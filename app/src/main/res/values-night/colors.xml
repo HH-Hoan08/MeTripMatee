@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- KHỐI CẢNH BÁO / LỖI (ROSE / RED ALERT) -->
+    <!-- Nền đỏ cực tối (rose-950 với opacity hoặc sắc độ sẫm) -->
+    <color name="alert_rose_bg">#4C0519</color>
+    <!-- Viền đỏ sẫm (rose-900) -->
+    <color name="alert_rose_border">#881337</color>
+    <!-- Chữ & Icon đỏ hồng sáng để nổi trên nền tối (rose-300 / rose-400) -->
+    <color name="alert_rose_text">#FDA4AF</color>
+
+    <!-- BADGE ĂN UỐNG / CẢNH BÁO (AMBER) -->
+    <color name="badge_amber_bg">#451A03</color>     <!-- amber-950 -->
+    <color name="badge_amber_text">#FCD34D</color>   <!-- amber-300 -->
+
+    <!-- BADGE DI CHUYỂN (BLUE / INDIGO) -->
+    <color name="badge_move_bg">#1E1B4B</color>      <!-- indigo-950 -->
+    <color name="badge_move_text">#A5B4FC</color>    <!-- indigo-300 -->
+
+    <!-- BADGE LƯU TRÚ (PURPLE) -->
+    <color name="badge_stay_bg">#3B0764</color>      <!-- purple-950 -->
+    <color name="badge_stay_text">#D8B4FE</color>    <!-- purple-300 -->
+</resources>
