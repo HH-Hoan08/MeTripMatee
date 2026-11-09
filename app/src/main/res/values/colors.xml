@@ -18,4 +18,18 @@
     <!-- BADGE LƯU TRÚ (PURPLE) -->
     <color name="badge_stay_bg">#F3E8FF</color>      <!-- purple-100 -->
     <color name="badge_stay_text">#7E22CE</color>    <!-- purple-700 -->
+
+    <!-- Tone màu xanh chủ đạo từ app của bạn -->
+    <color name="colorPrimary">#09A57B</color>
+    <color name="colorPrimaryVariant">#067A5A</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorTextPrimary">#333333</color>
+    <color name="colorTextSecondary">#757575</color>
+    <color name="colorBackground">#F5F7FA</color>
+    <color name="vivu_primary">#00896A</color>
+    <color name="vivu_primary_light">#E5F3F0</color>
+    <color name="vivu_bg_gray">#F6F8FA</color>
+    <color name="vivu_text_dark">#1A1A1A</color>
+    <color name="vivu_text_gray">#666666</color>
+    <color name="vivu_border_gray">#E0E0E0</color>
 </resources>
