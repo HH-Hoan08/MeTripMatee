@@ -4,8 +4,17 @@
         <item name="fontFamily">@font/app_font</item>
         <item name="android:fontFamily">@font/app_font</item>
 
-        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorPrimary">@color/teal_primary</item>
+        <item name="android:windowBackground">@color/bg_main</item>
     </style>
 
     <style name="Theme.Mytripmatee" parent="Base.Theme.Mytripmatee" />
+
+    <style name="ShapeAppearance.App.Corner14dp" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.Corner20dp" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerSize">20dp</item>
+    </style>
 </resources>
