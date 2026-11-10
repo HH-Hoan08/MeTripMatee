@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_main"
+    tools:context=".MainActivity">
+
+    <!-- ViewPager2 for 4 Tabs -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Bottom Navigation White Floating Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottomNavCard"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="@color/border_color"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="4dp">
+
+            <!-- Left 2 Tabs: Khám phá, Lịch trình -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayoutLeft"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:tabGravity="fill"
+                app:tabIndicatorColor="@color/teal_primary"
+                app:tabIndicatorHeight="3dp"
+                app:tabMode="fixed"
+                app:tabMinWidth="0dp"
+                app:tabPaddingStart="2dp"
+                app:tabPaddingEnd="2dp"
+                app:tabRippleColor="@null"
+                app:tabSelectedTextColor="@color/teal_primary"
+                app:tabTextAppearance="@style/CustomTabTextAppearance"
+                app:tabTextColor="@color/text_muted" />
+
+            <!-- Spacer in middle for Dome Center Button -->
+            <View
+                android:layout_width="64dp"
+                android:layout_height="match_parent" />
+
+            <!-- Right 2 Tabs: Bản đồ, Ví chi tiêu -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayoutRight"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                app:tabGravity="fill"
+                app:tabIndicatorColor="@color/teal_primary"
+                app:tabIndicatorHeight="3dp"
+                app:tabMode="fixed"
+                app:tabMinWidth="0dp"
+                app:tabPaddingStart="2dp"
+                app:tabPaddingEnd="2dp"
+                app:tabRippleColor="@null"
+                app:tabSelectedTextColor="@color/teal_primary"
+                app:tabTextAppearance="@style/CustomTabTextAppearance"
+                app:tabTextColor="@color/text_muted" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Center Dome Button (+ Nút hình vòm nhô vồng lên ở giữa) -->
+    <FrameLayout
+        android:id="@+id/btnAddTrip"
+        android:layout_width="100dp"
+        android:layout_height="60dp"
+        android:background="@drawable/bg_center_dome"
+        android:clickable="true"
+        android:elevation="12dp"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="@id/bottomNavCard"
+        app:layout_constraintEnd_toEndOf="@id/bottomNavCard"
+        app:layout_constraintStart_toStartOf="@id/bottomNavCard">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="4dp"
+            android:contentDescription="Thêm chuyến đi mới"
+            android:src="@drawable/ic_add"
+            app:tint="#FFFFFF" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

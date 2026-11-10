@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+  <path android:pathData="M0,0h100v100h-100z">
+    <aapt:attr name="android:fillColor">
+      <gradient
+          android:startX="0"
+          android:startY="0"
+          android:endX="100"
+          android:endY="100"
+          android:type="linear">
+        <item android:offset="0" android:color="#FF64748B"/>
+        <item android:offset="0.6" android:color="#FF334155"/>
+        <item android:offset="1" android:color="#FF0F172A"/>
+      </gradient>
+    </aapt:attr>
+  </path>
+  <!-- Mountain waves in grayscale landscape style -->
+  <path
+      android:fillColor="#8094A3B8"
+      android:pathData="M0,50 L30,30 L60,55 L80,25 L100,60 L100,100 L0,100 Z"/>
+  <path
+      android:fillColor="#A0475569"
+      android:pathData="M0,65 L40,40 L70,60 L100,45 L100,100 L0,100 Z"/>
+</vector>

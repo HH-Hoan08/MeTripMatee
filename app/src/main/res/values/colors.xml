@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Theme Colors -->
+    <color name="teal_primary">#0D9488</color>
+    <color name="teal_primary_dark">#0F766E</color>
+    <color name="teal_light">#E6F7F5</color>
+    <color name="teal_light_badge">#CCFBF1</color>
+
+    <!-- Background & Neutral Colors -->
+    <color name="bg_main">#F8FAFC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="border_color">#E2E8F0</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1E293B</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_muted">#94A3B8</color>
+
+    <!-- Badges -->
+    <color name="badge_draft_bg">#FEF3C7</color>
+    <color name="badge_draft_text">#D97706</color>
+    <color name="badge_completed_bg">#F1F5F9</color>
+    <color name="badge_completed_text">#64748B</color>
+    <color name="badge_upcoming_bg">#E6F7F5</color>
+    <color name="badge_upcoming_text">#0D9488</color>
+
+    <color name="red_badge">#EF4444</color>
+
+    <!-- Legacy / Alert Colors -->
+    <color name="alert_rose_bg">#FFE4E6</color>
+    <!-- Viền hồng đỏ nhạt (rose-200) -->
+    <color name="alert_rose_border">#FECDD3</color>
+    <!-- Chữ & Icon đỏ hồng đậm (rose-700) -->
+    <color name="alert_rose_text">#BE123C</color>
+
+    <!-- BADGE ĂN UỐNG / CẢNH BÁO (AMBER) -->
+    <color name="badge_amber_bg">#FEF3C7</color>     <!-- amber-100 -->
+    <color name="badge_amber_text">#B45309</color>   <!-- amber-700 -->
+
+    <!-- BADGE DI CHUYỂN (BLUE / INDIGO) -->
+    <color name="badge_move_bg">#E0E7FF</color>      <!-- indigo-100 -->
+    <color name="badge_move_text">#4338CA</color>    <!-- indigo-700 -->
+
+    <!-- BADGE LƯU TRÚ (PURPLE) -->
+    <color name="badge_stay_bg">#F3E8FF</color>      <!-- purple-100 -->
+    <color name="badge_stay_text">#7E22CE</color>    <!-- purple-700 -->
+
+    <!-- Tone màu xanh chủ đạo từ app của bạn -->
+
+    <color name="colorTextPrimary">#333333</color>
+    <color name="colorTextSecondary">#757575</color>
+    <color name="colorBackground">#F5F7FA</color>
+    <color name="vivu_primary">#00896A</color>
+    <color name="vivu_primary_light">#E5F3F0</color>
+    <color name="vivu_bg_gray">#F6F8FA</color>
+    <color name="vivu_text_dark">#1A1A1A</color>
+    <color name="vivu_text_gray">#666666</color>
+    <color name="vivu_border_gray">#E0E0E0</color>
+
+    <!-- Calendar Colors -->
+    <color name="calendar_primary">#00896A</color>
+    <color name="calendar_primary_light">#E5F3F0</color>
+    <color name="calendar_bg">#F6F8FA</color>
+    <color name="calendar_text_dark">#1A1A1A</color>
+    <color name="calendar_text_gray">#888888</color>
+    <color name="calendar_weekend">#D32F2F</color>
+</resources>

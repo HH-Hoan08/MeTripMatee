@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 1. Chữ thường (Regular) -->
+    <font
+        app:fontStyle="normal"
+        app:fontWeight="400"
+        app:font="@font/plus_jakarta_sans" />
+
+    <!-- 2. Chữ in đậm (Bold) -->
+    <font
+        app:fontStyle="normal"
+        app:fontWeight="700"
+        app:font="@font/plus_jakarta_sans_bold" />
+
+    <!-- 3. Chữ in nghiêng (Italic) -->
+    <font
+        app:fontStyle="italic"
+        app:fontWeight="400"
+        app:font="@font/plus_jakarta_sans_italic" />
+
+</font-family>

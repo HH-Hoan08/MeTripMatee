@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="360dp"
+    android:height="180dp"
+    android:viewportWidth="360"
+    android:viewportHeight="180">
+  <!-- Sky background with sunset gradient -->
+  <path android:pathData="M0,0h360v180h-360z">
+    <aapt:attr name="android:fillColor">
+      <gradient
+          android:startX="0"
+          android:startY="0"
+          android:endX="360"
+          android:endY="180"
+          android:type="linear">
+        <item android:offset="0" android:color="#FFD97706"/>
+        <item android:offset="0.4" android:color="#FF0D9488"/>
+        <item android:offset="1" android:color="#FF0F172A"/>
+      </gradient>
+    </aapt:attr>
+  </path>
+  <!-- Mountain silhouettes -->
+  <path
+      android:fillColor="#40000000"
+      android:pathData="M0,120 L80,70 L160,110 L240,60 L360,130 L360,180 L0,180 Z"/>
+  <path
+      android:fillColor="#60000000"
+      android:pathData="M0,140 L110,95 L200,135 L300,90 L360,150 L360,180 L0,180 Z"/>
+  <!-- Sun glow -->
+  <path
+      android:fillColor="#33FFFFFF"
+      android:pathData="M180,60m-35,0a35,35 0 1,0 70,0a35,35 0 1,0 -70,0"/>
+</vector>
