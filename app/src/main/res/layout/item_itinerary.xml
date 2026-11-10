@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingBottom="12dp">
+
+    <!-- Timeline Line Top -->
+    <View
+        android:id="@+id/timelineLineTop"
+        android:layout_width="2dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="11dp"
+        android:background="#CBD5E1" />
+
+    <!-- Timeline Line Bottom -->
+    <View
+        android:id="@+id/timelineLineBottom"
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:layout_below="@id/timelineLineTop"
+        android:layout_marginStart="11dp"
+        android:background="#CBD5E1" />
+
+    <!-- Node Circle Icon -->
+    <FrameLayout
+        android:id="@+id/nodeCircle"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_node_circle_blue">
+
+        <ImageView
+            android:id="@+id/imgNodeIcon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_gravity="center"
+            android:contentDescription="Icon"
+            android:src="@drawable/ic_pin_flight"
+            app:tint="#FFFFFF" />
+    </FrameLayout>
+
+    <!-- Card Container -->
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_toEndOf="@id/nodeCircle"
+        android:background="@drawable/bg_timeline_card"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Header Row -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvBadgeType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_badge_move"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textColor="#4338CA"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="DI CHUYỂN" />
+
+            <TextView
+                android:id="@+id/tvTimeRange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="06:00  -  08:30" />
+        </RelativeLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="#1E293B"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Bay Tân Sơn Nhất ➔ Liên Khương" />
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#64748B"
+            android:textSize="12sp"
+            tools:text="Vietjet VJ362 • Mã vé: HG893X" />
+
+        <!-- Footer Row -->
+        <RelativeLayout
+            android:id="@+id/layoutFooter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/tvSubInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                tools:text="Chi phí: 1.250.000 đ" />
+
+            <TextView
+                android:id="@+id/btnOpenMaps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:drawableStart="@drawable/ic_open_in_new"
+                android:drawablePadding="4dp"
+                android:text="Mở Google Maps"
+                android:textColor="#0D9488"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <CheckBox
+                android:id="@+id/cbDone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:minHeight="0dp"
+                android:textColor="#0D9488"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:buttonTint="#0D9488"
+                tools:text="Đã xong" />
+        </RelativeLayout>
+
+        <!-- Alert Box -->
+        <LinearLayout
+            android:id="@+id/layoutAlert"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_alert_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Cảnh báo"
+                android:src="@drawable/ic_warning" />
+
+            <TextView
+                android:id="@+id/tvAlertText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="#BE123C"
+                android:textSize="12sp"
+                tools:text="Cảnh báo: Khoảng cách từ Nhà Chung tới điểm kế tiếp 12km (~35p đèo)." />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

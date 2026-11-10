@@ -30,6 +30,11 @@
             android:exported="false"
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".TripDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mytripmatee"
+            android:windowSoftInputMode="adjustResize" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

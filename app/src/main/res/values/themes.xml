@@ -20,4 +20,17 @@
     <style name="ShapeAppearance.App.Corner20dp" parent="ShapeAppearance.Material3.Corner.Large">
         <item name="cornerSize">20dp</item>
     </style>
+
+    <style name="ShapeAppearance.App.BottomRounded20dp" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">20dp</item>
+        <item name="cornerSizeBottomRight">20dp</item>
+    </style>
+
+    <style name="CustomTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>
