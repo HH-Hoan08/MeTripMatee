@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="44"
+    android:viewportHeight="44">
+  <!-- Avatar background -->
+  <path
+      android:fillColor="#38BDF8"
+      android:pathData="M22,22m-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0"/>
+  <!-- User head -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M22,12c-2.76,0 -5,2.24 -5,5s2.24,5 5,5 5,-2.24 5,-5 -2.24,-5 -5,-5zM22,24c-4.67,0 -10,2.34 -10,7v2h20v-2c0,-4.66 -5.33,-7 -10,-7z"/>
+  <!-- Online status green dot -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M37,35m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0"/>
+  <path
+      android:fillColor="#22C55E"
+      android:pathData="M37,35m-4,0a4,4 0 1,0 8,0a4,4 0 1,0 -8,0"/>
+</vector>

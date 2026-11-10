@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Nền hồng nhạt (rose-100) -->
+    <!-- Primary Theme Colors -->
+    <color name="teal_primary">#0D9488</color>
+    <color name="teal_primary_dark">#0F766E</color>
+    <color name="teal_light">#E6F7F5</color>
+    <color name="teal_light_badge">#CCFBF1</color>
+
+    <!-- Background & Neutral Colors -->
+    <color name="bg_main">#F8FAFC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="border_color">#E2E8F0</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1E293B</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_muted">#94A3B8</color>
+
+    <!-- Badges -->
+    <color name="badge_draft_bg">#FEF3C7</color>
+    <color name="badge_draft_text">#D97706</color>
+    <color name="badge_completed_bg">#F1F5F9</color>
+    <color name="badge_completed_text">#64748B</color>
+    <color name="badge_upcoming_bg">#E6F7F5</color>
+    <color name="badge_upcoming_text">#0D9488</color>
+
+    <color name="red_badge">#EF4444</color>
+
+    <!-- Legacy / Alert Colors -->
     <color name="alert_rose_bg">#FFE4E6</color>
     <!-- Viền hồng đỏ nhạt (rose-200) -->
     <color name="alert_rose_border">#FECDD3</color>

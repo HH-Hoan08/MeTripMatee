@@ -1,91 +1,131 @@
 package com.example.mytripmatee;
 
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.mytripmatee.databinding.ActivityMainBinding;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
+    private ActivityMainBinding binding;
+    private TripAdapter tripAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.enableEdgeToEdge(getWindow());
 
-        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
-        setSupportActionBar(binding.toolbar);
 
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment_content_main);
+        setupRecyclerView();
+        loadMockData();
+        setupClickListeners();
+    }
 
-        if (navHostFragment != null) {
-            NavController navController = navHostFragment.getNavController();
-
-            appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-            NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        }
-
-        binding.fab.setOnClickListener(
-                view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show()
+    private void setupRecyclerView() {
+        tripAdapter = new TripAdapter(trip ->
+            Toast.makeText(MainActivity.this, "Đã chọn: " + trip.getTitle(), Toast.LENGTH_SHORT).show()
         );
+        binding.rvTrips.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvTrips.setAdapter(tripAdapter);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    private void loadMockData() {
+        List<Trip> trips = new ArrayList<>();
+
+        // Item 1: Draft item from screenshot
+        trips.add(new Trip(
+                "1",
+                "Phú Quốc – Nghỉ Dưỡng Biển Ngọc",
+                "Bản nháp",
+                Trip.StatusType.DRAFT,
+                "Tết 2027",
+                "4 ngày 3 đêm  •  12 mục đã lập",
+                R.drawable.img_phuquoc
+        ));
+
+        // Item 2: Completed item from screenshot
+        trips.add(new Trip(
+                "2",
+                "Hà Giang Loop – Chinh Phục Mã Pí L...",
+                "Đã kết thúc",
+                Trip.StatusType.COMPLETED,
+                "Tháng 09/2026",
+                "Tổng chi: 4.800.000 đ  •  Đánh giá 5★",
+                R.drawable.img_hagiang
+        ));
+
+        // Item 3: Additional mock trip
+        trips.add(new Trip(
+                "3",
+                "Nha Trang – Biển Xanh Nắng Vàng",
+                "Sắp tới",
+                Trip.StatusType.UPCOMING,
+                "Tháng 05/2026",
+                "3 ngày 2 đêm  •  5 thành viên",
+                R.drawable.img_dalat
+        ));
+
+        tripAdapter.setTrips(trips);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    private void setupClickListeners() {
+        binding.btnNotification.setOnClickListener(v ->
+            Toast.makeText(this, "Thông báo mới", Toast.LENGTH_SHORT).show()
+        );
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        binding.btnSettings.setOnClickListener(v ->
+            Toast.makeText(this, "Cài đặt", Toast.LENGTH_SHORT).show()
+        );
 
-        return super.onOptionsItemSelected(item);
+        binding.tvViewHistory.setOnClickListener(v ->
+            Toast.makeText(this, "Xem lịch sử chuyến đi", Toast.LENGTH_SHORT).show()
+        );
+
+        binding.fabAdd.setOnClickListener(v ->
+            Toast.makeText(this, "Tạo chuyến đi mới", Toast.LENGTH_SHORT).show()
+        );
+
+        // Filter tabs click handling
+        binding.tabAll.setOnClickListener(v -> selectTab(binding.tabAll, "Tất cả"));
+        binding.tabUpcoming.setOnClickListener(v -> selectTab(binding.tabUpcoming, "Sắp tới"));
+        binding.tabDraft.setOnClickListener(v -> selectTab(binding.tabDraft, "Bản nháp"));
+        binding.tabDone.setOnClickListener(v -> selectTab(binding.tabDone, "Đã xong"));
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment_content_main);
-        boolean handled = false;
-        if (navHostFragment != null) {
-            NavController navController = navHostFragment.getNavController();
-            handled = NavigationUI.navigateUp(navController, appBarConfiguration);
-        }
-        return handled || super.onSupportNavigateUp();
+    private void selectTab(android.widget.TextView selected, String tabName) {
+        binding.tabAll.setBackgroundResource(R.drawable.bg_pill_white);
+        binding.tabAll.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
+
+        binding.tabUpcoming.setBackgroundResource(R.drawable.bg_pill_white);
+        binding.tabUpcoming.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
+
+        binding.tabDraft.setBackgroundResource(R.drawable.bg_pill_white);
+        binding.tabDraft.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
+
+        binding.tabDone.setBackgroundResource(R.drawable.bg_pill_white);
+        binding.tabDone.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
+
+        selected.setBackgroundResource(R.drawable.bg_pill_teal);
+        selected.setTextColor(getResources().getColor(android.R.color.white, getTheme()));
+
+        Toast.makeText(this, "Lọc: " + tabName, Toast.LENGTH_SHORT).show();
     }
 }
