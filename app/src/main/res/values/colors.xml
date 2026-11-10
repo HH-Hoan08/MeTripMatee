@@ -56,4 +56,12 @@
     <color name="vivu_text_dark">#1A1A1A</color>
     <color name="vivu_text_gray">#666666</color>
     <color name="vivu_border_gray">#E0E0E0</color>
+
+    <!-- Calendar Colors -->
+    <color name="calendar_primary">#00896A</color>
+    <color name="calendar_primary_light">#E5F3F0</color>
+    <color name="calendar_bg">#F6F8FA</color>
+    <color name="calendar_text_dark">#1A1A1A</color>
+    <color name="calendar_text_gray">#888888</color>
+    <color name="calendar_weekend">#D32F2F</color>
 </resources>

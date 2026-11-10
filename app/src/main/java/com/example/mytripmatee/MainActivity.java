@@ -1,5 +1,6 @@
 package com.example.mytripmatee;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -40,9 +41,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        tripAdapter = new TripAdapter(trip ->
-            Toast.makeText(MainActivity.this, "Đã chọn: " + trip.getTitle(), Toast.LENGTH_SHORT).show()
-        );
+        tripAdapter = new TripAdapter(trip -> {
+            Intent intent = new Intent(MainActivity.this, EditTripActivity.class);
+            intent.putExtra("trip_title", trip.getTitle());
+            startActivity(intent);
+        });
         binding.rvTrips.setLayoutManager(new LinearLayoutManager(this));
         binding.rvTrips.setAdapter(tripAdapter);
     }
@@ -99,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Xem lịch sử chuyến đi", Toast.LENGTH_SHORT).show()
         );
 
-        binding.fabAdd.setOnClickListener(v ->
-            Toast.makeText(this, "Tạo chuyến đi mới", Toast.LENGTH_SHORT).show()
-        );
+        binding.fabAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, EditTripActivity.class);
+            intent.putExtra("mode_create", true);
+            startActivity(intent);
+        });
 
         // Filter tabs click handling
         binding.tabAll.setOnClickListener(v -> selectTab(binding.tabAll, "Tất cả"));
