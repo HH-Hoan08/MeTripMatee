@@ -1,7 +1,6 @@
 package com.example.mytripmatee;
 
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -11,13 +10,22 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
-
 import com.example.mytripmatee.databinding.ActivityMainBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    // --- Cấu hình Tab ở đây để dễ chỉnh sửa ---
+    private final String[] tabTitles = {"Khám phá", "Lịch trình", "Bản đồ", "Ví chi tiêu"};
+    private final int[] tabIcons = {
+            R.drawable.ic_explore,
+            R.drawable.ic_calendar_month,
+            R.drawable.ic_map,
+            R.drawable.ic_wallet
+    };
+    // -----------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,29 +45,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViewPagerAndTabs() {
-        MainPagerAdapter adapter = new MainPagerAdapter(this);
-        binding.viewPager.setAdapter(adapter);
+        binding.viewPager.setAdapter(new MainPagerAdapter(this));
 
-        // Connect TabLayout with ViewPager2
         new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
-            switch (position) {
-                case 0:
-                    tab.setText("Khám phá");
-                    tab.setIcon(R.drawable.ic_explore);
-                    break;
-                case 1:
-                    tab.setText("Lịch trình");
-                    tab.setIcon(R.drawable.ic_calendar_month);
-                    break;
-                case 2:
-                    tab.setText("Bản đồ");
-                    tab.setIcon(R.drawable.ic_map);
-                    break;
-                case 3:
-                    tab.setText("Ví chi tiêu");
-                    tab.setIcon(R.drawable.ic_wallet);
-                    break;
-            }
+            tab.setText(tabTitles[position]);
+            tab.setIcon(tabIcons[position]);
         }).attach();
     }
 
@@ -70,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static class MainPagerAdapter extends FragmentStateAdapter {
-
         public MainPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
             super(fragmentActivity);
         }
@@ -79,15 +68,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment createFragment(int position) {
             switch (position) {
-                case 1:
-                    return new ItineraryFragment();
-                case 2:
-                    return new MapFragment();
-                case 3:
-                    return new ExpenseFragment();
-                case 0:
-                default:
-                    return new ExploreFragment();
+                case 1:  return new ItineraryFragment();
+                case 2:  return new MapFragment();
+                case 3:  return new ExpenseFragment();
+                default: return new ExploreFragment();
             }
         }
 
