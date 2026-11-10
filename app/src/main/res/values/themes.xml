@@ -1,10 +1,13 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Mytripmatee" parent="Theme.Material3.DayNight.NoActionBar">
+    <!--Phong chữ-->
         <item name="fontFamily">@font/app_font</item>
         <item name="android:fontFamily">@font/app_font</item>
-
+    <!--màu-->
         <item name="colorPrimary">@color/teal_primary</item>
+        <item name="colorPrimaryVariant">#067A5A</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
         <item name="android:windowBackground">@color/bg_main</item>
     </style>
 

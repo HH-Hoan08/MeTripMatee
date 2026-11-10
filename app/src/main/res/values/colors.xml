@@ -46,9 +46,7 @@
     <color name="badge_stay_text">#7E22CE</color>    <!-- purple-700 -->
 
     <!-- Tone màu xanh chủ đạo từ app của bạn -->
-    <color name="colorPrimary">#09A57B</color>
-    <color name="colorPrimaryVariant">#067A5A</color>
-    <color name="colorOnPrimary">#FFFFFF</color>
+
     <color name="colorTextPrimary">#333333</color>
     <color name="colorTextSecondary">#757575</color>
     <color name="colorBackground">#F5F7FA</color>
