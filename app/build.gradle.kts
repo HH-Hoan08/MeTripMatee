@@ -18,6 +18,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res/features/auth",
+                "src/main/res/features/main",
+                "src/main/res/features/explore",
+                "src/main/res/features/trip",
+                "src/main/res/features/itinerary",
+                "src/main/res/features/expense",
+                "src/main/res/features/gallery",
+                "src/main/res/features/stats",
+                "src/main/res/features/map",
+                "src/main/res/features/settings"
+            )
+        }
+    }
+
     buildTypes {
         release {
             optimization {

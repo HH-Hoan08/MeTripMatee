@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mytripmatee">
         <activity
-            android:name=".LoginActivity"
+            android:name=".activity.LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -22,33 +22,33 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".RegisterActivity"
+            android:name=".activity.RegisterActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".MainActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Mytripmatee"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".TripDetailActivity"
+            android:name=".activity.MainActivity"
             android:exported="false"
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".EditTripActivity"
+            android:name=".activity.TripDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mytripmatee"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.EditTripActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".CustomDatePickerActivity"
+            android:name=".activity.CustomDatePickerActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".EditItineraryActivity"
+            android:name=".activity.EditItineraryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activity.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />
