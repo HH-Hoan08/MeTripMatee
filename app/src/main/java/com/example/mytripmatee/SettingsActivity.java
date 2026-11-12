@@ -4,11 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
@@ -28,6 +32,9 @@ public class SettingsActivity extends AppCompatActivity {
     public static final String PREFS_NAME = "AppSettings";
     public static final String KEY_DARK_MODE = "dark_mode";
     public static final String KEY_LAST_BACKUP = "last_backup_time";
+
+    public static Bitmap pendingSweepBitmap = null;
+    public static boolean shouldAnimateSweep = false;
 
     private ActivitySettingsBinding binding;
     private SharedPreferences sharedPreferences;
@@ -56,6 +63,42 @@ public class SettingsActivity extends AppCompatActivity {
         setupLogout();
     }
 
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        checkAndPerformSweepAnimation();
+    }
+
+    private void checkAndPerformSweepAnimation() {
+        if (shouldAnimateSweep && pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
+            shouldAnimateSweep = false;
+            binding.overlayView.setImageBitmap(pendingSweepBitmap);
+            binding.overlayView.setVisibility(View.VISIBLE);
+            binding.overlayView.setTranslationX(0f);
+
+            binding.overlayView.post(() -> {
+                int screenWidth = binding.getRoot().getWidth();
+                if (screenWidth <= 0) {
+                    screenWidth = getResources().getDisplayMetrics().widthPixels;
+                }
+
+                binding.overlayView.animate()
+                        .translationX(screenWidth)
+                        .setDuration(450)
+                        .setInterpolator(new DecelerateInterpolator(1.5f))
+                        .withEndAction(() -> {
+                            binding.overlayView.setVisibility(View.GONE);
+                            binding.overlayView.setTranslationX(0f);
+                            if (pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
+                                pendingSweepBitmap.recycle();
+                                pendingSweepBitmap = null;
+                            }
+                        })
+                        .start();
+            });
+        }
+    }
+
     private void setupHeader() {
         binding.btnBack.setOnClickListener(v -> finish());
     }
@@ -72,6 +115,21 @@ public class SettingsActivity extends AppCompatActivity {
             boolean currentMode = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
             if (currentMode == isChecked) return;
 
+            // Capture screenshot of current screen in old theme for smooth sweep
+            try {
+                View rootView = binding.getRoot();
+                if (rootView.getWidth() > 0 && rootView.getHeight() > 0) {
+                    Bitmap bitmap = Bitmap.createBitmap(rootView.getWidth(), rootView.getHeight(), Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    rootView.draw(canvas);
+                    pendingSweepBitmap = bitmap;
+                    shouldAnimateSweep = true;
+                }
+            } catch (Exception e) {
+                pendingSweepBitmap = null;
+                shouldAnimateSweep = false;
+            }
+
             sharedPreferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
 
             if (isChecked) {
@@ -79,6 +137,8 @@ public class SettingsActivity extends AppCompatActivity {
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
+
+            overridePendingTransition(0, 0);
         });
     }
 
