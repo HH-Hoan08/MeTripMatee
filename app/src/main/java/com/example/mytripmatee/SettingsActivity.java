@@ -61,18 +61,19 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupDarkModeSwitch() {
-        // Retrieve saved preference or default to current night mode status
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         boolean isDarkSystem = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
         boolean isDarkModeSaved = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
 
+        binding.switchDarkMode.setOnCheckedChangeListener(null);
         binding.switchDarkMode.setChecked(isDarkModeSaved);
 
         binding.switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Save state in SharedPreferences
+            boolean currentMode = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
+            if (currentMode == isChecked) return;
+
             sharedPreferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
 
-            // Toggle night mode in app
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {

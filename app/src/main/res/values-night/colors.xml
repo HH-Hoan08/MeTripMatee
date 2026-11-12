@@ -1,11 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary Theme Colors (Dark Mode) -->
+    <color name="teal_primary">#14B8A6</color>
+    <color name="teal_primary_dark">#0D9488</color>
+    <color name="teal_light">#134E4A</color>
+    <color name="teal_light_badge">#115E59</color>
+
+    <!-- Background & Neutral Colors (Dark Mode) -->
+    <color name="bg_main">#0F172A</color>
+    <color name="card_bg">#1E293B</color>
+    <color name="border_color">#334155</color>
+
+    <!-- Text Colors (Dark Mode) -->
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+
+    <!-- Badges (Dark Mode) -->
+    <color name="badge_draft_bg">#451A03</color>
+    <color name="badge_draft_text">#FCD34D</color>
+    <color name="badge_completed_bg">#334155</color>
+    <color name="badge_completed_text">#CBD5E1</color>
+    <color name="badge_upcoming_bg">#134E4A</color>
+    <color name="badge_upcoming_text">#2DD4BF</color>
+
+    <color name="red_badge">#F87171</color>
+
     <!-- KHỐI CẢNH BÁO / LỖI (ROSE / RED ALERT) -->
-    <!-- Nền đỏ cực tối (rose-950 với opacity hoặc sắc độ sẫm) -->
     <color name="alert_rose_bg">#4C0519</color>
-    <!-- Viền đỏ sẫm (rose-900) -->
     <color name="alert_rose_border">#881337</color>
-    <!-- Chữ & Icon đỏ hồng sáng để nổi trên nền tối (rose-300 / rose-400) -->
     <color name="alert_rose_text">#FDA4AF</color>
 
     <!-- BADGE ĂN UỐNG / CẢNH BÁO (AMBER) -->
@@ -19,4 +42,23 @@
     <!-- BADGE LƯU TRÚ (PURPLE) -->
     <color name="badge_stay_bg">#3B0764</color>      <!-- purple-950 -->
     <color name="badge_stay_text">#D8B4FE</color>    <!-- purple-300 -->
+
+    <!-- Tone màu xanh chủ đạo (Dark Mode) -->
+    <color name="colorTextPrimary">#F8FAFC</color>
+    <color name="colorTextSecondary">#94A3B8</color>
+    <color name="colorBackground">#0F172A</color>
+    <color name="vivu_primary">#14B8A6</color>
+    <color name="vivu_primary_light">#134E4A</color>
+    <color name="vivu_bg_gray">#0F172A</color>
+    <color name="vivu_text_dark">#F8FAFC</color>
+    <color name="vivu_text_gray">#94A3B8</color>
+    <color name="vivu_border_gray">#334155</color>
+
+    <!-- Calendar Colors (Dark Mode) -->
+    <color name="calendar_primary">#14B8A6</color>
+    <color name="calendar_primary_light">#134E4A</color>
+    <color name="calendar_bg">#0F172A</color>
+    <color name="calendar_text_dark">#F8FAFC</color>
+    <color name="calendar_text_gray">#94A3B8</color>
+    <color name="calendar_weekend">#F87171</color>
 </resources>
