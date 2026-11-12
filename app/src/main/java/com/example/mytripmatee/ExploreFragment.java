@@ -34,6 +34,7 @@ public class ExploreFragment extends Fragment {
 
         setupRecyclerView();
         setupFeaturedCard();
+        setupSettingsButton();
     }
 
     private void setupRecyclerView() {
@@ -65,6 +66,15 @@ public class ExploreFragment extends Fragment {
                         "Đà Lạt – Sương Mù & Thảnh Thơi",
                         "12/11 - 15/11/2026 • 3 ngày 2 đêm"
                 );
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setupSettingsButton() {
+        binding.btnSettings.setOnClickListener(v -> {
+            if (getContext() != null) {
+                Intent intent = new Intent(getContext(), SettingsActivity.class);
                 startActivity(intent);
             }
         });
