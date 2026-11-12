@@ -15,6 +15,15 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        android.content.SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, MODE_PRIVATE);
+        if (prefs.contains(SettingsActivity.KEY_DARK_MODE)) {
+            boolean isDark = prefs.getBoolean(SettingsActivity.KEY_DARK_MODE, false);
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                    isDark ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            );
+        }
+
         setContentView(R.layout.activity_login);
 
         // ánh xạ view
