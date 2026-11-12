@@ -1,5 +1,6 @@
 package com.example.mytripmatee;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,13 +43,24 @@ public class ItineraryFragment extends Fragment {
         binding.btnForecast.setOnClickListener(v ->
                 Toast.makeText(requireContext(), "Xem dự báo thời tiết 3 ngày", Toast.LENGTH_SHORT).show()
         );
+
+        // Open EditItineraryActivity when clicking "+ Thêm hoạt động" button or Floating Action Button
+        View.OnClickListener openEditListener = v -> {
+            Intent intent = EditItineraryActivity.newIntent(requireContext());
+            startActivity(intent);
+        };
+
+        binding.btnAddActivity.setOnClickListener(openEditListener);
+        binding.fabAddActivity.setOnClickListener(openEditListener);
     }
 
     private void setupRecyclerView() {
         adapter = new ItineraryAdapter(new ItineraryAdapter.OnItineraryItemClickListener() {
             @Override
             public void onItemClick(ItineraryItem item) {
-                Toast.makeText(requireContext(), "Chi tiết: " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                // Clicking an existing item opens EditItineraryActivity to edit
+                Intent intent = EditItineraryActivity.newIntent(requireContext());
+                startActivity(intent);
             }
 
             @Override

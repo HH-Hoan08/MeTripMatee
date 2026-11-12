@@ -1,176 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
-    android:fillViewport="true">
+    android:background="#F8FAFC">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="80dp">
 
-        <!-- Weather Banner Card -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_weather_card"
+            android:orientation="vertical"
             android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/ivWeatherIcon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="12dp"
-                android:contentDescription="Thời tiết"
-                android:src="@drawable/ic_weather" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <!-- Weather Banner Card -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toEndOf="@id/ivWeatherIcon"
-                android:layout_toStartOf="@id/btnForecast"
-                android:orientation="vertical">
+                android:background="@drawable/bg_weather_card"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/ivWeatherIcon"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:contentDescription="Thời tiết"
+                    android:src="@drawable/ic_weather" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toEndOf="@id/ivWeatherIcon"
+                    android:layout_toStartOf="@id/btnForecast"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đà Lạt • 19°C Trời se lạnh"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Gợi ý: Mang áo khoác nhẹ &amp; ô nhỏ"
+                        android:textColor="#CCFBF1"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnForecast"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="#20FFFFFF"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:text="Dự báo 3 ngày"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp" />
+            </RelativeLayout>
+
+            <!-- Section Title & Add Activity Button Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đà Lạt • 19°C Trời se lạnh"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:letterSpacing="0.03"
+                    android:text="LỊCH TRÌNH CHI TIẾT"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/btnAddActivity"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Gợi ý: Mang áo khoác nhẹ &amp; ô nhỏ"
-                    android:textColor="#CCFBF1"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_pill_teal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="+ Thêm hoạt động"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
 
-            <TextView
-                android:id="@+id/btnForecast"
-                android:layout_width="wrap_content"
+            <!-- Date Selector Pills -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="#20FFFFFF"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp"
-                android:text="Dự báo 3 ngày"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp" />
-        </RelativeLayout>
+                android:layout_marginTop="12dp"
+                android:scrollbars="none">
 
-        <!-- Date Selector Pills -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:scrollbars="none">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
+                    <!-- Day 1 (Selected) -->
+                    <LinearLayout
+                        android:id="@+id/day1Pill"
+                        android:layout_width="90dp"
+                        android:layout_height="54dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_date_pill_selected"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="NGÀY 1"
+                            android:textColor="#CCFBF1"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12 Th11"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Day 2 (Unselected) -->
+                    <LinearLayout
+                        android:id="@+id/day2Pill"
+                        android:layout_width="90dp"
+                        android:layout_height="54dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_date_pill_unselected"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="NGÀY 2"
+                            android:textColor="#94A3B8"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="13 Th11"
+                            android:textColor="#1E293B"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Day 3 (Unselected) -->
+                    <LinearLayout
+                        android:id="@+id/day3Pill"
+                        android:layout_width="90dp"
+                        android:layout_height="54dp"
+                        android:background="@drawable/bg_date_pill_unselected"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="NGÀY 3"
+                            android:textColor="#94A3B8"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="14 Th11"
+                            android:textColor="#1E293B"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Itinerary Dynamic RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvItinerary"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginTop="16dp"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_itinerary" />
 
-                <!-- Day 1 (Selected) -->
-                <LinearLayout
-                    android:id="@+id/day1Pill"
-                    android:layout_width="90dp"
-                    android:layout_height="54dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_date_pill_selected"
-                    android:gravity="center"
-                    android:orientation="vertical">
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="NGÀY 1"
-                        android:textColor="#CCFBF1"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
+    <!-- Floating Action Button to Add New Activity -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="20dp"
+        android:contentDescription="Thêm hoạt động"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/teal_primary"
+        app:tint="#FFFFFF" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="12 Th11"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- Day 2 (Unselected) -->
-                <LinearLayout
-                    android:id="@+id/day2Pill"
-                    android:layout_width="90dp"
-                    android:layout_height="54dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_date_pill_unselected"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="NGÀY 2"
-                        android:textColor="#94A3B8"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="13 Th11"
-                        android:textColor="#1E293B"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- Day 3 (Unselected) -->
-                <LinearLayout
-                    android:id="@+id/day3Pill"
-                    android:layout_width="90dp"
-                    android:layout_height="54dp"
-                    android:background="@drawable/bg_date_pill_unselected"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="NGÀY 3"
-                        android:textColor="#94A3B8"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="14 Th11"
-                        android:textColor="#1E293B"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <!-- Itinerary Dynamic RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvItinerary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:nestedScrollingEnabled="false"
-            tools:itemCount="3"
-            tools:listitem="@layout/item_itinerary" />
-
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</RelativeLayout>
