@@ -72,7 +72,8 @@
 
             <!-- Spacer in middle for Dome Center Button -->
             <View
-                android:layout_width="64dp"
+                android:id="@+id/spacerCenter"
+                android:layout_width="68dp"
                 android:layout_height="match_parent" />
 
             <!-- Right 2 Tabs: Bản đồ, Ví chi tiêu -->
@@ -101,7 +102,7 @@
     <!-- Center Dome Button (+ Nút hình vòm nhô vồng lên ở giữa) -->
     <FrameLayout
         android:id="@+id/btnAddTrip"
-        android:layout_width="100dp"
+        android:layout_width="68dp"
         android:layout_height="60dp"
         android:background="@drawable/bg_center_dome"
         android:clickable="true"
