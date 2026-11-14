@@ -80,7 +80,8 @@
                         android:layout_height="20dp"
                         android:layout_gravity="center"
                         android:contentDescription="Thông báo"
-                        android:src="@drawable/ic_bell" />
+                        android:src="@drawable/ic_bell"
+                        app:tint="@color/text_primary" />
 
                     <!-- Red Notification Dot -->
                     <View
@@ -107,7 +108,8 @@
                         android:layout_height="20dp"
                         android:layout_gravity="center"
                         android:contentDescription="Cài đặt"
-                        android:src="@drawable/ic_settings" />
+                        android:src="@drawable/ic_settings"
+                        app:tint="@color/text_primary" />
                 </FrameLayout>
             </LinearLayout>
         </RelativeLayout>
