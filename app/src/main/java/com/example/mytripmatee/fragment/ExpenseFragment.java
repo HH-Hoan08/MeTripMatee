@@ -246,11 +246,6 @@ public class ExpenseFragment extends Fragment {
     }
 
     private void setupActionButtons() {
-        if (binding.btnBack != null) {
-            binding.btnBack.setOnClickListener(v -> {
-                if (getActivity() != null) getActivity().onBackPressed();
-            });
-        }
 
         binding.btnExport.setOnClickListener(v ->
                 Toast.makeText(requireContext(), "Đang xuất báo cáo chi tiêu dạng Excel / PDF...", Toast.LENGTH_SHORT).show()

@@ -1,6 +1,7 @@
 package com.example.mytripmatee.activity;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -71,46 +72,36 @@ public class MainActivity extends AppCompatActivity {
         binding.tabLayoutRight.addTab(tab2);
         binding.tabLayoutRight.addTab(tab3);
 
-        int tealColor = ContextCompat.getColor(this, R.color.teal_primary);
-
         // Left Tab selection
         binding.tabLayoutLeft.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (isSyncingTab) return;
-                isSyncingTab = true;
-                int pos = tab.getPosition();
-                binding.viewPager.setCurrentItem(pos, true);
-                binding.tabLayoutLeft.setSelectedTabIndicatorColor(tealColor);
-                binding.tabLayoutRight.setSelectedTabIndicatorColor(Color.TRANSPARENT);
-                isSyncingTab = false;
+                onTabClicked(tab.getPosition());
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {}
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+                onTabClicked(tab.getPosition());
+            }
         });
 
         // Right Tab selection
         binding.tabLayoutRight.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (isSyncingTab) return;
-                isSyncingTab = true;
-                int pos = tab.getPosition() + 2;
-                binding.viewPager.setCurrentItem(pos, true);
-                binding.tabLayoutRight.setSelectedTabIndicatorColor(tealColor);
-                binding.tabLayoutLeft.setSelectedTabIndicatorColor(Color.TRANSPARENT);
-                isSyncingTab = false;
+                onTabClicked(tab.getPosition() + 2);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {}
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+                onTabClicked(tab.getPosition() + 2);
+            }
         });
 
         // Sync tabs when ViewPager2 is swiped
@@ -120,27 +111,76 @@ public class MainActivity extends AppCompatActivity {
                 super.onPageSelected(position);
                 if (isSyncingTab) return;
                 isSyncingTab = true;
-
-                if (position < 2) {
-                    binding.tabLayoutLeft.setSelectedTabIndicatorColor(tealColor);
-                    binding.tabLayoutRight.setSelectedTabIndicatorColor(Color.TRANSPARENT);
-                    TabLayout.Tab tab = binding.tabLayoutLeft.getTabAt(position);
-                    if (tab != null && !tab.isSelected()) {
-                        tab.select();
-                    }
-                } else {
-                    int rightIndex = position - 2;
-                    binding.tabLayoutRight.setSelectedTabIndicatorColor(tealColor);
-                    binding.tabLayoutLeft.setSelectedTabIndicatorColor(Color.TRANSPARENT);
-                    TabLayout.Tab tab = binding.tabLayoutRight.getTabAt(rightIndex);
-                    if (tab != null && !tab.isSelected()) {
-                        tab.select();
-                    }
-                }
-
+                updateTabSelection(position);
                 isSyncingTab = false;
             }
         });
+
+        // Initial tab selection state
+        updateTabSelection(0);
+    }
+
+    private void onTabClicked(int position) {
+        if (isSyncingTab) return;
+        isSyncingTab = true;
+        binding.viewPager.setCurrentItem(position, true);
+        updateTabSelection(position);
+        isSyncingTab = false;
+    }
+
+    private void updateTabSelection(int position) {
+        int tealColor = ContextCompat.getColor(this, R.color.teal_primary);
+        int mutedColor = ContextCompat.getColor(this, R.color.text_muted);
+        int indicatorHeightPx = (int) (3 * getResources().getDisplayMetrics().density);
+
+        ColorStateList activeColorStateList = new ColorStateList(
+                new int[][]{
+                        new int[]{android.R.attr.state_selected},
+                        new int[]{}
+                },
+                new int[]{
+                        tealColor,
+                        mutedColor
+                }
+        );
+        ColorStateList inactiveColorStateList = ColorStateList.valueOf(mutedColor);
+
+        if (position < 2) {
+            // Left tab active
+            binding.tabLayoutLeft.setTabTextColors(mutedColor, tealColor);
+            binding.tabLayoutLeft.setTabIconTint(activeColorStateList);
+            binding.tabLayoutLeft.setSelectedTabIndicatorHeight(indicatorHeightPx);
+            binding.tabLayoutLeft.setSelectedTabIndicatorColor(tealColor);
+
+            TabLayout.Tab tabLeft = binding.tabLayoutLeft.getTabAt(position);
+            if (tabLeft != null && !tabLeft.isSelected()) {
+                tabLeft.select();
+            }
+
+            // Right tab inactive
+            binding.tabLayoutRight.setTabTextColors(mutedColor, mutedColor);
+            binding.tabLayoutRight.setTabIconTint(inactiveColorStateList);
+            binding.tabLayoutRight.setSelectedTabIndicatorHeight(0);
+            binding.tabLayoutRight.setSelectedTabIndicatorColor(Color.TRANSPARENT);
+        } else {
+            // Right tab active
+            int rightIndex = position - 2;
+            binding.tabLayoutRight.setTabTextColors(mutedColor, tealColor);
+            binding.tabLayoutRight.setTabIconTint(activeColorStateList);
+            binding.tabLayoutRight.setSelectedTabIndicatorHeight(indicatorHeightPx);
+            binding.tabLayoutRight.setSelectedTabIndicatorColor(tealColor);
+
+            TabLayout.Tab tabRight = binding.tabLayoutRight.getTabAt(rightIndex);
+            if (tabRight != null && !tabRight.isSelected()) {
+                tabRight.select();
+            }
+
+            // Left tab inactive
+            binding.tabLayoutLeft.setTabTextColors(mutedColor, mutedColor);
+            binding.tabLayoutLeft.setTabIconTint(inactiveColorStateList);
+            binding.tabLayoutLeft.setSelectedTabIndicatorHeight(0);
+            binding.tabLayoutLeft.setSelectedTabIndicatorColor(Color.TRANSPARENT);
+        }
     }
 
     private void setupAddTripButton() {
