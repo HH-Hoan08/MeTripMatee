@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid base background -->
+    <item>
+        <color android:color="@color/bg_main" />
+    </item>
+
+    <!-- Top-left soft glowing green light bubble (Dominant) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="380dp"
+                android:centerX="20%"
+                android:centerY="25%"
+                android:startColor="#250D9488"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Top-right soft ocean blue accent bubble -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="300dp"
+                android:centerX="80%"
+                android:centerY="15%"
+                android:startColor="#1838BDF8"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Bottom-right soft glowing green light bubble (Dominant) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="85%"
+                android:centerY="75%"
+                android:startColor="#2010B981"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Bottom-left soft white light accent sheen -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="280dp"
+                android:centerX="15%"
+                android:centerY="85%"
+                android:startColor="#12FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Center ambient mint-green glow (Dominant) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="320dp"
+                android:centerX="48%"
+                android:centerY="50%"
+                android:startColor="#1A34D399"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>
