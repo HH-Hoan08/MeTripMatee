@@ -151,12 +151,12 @@
                 android:inputType="textPersonName"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Nhãn Email -->
+        <!-- Nhãn Tên đăng nhập -->
         <TextView
             android:id="@+id/tvEmailLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Email hoặc Số điện thoại"
+            android:text="Tên đăng nhập"
             android:textColor="@color/vivu_text_dark"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -164,7 +164,7 @@
             app:layout_constraintTop_toBottomOf="@id/tilFullName"
             app:layout_constraintStart_toStartOf="parent"/>
 
-        <!-- Ô nhập Email -->
+        <!-- Ô nhập Tên đăng nhập -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilEmail"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -177,7 +177,7 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
             app:boxStrokeColor="@color/vivu_border_gray"
-            app:startIconDrawable="@android:drawable/ic_dialog_email"
+            app:startIconDrawable="@drawable/ic_user"
             app:startIconTint="@color/vivu_text_gray"
             app:layout_constraintTop_toBottomOf="@id/tvEmailLabel">
 
@@ -186,9 +186,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingVertical="16dp"
-                android:hint="name@email.com hoặc 09..."
+                android:hint="vd: phu123 (3-30 ký tự)"
                 android:textSize="15sp"
-                android:inputType="textEmailAddress"/>
+                android:inputType="text"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Nhãn Mật khẩu -->
