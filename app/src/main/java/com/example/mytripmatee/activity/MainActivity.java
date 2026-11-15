@@ -23,6 +23,7 @@ import com.example.mytripmatee.fragment.ExpenseFragment;
 import com.example.mytripmatee.fragment.ExploreFragment;
 import com.example.mytripmatee.fragment.ItineraryFragment;
 import com.example.mytripmatee.fragment.MapFragment;
+import com.example.mytripmatee.util.SessionManager;
 import com.google.android.material.tabs.TabLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +34,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        // kiểm tra session
+        SessionManager sessionManager = new SessionManager(this);
+        if (!sessionManager.isLoggedIn()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+        int currentUserId = sessionManager.getUserId();
+        String currentUserName = sessionManager.getFullName();
         android.content.SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, MODE_PRIVATE);
         if (prefs.contains(SettingsActivity.KEY_DARK_MODE)) {
             boolean isDark = prefs.getBoolean(SettingsActivity.KEY_DARK_MODE, false);

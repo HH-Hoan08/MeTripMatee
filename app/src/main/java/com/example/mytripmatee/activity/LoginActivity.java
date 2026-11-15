@@ -2,13 +2,16 @@ package com.example.mytripmatee.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.database.DBHelper;
+import com.example.mytripmatee.database.NguoiDungDAO;
+import com.example.mytripmatee.model.NguoiDung;
+import com.example.mytripmatee.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -17,16 +20,23 @@ public class LoginActivity extends AppCompatActivity {
     private MaterialButton btnLogin, btnNavRegister;
     private CheckBox cbRemember;
 
+    private SessionManager sessionManager;
+    private NguoiDungDAO nguoiDungDAO;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        android.content.SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, MODE_PRIVATE);
-        if (prefs.contains(SettingsActivity.KEY_DARK_MODE)) {
-            boolean isDark = prefs.getBoolean(SettingsActivity.KEY_DARK_MODE, false);
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                    isDark ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-            );
+        // Đảm bảo SQLite đã được khởi tạo
+        DBHelper.getInstance(this).getWritableDatabase();
+
+        sessionManager = new SessionManager(this);
+        nguoiDungDAO = new NguoiDungDAO(this);
+
+        // kiểm tra Tự động đăng nhập (Auto-login)
+        if (sessionManager.isLoggedIn() && sessionManager.isRememberMe()) {
+            navigateToMain();
+            return;
         }
 
         setContentView(R.layout.activity_login);
@@ -37,21 +47,13 @@ public class LoginActivity extends AppCompatActivity {
         btnNavRegister = findViewById(R.id.btnNavRegister);
         cbRemember = findViewById(R.id.cbRemember);
 
-        btnLogin.setOnClickListener(v -> {
-            String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-            String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+        // điền sẵn username nếu từng chọn ghi nhớ trước đây
+        if (sessionManager.isRememberMe()) {
+            etEmail.setText(sessionManager.getUsername());
+            cbRemember.setChecked(true);
+        }
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(LoginActivity.this, "Vui lòng nhập email và mật khẩu", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            boolean isRemember = cbRemember.isChecked();
-            Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-        });
+        btnLogin.setOnClickListener(v -> handleLogin());
 
         if (btnNavRegister != null) {
             btnNavRegister.setOnClickListener(v -> {
@@ -59,5 +61,35 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
+    }
+
+    private void handleLogin() {
+        String username = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+        String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+
+        if (username.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập tên đăng nhập và mật khẩu", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Gọi DAO để xác thực
+        NguoiDung user = nguoiDungDAO.dangNhap(username, password);
+
+        if (user != null) {
+            boolean isRemember = cbRemember.isChecked();
+            // Lưu phiên đăng nhập
+            sessionManager.saveUserSession(user.getMaNguoiDung(), user.getTenDangNhap(), user.getHoTen(), isRemember);
+
+            Toast.makeText(this, "Chào mừng " + (user.getHoTen() != null ? user.getHoTen() : user.getTenDangNhap()) + "!", Toast.LENGTH_SHORT).show();
+            navigateToMain();
+        } else {
+            Toast.makeText(this, "Tên đăng nhập hoặc mật khẩu không chính xác!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void navigateToMain() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

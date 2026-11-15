@@ -267,6 +267,11 @@ public class SettingsActivity extends AppCompatActivity {
                     .setTitle("Đăng xuất")
                     .setMessage("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")
                     .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                        // 1. Xóa phiên đăng nhập
+                        com.example.mytripmatee.util.SessionManager sessionManager = new com.example.mytripmatee.util.SessionManager(SettingsActivity.this);
+                        sessionManager.logout();
+
+                        // 2. Chuyển về màn hình đăng nhập và xóa sạch stack activity
                         Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
