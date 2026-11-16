@@ -41,8 +41,6 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-        int currentUserId = quanLyPhien.getMaNguoiDung();
-        String currentUserName = quanLyPhien.getHoTen();
         android.content.SharedPreferences prefs = getSharedPreferences(CaiDatActivity.PREFS_NAME, MODE_PRIVATE);
         if (prefs.contains(CaiDatActivity.KEY_DARK_MODE)) {
             boolean isDark = prefs.getBoolean(CaiDatActivity.KEY_DARK_MODE, false);
