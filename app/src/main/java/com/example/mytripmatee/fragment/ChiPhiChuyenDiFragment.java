@@ -13,27 +13,27 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.mytripmatee.adapter.ExpenseAdapter;
-import com.example.mytripmatee.databinding.DialogExpenseBinding;
-import com.example.mytripmatee.databinding.FragmentTripExpenseBinding;
-import com.example.mytripmatee.model.ExpenseItem;
+import com.example.mytripmatee.adapter.AdapterChiPhi;
+import com.example.mytripmatee.databinding.DialogChiPhiBinding;
+import com.example.mytripmatee.databinding.FragmentChiPhiChuyenDiBinding;
+import com.example.mytripmatee.model.ItemChiPhi;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class TripExpenseFragment extends Fragment {
+public class ChiPhiChuyenDiFragment extends Fragment {
 
-    private FragmentTripExpenseBinding binding;
-    private ExpenseAdapter expenseAdapter;
-    private final List<ExpenseItem> tripExpenses = new ArrayList<>();
+    private FragmentChiPhiChuyenDiBinding binding;
+    private AdapterChiPhi adapterChiPhi;
+    private final List<ItemChiPhi> chiPhiChuyenDi = new ArrayList<>();
     private final long tripBudget = 5000000;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentTripExpenseBinding.inflate(inflater, container, false);
+        binding = FragmentChiPhiChuyenDiBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -47,43 +47,43 @@ public class TripExpenseFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        expenseAdapter = new ExpenseAdapter(item ->
-                Toast.makeText(requireContext(), "Khoản chi: " + item.getTitle() + " - " + item.getFormattedAmount(), Toast.LENGTH_SHORT).show()
+        adapterChiPhi = new AdapterChiPhi(item ->
+                Toast.makeText(requireContext(), "Khoản chi: " + item.getTieuDe() + " - " + item.getSoTienDinhDang(), Toast.LENGTH_SHORT).show()
         );
 
         binding.rvTripExpenses.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvTripExpenses.setAdapter(expenseAdapter);
+        binding.rvTripExpenses.setAdapter(adapterChiPhi);
     }
 
     private void loadSampleTripExpenses() {
-        tripExpenses.clear();
-        tripExpenses.add(new ExpenseItem(
+        chiPhiChuyenDi.clear();
+        chiPhiChuyenDi.add(new ItemChiPhi(
                 "1",
                 "Vé máy bay Vietjet VJ362",
                 "Di chuyển • Tân Sơn Nhất ➔ Liên Khương",
                 1250000,
-                ExpenseItem.CategoryType.MOVE,
+                ItemChiPhi.LoaiDanhMuc.DI_CHUYEN,
                 "Tôi",
                 "Đà Lạt – Sương Mù"
         ));
-        tripExpenses.add(new ExpenseItem(
+        chiPhiChuyenDi.add(new ItemChiPhi(
                 "2",
                 "Thung Lũng Mây Homestay",
                 "Lưu trú • 2 đêm (View đồi)",
                 1800000,
-                ExpenseItem.CategoryType.STAY,
+                ItemChiPhi.LoaiDanhMuc.LUU_TRU,
                 "Hoàn",
                 "Đà Lạt – Sương Mù"
         ));
 
-        expenseAdapter.setExpenses(tripExpenses);
+        adapterChiPhi.setDanhSachChiPhi(chiPhiChuyenDi);
         recalculateTripTotals();
     }
 
     private void recalculateTripTotals() {
         long totalSpent = 0;
-        for (ExpenseItem item : tripExpenses) {
-            totalSpent += item.getAmount();
+        for (ItemChiPhi item : chiPhiChuyenDi) {
+            totalSpent += item.getSoTien();
         }
 
         long remaining = tripBudget - totalSpent;
@@ -101,7 +101,7 @@ public class TripExpenseFragment extends Fragment {
 
     private void showAddExpenseDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        DialogExpenseBinding dialogBinding = DialogExpenseBinding.inflate(getLayoutInflater());
+        DialogChiPhiBinding dialogBinding = DialogChiPhiBinding.inflate(getLayoutInflater());
         dialog.setContentView(dialogBinding.getRoot());
 
         String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
@@ -137,20 +137,20 @@ public class TripExpenseFragment extends Fragment {
             }
 
             int catPos = dialogBinding.spCategory.getSelectedItemPosition();
-            ExpenseItem.CategoryType categoryType;
+            ItemChiPhi.LoaiDanhMuc loaiDanhMuc;
             switch (catPos) {
                 case 1:
-                    categoryType = ExpenseItem.CategoryType.FOOD;
+                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.AN_UONG;
                     break;
                 case 2:
-                    categoryType = ExpenseItem.CategoryType.STAY;
+                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.LUU_TRU;
                     break;
                 case 3:
-                    categoryType = ExpenseItem.CategoryType.OTHER;
+                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.KHAC;
                     break;
                 case 0:
                 default:
-                    categoryType = ExpenseItem.CategoryType.MOVE;
+                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.DI_CHUYEN;
                     break;
             }
 
@@ -158,18 +158,18 @@ public class TripExpenseFragment extends Fragment {
             String catName = categories[catPos];
             String subtitle = catName + " • " + selectedPayer + " thanh toán";
 
-            ExpenseItem newItem = new ExpenseItem(
+            ItemChiPhi newItem = new ItemChiPhi(
                     String.valueOf(System.currentTimeMillis()),
                     title,
                     subtitle,
                     amount,
-                    categoryType,
+                    loaiDanhMuc,
                     selectedPayer,
                     "Đà Lạt – Sương Mù"
             );
 
-            tripExpenses.add(0, newItem);
-            expenseAdapter.addExpense(newItem);
+            chiPhiChuyenDi.add(0, newItem);
+            adapterChiPhi.themChiPhi(newItem);
             recalculateTripTotals();
 
             Toast.makeText(requireContext(), "Đã thêm khoản chi phí thành công!", Toast.LENGTH_SHORT).show();

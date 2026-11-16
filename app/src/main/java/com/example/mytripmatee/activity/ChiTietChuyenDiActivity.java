@@ -15,33 +15,33 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.databinding.ActivityTripDetailBinding;
-import com.example.mytripmatee.fragment.ItineraryFragment;
-import com.example.mytripmatee.fragment.TripExpenseFragment;
-import com.example.mytripmatee.fragment.TripGalleryFragment;
-import com.example.mytripmatee.fragment.TripStatsFragment;
+import com.example.mytripmatee.databinding.ActivityChiTietChuyenDiBinding;
+import com.example.mytripmatee.fragment.ChiPhiChuyenDiFragment;
+import com.example.mytripmatee.fragment.LichTrinhFragment;
+import com.example.mytripmatee.fragment.ThongKeChuyenDiFragment;
+import com.example.mytripmatee.fragment.ThuVienAnhFragment;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-public class TripDetailActivity extends AppCompatActivity {
+public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
     public static final String EXTRA_TRIP_TITLE = "extra_trip_title";
     public static final String EXTRA_TRIP_DATE = "extra_trip_date";
 
     public static Intent newIntent(Context context, String title, String dateTag) {
-        Intent intent = new Intent(context, TripDetailActivity.class);
+        Intent intent = new Intent(context, ChiTietChuyenDiActivity.class);
         intent.putExtra(EXTRA_TRIP_TITLE, title);
         intent.putExtra(EXTRA_TRIP_DATE, dateTag);
         return intent;
     }
 
-    private ActivityTripDetailBinding binding;
+    private ActivityChiTietChuyenDiBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.enableEdgeToEdge(getWindow());
 
-        binding = ActivityTripDetailBinding.inflate(getLayoutInflater());
+        binding = ActivityChiTietChuyenDiBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainDetail, (v, insets) -> {
@@ -107,14 +107,14 @@ public class TripDetailActivity extends AppCompatActivity {
         public Fragment createFragment(int position) {
             switch (position) {
                 case 0:
-                    return new ItineraryFragment();
+                    return new LichTrinhFragment();
                 case 1:
-                    return new TripExpenseFragment();
+                    return new ChiPhiChuyenDiFragment();
                 case 2:
-                    return new TripStatsFragment();
+                    return new ThongKeChuyenDiFragment();
                 case 3:
                 default:
-                    return new TripGalleryFragment();
+                    return new ThuVienAnhFragment();
             }
         }
 

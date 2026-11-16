@@ -18,18 +18,18 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.databinding.ActivityItineraryEditBinding;
+import com.example.mytripmatee.databinding.ActivitySuaLichTrinhBinding;
 
 import java.util.Calendar;
 import java.util.Locale;
 
-public class EditItineraryActivity extends AppCompatActivity {
+public class SuaLichTrinhActivity extends AppCompatActivity {
 
     public static Intent newIntent(Context context) {
-        return new Intent(context, EditItineraryActivity.class);
+        return new Intent(context, SuaLichTrinhActivity.class);
     }
 
-    private ActivityItineraryEditBinding binding;
+    private ActivitySuaLichTrinhBinding binding;
     private String selectedType = "DI CHUYỂN";
     private String selectedDate = "";
     private String selectedStartTime = "09:00";
@@ -40,7 +40,7 @@ public class EditItineraryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         WindowCompat.enableEdgeToEdge(getWindow());
 
-        binding = ActivityItineraryEditBinding.inflate(getLayoutInflater());
+        binding = ActivitySuaLichTrinhBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {

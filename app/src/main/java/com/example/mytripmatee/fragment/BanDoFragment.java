@@ -9,16 +9,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.mytripmatee.databinding.FragmentTripStatsBinding;
+import com.example.mytripmatee.databinding.FragmentBanDoBinding;
 
-public class TripStatsFragment extends Fragment {
+public class BanDoFragment extends Fragment {
 
-    private FragmentTripStatsBinding binding;
+    private FragmentBanDoBinding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentTripStatsBinding.inflate(inflater, container, false);
+        binding = FragmentBanDoBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 

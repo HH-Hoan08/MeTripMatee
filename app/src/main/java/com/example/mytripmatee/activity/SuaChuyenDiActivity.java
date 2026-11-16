@@ -18,7 +18,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 
-public class EditTripActivity extends AppCompatActivity {
+public class SuaChuyenDiActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private MaterialButton btnSaveTop, btnSaveBottom, btnDelete;
     private TextInputEditText etTripName, etDestination;
@@ -32,7 +32,7 @@ public class EditTripActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_trip_edit);
+        setContentView(R.layout.activity_sua_chuyen_di);
         initViews();
         setupListeners();
 
@@ -181,14 +181,14 @@ public class EditTripActivity extends AppCompatActivity {
 
         if (btnDelete != null) {
             btnDelete.setOnClickListener(v -> {
-                Toast.makeText(EditTripActivity.this, "Đã xóa chuyến đi", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SuaChuyenDiActivity.this, "Đã xóa chuyến đi", Toast.LENGTH_SHORT).show();
                 finish();
             });
         }
 
         if (cvTime != null) {
             cvTime.setOnClickListener(v -> {
-                Intent intent = new Intent(EditTripActivity.this, CustomDatePickerActivity.class);
+                Intent intent = new Intent(SuaChuyenDiActivity.this, ChonNgayActivity.class);
                 startActivity(intent);
             });
         }

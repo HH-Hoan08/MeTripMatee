@@ -12,24 +12,24 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.activity.SettingsActivity;
-import com.example.mytripmatee.activity.TripDetailActivity;
-import com.example.mytripmatee.adapter.TripAdapter;
-import com.example.mytripmatee.databinding.FragmentExploreBinding;
-import com.example.mytripmatee.model.TripItem;
+import com.example.mytripmatee.activity.CaiDatActivity;
+import com.example.mytripmatee.activity.ChiTietChuyenDiActivity;
+import com.example.mytripmatee.adapter.AdapterChuyenDi;
+import com.example.mytripmatee.databinding.FragmentKhamPhaBinding;
+import com.example.mytripmatee.model.ItemChuyenDi;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExploreFragment extends Fragment {
+public class KhamPhaFragment extends Fragment {
 
-    private FragmentExploreBinding binding;
-    private TripAdapter tripAdapter;
+    private FragmentKhamPhaBinding binding;
+    private AdapterChuyenDi adapterChuyenDi;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentExploreBinding.inflate(inflater, container, false);
+        binding = FragmentKhamPhaBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -43,27 +43,27 @@ public class ExploreFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        tripAdapter = new TripAdapter(tripItem -> {
+        adapterChuyenDi = new AdapterChuyenDi(itemChuyenDi -> {
             if (getContext() != null) {
-                Intent intent = TripDetailActivity.newIntent(
+                Intent intent = ChiTietChuyenDiActivity.newIntent(
                         getContext(),
-                        tripItem.getTitle(),
-                        tripItem.getDateTag() != null ? tripItem.getDateTag() : "Chi tiết chuyến đi"
+                        itemChuyenDi.getTieuDe(),
+                        itemChuyenDi.getTheNgay() != null ? itemChuyenDi.getTheNgay() : "Chi tiết chuyến đi"
                 );
                 startActivity(intent);
             }
         });
 
         binding.rvTrips.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvTrips.setAdapter(tripAdapter);
+        binding.rvTrips.setAdapter(adapterChuyenDi);
 
-        tripAdapter.setTrips(getSampleTrips());
+        adapterChuyenDi.setDanhSachChuyenDi(getSampleTrips());
     }
 
     private void setupFeaturedCard() {
         binding.cardFeatured.setOnClickListener(v -> {
             if (getContext() != null) {
-                Intent intent = TripDetailActivity.newIntent(
+                Intent intent = ChiTietChuyenDiActivity.newIntent(
                         getContext(),
                         "Đà Lạt – Sương Mù & Thảnh Thơi",
                         "12/11 - 15/11/2026 • 3 ngày 2 đêm"
@@ -76,42 +76,42 @@ public class ExploreFragment extends Fragment {
     private void setupSettingsButton() {
         binding.btnSettings.setOnClickListener(v -> {
             if (getContext() != null) {
-                Intent intent = new Intent(getContext(), SettingsActivity.class);
+                Intent intent = new Intent(getContext(), CaiDatActivity.class);
                 startActivity(intent);
             }
         });
     }
 
-    private List<TripItem> getSampleTrips() {
-        List<TripItem> tripItems = new ArrayList<>();
-        tripItems.add(new TripItem(
+    private List<ItemChuyenDi> getSampleTrips() {
+        List<ItemChuyenDi> danhSach = new ArrayList<>();
+        danhSach.add(new ItemChuyenDi(
                 "1",
                 "Phú Quốc – Nghỉ Dưỡng Biển Ngọc",
                 "Bản nháp",
-                TripItem.StatusType.DRAFT,
+                ItemChuyenDi.LoaiTrangThai.NHAP,
                 "Tết 2027",
                 "4 ngày 3 đêm • 12 mục đã lập",
                 R.drawable.img_phuquoc
         ));
-        tripItems.add(new TripItem(
+        danhSach.add(new ItemChuyenDi(
                 "2",
                 "Hà Giang – Chinh Phục Mã Pí Lèng",
                 "Đã xong",
-                TripItem.StatusType.COMPLETED,
+                ItemChuyenDi.LoaiTrangThai.DA_HOAN_THANH,
                 "T10/2026",
                 "3 ngày 2 đêm • Hoàn thành 100%",
                 R.drawable.img_hagiang
         ));
-        tripItems.add(new TripItem(
+        danhSach.add(new ItemChuyenDi(
                 "3",
                 "Đà Lạt – Sương Mù & Thảnh Thơi",
                 "Sắp tới",
-                TripItem.StatusType.UPCOMING,
+                ItemChuyenDi.LoaiTrangThai.SAP_TOI,
                 "12/11 - 15/11/2026",
                 "3 ngày 2 đêm • Đang đếm ngược",
                 R.drawable.img_dalat
         ));
-        return tripItems;
+        return danhSach;
     }
 
     @Override

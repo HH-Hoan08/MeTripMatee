@@ -14,52 +14,52 @@ import com.example.mytripmatee.R;
 
 import java.util.List;
 
-public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayViewHolder> {
+public class AdapterLich extends RecyclerView.Adapter<AdapterLich.ViewHolderNgay> {
 
-    public static class DayItem {
-        public final int dayNumber;
-        public final boolean isCurrentMonth;
+    public static class ItemNgayLich {
+        public final int soNgay;
+        public final boolean laThangHienTai;
 
-        public DayItem(int dayNumber, boolean isCurrentMonth) {
-            this.dayNumber = dayNumber;
-            this.isCurrentMonth = isCurrentMonth;
+        public ItemNgayLich(int soNgay, boolean laThangHienTai) {
+            this.soNgay = soNgay;
+            this.laThangHienTai = laThangHienTai;
         }
     }
 
-    public interface OnDayClickListener {
-        void onDayClick(int dayNumber);
+    public interface SuKienChonNgayListener {
+        void onChonNgay(int soNgay);
     }
 
-    private final List<DayItem> days;
-    private final OnDayClickListener listener;
-    private Integer startDate = 12;
-    private Integer endDate = 15;
+    private final List<ItemNgayLich> danhSachNgay;
+    private final SuKienChonNgayListener listener;
+    private Integer ngayBatDau = 12;
+    private Integer ngayKetThuc = 15;
 
-    public CalendarAdapter(List<DayItem> days, OnDayClickListener listener) {
-        this.days = days;
+    public AdapterLich(List<ItemNgayLich> danhSachNgay, SuKienChonNgayListener listener) {
+        this.danhSachNgay = danhSachNgay;
         this.listener = listener;
     }
 
-    public void setSelectedRange(Integer startDate, Integer endDate) {
-        this.startDate = startDate;
-        this.endDate = endDate;
+    public void setKhoangNgayChon(Integer ngayBatDau, Integer ngayKetThuc) {
+        this.ngayBatDau = ngayBatDau;
+        this.ngayKetThuc = ngayKetThuc;
         notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public DayViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolderNgay onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_calendar_day, parent, false);
-        return new DayViewHolder(view);
+                .inflate(R.layout.item_ngay_lich, parent, false);
+        return new ViewHolderNgay(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull DayViewHolder holder, int position) {
-        DayItem item = days.get(position);
-        holder.tvDayNumber.setText(String.valueOf(item.dayNumber));
+    public void onBindViewHolder(@NonNull ViewHolderNgay holder, int position) {
+        ItemNgayLich item = danhSachNgay.get(position);
+        holder.tvDayNumber.setText(String.valueOf(item.soNgay));
 
-        if (!item.isCurrentMonth) {
+        if (!item.laThangHienTai) {
             holder.tvDayNumber.setTextColor(Color.parseColor("#CCCCCC"));
             holder.tvDayNumber.setTypeface(null, Typeface.NORMAL);
             holder.viewCircleHighlight.setVisibility(View.GONE);
@@ -68,14 +68,14 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
             return;
         }
 
-        boolean isStart = startDate != null && item.dayNumber == startDate.intValue();
-        boolean isEnd = endDate != null && item.dayNumber == endDate.intValue();
-        boolean inRange = startDate != null && endDate != null
-                && item.dayNumber > startDate && item.dayNumber < endDate;
+        boolean isStart = ngayBatDau != null && item.soNgay == ngayBatDau.intValue();
+        boolean isEnd = ngayKetThuc != null && item.soNgay == ngayKetThuc.intValue();
+        boolean inRange = ngayBatDau != null && ngayKetThuc != null
+                && item.soNgay > ngayBatDau && item.soNgay < ngayKetThuc;
 
         if (isStart || isEnd) {
             holder.viewCircleHighlight.setVisibility(View.VISIBLE);
-            holder.viewRangeHighlight.setVisibility(endDate != null ? View.VISIBLE : View.GONE);
+            holder.viewRangeHighlight.setVisibility(ngayKetThuc != null ? View.VISIBLE : View.GONE);
             holder.tvDayNumber.setTextColor(Color.WHITE);
             holder.tvDayNumber.setTypeface(null, Typeface.BOLD);
         } else if (inRange) {
@@ -92,22 +92,22 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onDayClick(item.dayNumber);
+                listener.onChonNgay(item.soNgay);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return days.size();
+        return danhSachNgay.size();
     }
 
-    static class DayViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolderNgay extends RecyclerView.ViewHolder {
         final View viewRangeHighlight;
         final View viewCircleHighlight;
         final TextView tvDayNumber;
 
-        DayViewHolder(@NonNull View itemView) {
+        ViewHolderNgay(@NonNull View itemView) {
             super(itemView);
             viewRangeHighlight = itemView.findViewById(R.id.viewRangeHighlight);
             viewCircleHighlight = itemView.findViewById(R.id.viewCircleHighlight);

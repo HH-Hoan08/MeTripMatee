@@ -9,16 +9,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.mytripmatee.databinding.FragmentMapBinding;
+import com.example.mytripmatee.databinding.FragmentThongKeChuyenDiBinding;
 
-public class MapFragment extends Fragment {
+public class ThongKeChuyenDiFragment extends Fragment {
 
-    private FragmentMapBinding binding;
+    private FragmentThongKeChuyenDiBinding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentMapBinding.inflate(inflater, container, false);
+        binding = FragmentThongKeChuyenDiBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 

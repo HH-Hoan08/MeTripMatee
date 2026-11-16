@@ -9,7 +9,7 @@
     tools:context=".MainActivity">
 
     <!-- Animated Soft Ambient Light Bubble Background -->
-    <com.example.mytripmatee.ui.BubbleBackgroundView
+    <com.example.mytripmatee.ui.NenBongBongView
         android:id="@+id/bubbleBackground"
         android:layout_width="0dp"
         android:layout_height="0dp"
