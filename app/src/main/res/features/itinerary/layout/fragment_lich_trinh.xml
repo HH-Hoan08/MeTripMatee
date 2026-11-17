@@ -44,6 +44,7 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvWeatherLocation"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Đà Lạt • 19°C Trời se lạnh"
@@ -110,6 +111,7 @@
 
             <!-- Date Selector Pills (Dynamically rendered based on trip dates) -->
             <HorizontalScrollView
+                android:id="@+id/layoutDayPillsScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -130,7 +132,22 @@
                 android:layout_marginTop="16dp"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="3"
-                tools:listitem="@layout/item_itinerary" />
+                tools:listitem="@layout/item_lich_trinh" />
+
+            <!-- Centered Empty State View -->
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="40dp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:text="Chưa có hoạt động nào cho ngày này.\nBấm '+ Thêm hoạt động' để thêm mới!"
+                android:textColor="@color/text_muted"
+                android:textSize="14sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

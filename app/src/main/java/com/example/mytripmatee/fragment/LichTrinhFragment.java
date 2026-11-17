@@ -25,6 +25,7 @@ import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.databinding.FragmentLichTrinhBinding;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.LichTrinh;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
 
 import java.text.SimpleDateFormat;
@@ -91,7 +92,65 @@ public class LichTrinhFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (getArguments() != null && getArguments().containsKey("maChuyenDi")) {
+            maChuyenDi = getArguments().getInt("maChuyenDi", 1);
+            loadDayData(selectedDay);
+        } else {
+            kiemTraChuyenDiHomNay();
+        }
+    }
+
+    /**
+     * Tự động kiểm tra theo thời gian thực xem hôm nay có chuyến đi nào không.
+     * Nếu có: tự động chuyển sang chuyến đi và ngày hiện tại.
+     * Nếu không: hiển thị thông báo thời gian thực cho người dùng.
+     */
+    public void kiemTraChuyenDiHomNay() {
+        if (getContext() == null) return;
+
+        QuanLyPhien quanLyPhien = new QuanLyPhien(requireContext());
+        int maNguoiDung = quanLyPhien.getMaNguoiDung();
+        if (maNguoiDung <= 0) maNguoiDung = 1;
+
+        SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat sdfDmy = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        Date now = new Date();
+        String todayDbStr = sdfYmd.format(now);
+        String todayDisplayStr = sdfDmy.format(now);
+
+        ChuyenDi chuyenDiHomNay = chuyenDiDAO.layChuyenDiHomNay(maNguoiDung, todayDbStr);
+
+        if (chuyenDiHomNay != null) {
+            maChuyenDi = chuyenDiHomNay.getMaChuyenDi();
+            int dayNumber = tinhNgayThuMay(chuyenDiHomNay.getNgayDi(), todayDbStr);
+            selectedDay = Math.max(1, dayNumber);
+
+            Toast.makeText(requireContext(),
+                    "Hôm nay (" + todayDisplayStr + ") đang diễn ra: " + chuyenDiHomNay.getTenChuyenDi(),
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            maChuyenDi = -1; // Không có chuyến đi hôm nay
+            Toast.makeText(requireContext(),
+                    "Hôm nay (" + todayDisplayStr + ") bạn không có chuyến đi nào!",
+                    Toast.LENGTH_LONG).show();
+        }
+
         loadDayData(selectedDay);
+    }
+
+    private int tinhNgayThuMay(String ngayDiStr, String ngayHomNayStr) {
+        if (ngayDiStr == null || ngayHomNayStr == null) return 1;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date d1 = sdf.parse(ngayDiStr);
+            Date d2 = sdf.parse(ngayHomNayStr);
+            if (d1 != null && d2 != null) {
+                long diff = d2.getTime() - d1.getTime();
+                long days = diff / (1000 * 60 * 60 * 24);
+                return (int) days + 1;
+            }
+        } catch (Exception ignored) {}
+        return 1;
     }
 
     private void setupRecyclerView() {
@@ -157,15 +216,34 @@ public class LichTrinhFragment extends Fragment {
     }
 
     private void loadDayData(int dayNumber) {
-        List<LichTrinh> allItems = lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi);
-        ChuyenDi chuyenDi = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+        List<LichTrinh> allItems = (maChuyenDi > 0) ? lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi) : new ArrayList<>();
+        ChuyenDi chuyenDi = (maChuyenDi > 0) ? chuyenDiDAO.layChuyenDiTheoId(maChuyenDi) : null;
+
+        if (chuyenDi != null && chuyenDi.getDiemDen() != null && !chuyenDi.getDiemDen().isEmpty() && binding != null && binding.tvWeatherLocation != null) {
+            binding.tvWeatherLocation.setText(chuyenDi.getDiemDen() + " • 19°C Trời se lạnh");
+        }
 
         List<String> tripDates = calculateTripDates(chuyenDi, allItems);
 
         renderDayPills(tripDates, dayNumber);
 
+        if (chuyenDi == null || maChuyenDi <= 0) {
+            adapter.setDanhSachLichTrinh(new ArrayList<>());
+            if (binding != null && binding.tvEmptyState != null) {
+                SimpleDateFormat sdfDmy = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                String todayDisplayStr = sdfDmy.format(new Date());
+                binding.tvEmptyState.setVisibility(View.VISIBLE);
+                binding.tvEmptyState.setText("Hôm nay (" + todayDisplayStr + ") bạn không có chuyến đi nào đang diễn ra!\nHãy bấm '+ Thêm hoạt động' hoặc tạo chuyến đi mới.");
+            }
+            return;
+        }
+
         if (allItems == null || allItems.isEmpty()) {
             adapter.setDanhSachLichTrinh(new ArrayList<>());
+            if (binding != null && binding.tvEmptyState != null) {
+                binding.tvEmptyState.setVisibility(View.VISIBLE);
+                binding.tvEmptyState.setText("Chưa có hoạt động nào cho chuyến đi này.\nBấm '+ Thêm hoạt động' để bổ sung!");
+            }
             return;
         }
 
@@ -182,6 +260,15 @@ public class LichTrinhFragment extends Fragment {
         }
 
         adapter.setDanhSachLichTrinh(filteredItems);
+
+        if (binding != null && binding.tvEmptyState != null) {
+            if (filteredItems.isEmpty()) {
+                binding.tvEmptyState.setVisibility(View.VISIBLE);
+                binding.tvEmptyState.setText("Chưa có hoạt động nào cho Ngày " + dayNumber + ".\nBấm '+ Thêm hoạt động' để bổ sung!");
+            } else {
+                binding.tvEmptyState.setVisibility(View.GONE);
+            }
+        }
     }
 
     private List<String> calculateTripDates(ChuyenDi cd, List<LichTrinh> activities) {
@@ -210,15 +297,25 @@ public class LichTrinhFragment extends Fragment {
             }
         }
 
-        if (dates.isEmpty()) {
-            dates.add("2026-12-01");
-            dates.add("2026-12-02");
-            dates.add("2026-12-03");
-        }
         return dates;
     }
 
     private void renderDayPills(List<String> dates, int currentSelectedDay) {
+        if (binding == null) return;
+
+        if (dates == null || dates.isEmpty()) {
+            if (binding.layoutDayPillsContainer != null) {
+                binding.layoutDayPillsContainer.removeAllViews();
+            }
+            if (binding.layoutDayPillsScroll != null) {
+                binding.layoutDayPillsScroll.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        if (binding.layoutDayPillsScroll != null) {
+            binding.layoutDayPillsScroll.setVisibility(View.VISIBLE);
+        }
         if (binding.layoutDayPillsContainer == null) return;
         binding.layoutDayPillsContainer.removeAllViews();
 
