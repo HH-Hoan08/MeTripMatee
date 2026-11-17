@@ -16,7 +16,7 @@ import com.example.mytripmatee.R;
 import com.example.mytripmatee.activity.SuaLichTrinhActivity;
 import com.example.mytripmatee.adapter.AdapterLichTrinh;
 import com.example.mytripmatee.databinding.FragmentLichTrinhBinding;
-import com.example.mytripmatee.model.ItemLichTrinh;
+import com.example.mytripmatee.model.LichTrinh;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,18 +60,18 @@ public class LichTrinhFragment extends Fragment {
     private void setupRecyclerView() {
         adapter = new AdapterLichTrinh(new AdapterLichTrinh.SuKienChonLichTrinhListener() {
             @Override
-            public void onChonMuc(ItemLichTrinh item) {
+            public void onChonMuc(LichTrinh item) {
                 Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
                 startActivity(intent);
             }
 
             @Override
-            public void onMoBanDo(ItemLichTrinh item) {
+            public void onMoBanDo(LichTrinh item) {
                 Toast.makeText(requireContext(), "Đang mở Google Maps cho " + item.getTieuDe(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onThayDoiCheck(ItemLichTrinh item, boolean isChecked) {
+            public void onThayDoiCheck(LichTrinh item, boolean isChecked) {
                 String state = isChecked ? "Đã xong: " : "Bỏ chọn: ";
                 Toast.makeText(requireContext(), state + item.getTieuDe(), Toast.LENGTH_SHORT).show();
             }
@@ -93,11 +93,11 @@ public class LichTrinhFragment extends Fragment {
     }
 
     private void loadDayData(int dayNumber) {
-        List<ItemLichTrinh> items = new ArrayList<>();
+        List<LichTrinh> items = new ArrayList<>();
         if (dayNumber == 1) {
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d1_1",
-                    ItemLichTrinh.LoaiHoatDong.DI_CHUYEN,
+                    LichTrinh.LoaiHoatDong.DI_CHUYEN,
                     "DI CHUYỂN",
                     "06:00 - 08:30",
                     "Bay Tân Sơn Nhất ➔ Liên Khương",
@@ -108,9 +108,9 @@ public class LichTrinhFragment extends Fragment {
                     false,
                     null
             ));
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d1_2",
-                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
+                    LichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "09:15 - 10:15",
                     "Bánh căn Nhà Chung Đà Lạt",
@@ -121,9 +121,9 @@ public class LichTrinhFragment extends Fragment {
                     true,
                     "Cảnh báo: Khoảng cách từ Nhà Chung tới điểm kế tiếp 12km (~35p đèo)."
             ));
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d1_3",
-                    ItemLichTrinh.LoaiHoatDong.LUU_TRU,
+                    LichTrinh.LoaiHoatDong.LUU_TRU,
                     "LƯU TRÚ",
                     "11:00 - 12:00",
                     "Check-in Thung Lũng Mây Homestay",
@@ -135,9 +135,9 @@ public class LichTrinhFragment extends Fragment {
                     null
             ));
         } else if (dayNumber == 2) {
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d2_1",
-                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
+                    LichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "06:30 - 08:30",
                     "Cà phê Túi Mơ To - Săn Mây",
@@ -148,9 +148,9 @@ public class LichTrinhFragment extends Fragment {
                     true,
                     null
             ));
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d2_2",
-                    ItemLichTrinh.LoaiHoatDong.THAM_QUAN,
+                    LichTrinh.LoaiHoatDong.THAM_QUAN,
                     "CẢNH ĐẸP",
                     "09:00 - 11:30",
                     "Check-in Quảng trường Lâm Viên & Hồ Xuân Hương",
@@ -162,9 +162,9 @@ public class LichTrinhFragment extends Fragment {
                     null
             ));
         } else {
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d3_1",
-                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
+                    LichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "11:30 - 13:00",
                     "Lẩu gà lá é Tao Ngộ",
@@ -175,9 +175,9 @@ public class LichTrinhFragment extends Fragment {
                     true,
                     null
             ));
-            items.add(new ItemLichTrinh(
+            items.add(new LichTrinh(
                     "d3_2",
-                    ItemLichTrinh.LoaiHoatDong.DI_CHUYEN,
+                    LichTrinh.LoaiHoatDong.DI_CHUYEN,
                     "DI CHUYỂN",
                     "16:30 - 18:00",
                     "Bay Liên Khương ➔ Tân Sơn Nhất",

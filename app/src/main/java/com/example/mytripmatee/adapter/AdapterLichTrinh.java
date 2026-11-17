@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.databinding.ItemLichTrinhBinding;
-import com.example.mytripmatee.model.ItemLichTrinh;
+import com.example.mytripmatee.model.LichTrinh;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +19,19 @@ import java.util.List;
 public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.ViewHolderLichTrinh> {
 
     public interface SuKienChonLichTrinhListener {
-        void onChonMuc(ItemLichTrinh item);
-        void onMoBanDo(ItemLichTrinh item);
-        void onThayDoiCheck(ItemLichTrinh item, boolean isChecked);
+        void onChonMuc(LichTrinh item);
+        void onMoBanDo(LichTrinh item);
+        void onThayDoiCheck(LichTrinh item, boolean isChecked);
     }
 
-    private final List<ItemLichTrinh> danhSachLichTrinh = new ArrayList<>();
+    private final List<LichTrinh> danhSachLichTrinh = new ArrayList<>();
     private final SuKienChonLichTrinhListener listener;
 
     public AdapterLichTrinh(SuKienChonLichTrinhListener listener) {
         this.listener = listener;
     }
 
-    public void setDanhSachLichTrinh(List<ItemLichTrinh> danhSachMoi) {
+    public void setDanhSachLichTrinh(List<LichTrinh> danhSachMoi) {
         this.danhSachLichTrinh.clear();
         if (danhSachMoi != null) {
             this.danhSachLichTrinh.addAll(danhSachMoi);
@@ -68,7 +68,7 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
             this.binding = binding;
         }
 
-        public void bind(ItemLichTrinh item, int position, int totalSize, SuKienChonLichTrinhListener listener) {
+        public void bind(LichTrinh item, int position, int totalSize, SuKienChonLichTrinhListener listener) {
             if (item == null) return;
 
             Context context = binding.getRoot().getContext();
