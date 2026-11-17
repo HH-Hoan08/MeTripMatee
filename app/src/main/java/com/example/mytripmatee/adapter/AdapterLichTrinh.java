@@ -1,6 +1,7 @@
 package com.example.mytripmatee.adapter;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
         void onChonMuc(LichTrinh item);
         void onMoBanDo(LichTrinh item);
         void onThayDoiCheck(LichTrinh item, boolean isChecked);
+        default void onXoaMuc(LichTrinh item) {}
     }
 
     private final List<LichTrinh> danhSachLichTrinh = new ArrayList<>();
@@ -121,11 +123,15 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
                 binding.tvSubInfo.setText(item.getThongTinPhu() != null ? item.getThongTinPhu() : "");
             }
 
+            updateStrikethroughStyle(binding, item.isDaHoanThanh());
+
             binding.cbDone.setOnCheckedChangeListener(null);
             binding.cbDone.setText(item.getVanBanTrangThai() != null ? item.getVanBanTrangThai() : "");
             binding.cbDone.setChecked(item.isDaHoanThanh());
             binding.cbDone.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 item.setDaHoanThanh(isChecked);
+                binding.cbDone.setText(item.getVanBanTrangThai());
+                updateStrikethroughStyle(binding, isChecked);
                 if (listener != null) {
                     listener.onThayDoiCheck(item, isChecked);
                 }
@@ -143,6 +149,25 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
                     listener.onChonMuc(item);
                 }
             });
+
+            binding.getRoot().setOnLongClickListener(v -> {
+                if (listener != null) {
+                    listener.onXoaMuc(item);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        private static void updateStrikethroughStyle(ItemLichTrinhBinding binding, boolean isDone) {
+            if (isDone) {
+                binding.tvTitle.setPaintFlags(binding.tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                binding.tvTitle.setAlpha(0.6f);
+            } else {
+                binding.tvTitle.setPaintFlags(binding.tvTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                binding.tvTitle.setAlpha(1.0f);
+            }
         }
     }
 }
+

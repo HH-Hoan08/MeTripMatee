@@ -108,7 +108,7 @@
                     android:textStyle="bold" />
             </RelativeLayout>
 
-            <!-- Date Selector Pills -->
+            <!-- Date Selector Pills (Dynamically rendered based on trip dates) -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,90 +116,10 @@
                 android:scrollbars="none">
 
                 <LinearLayout
+                    android:id="@+id/layoutDayPillsContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <!-- Day 1 (Selected) -->
-                    <LinearLayout
-                        android:id="@+id/day1Pill"
-                        android:layout_width="90dp"
-                        android:layout_height="54dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_date_pill_selected"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="NGÀY 1"
-                            android:textColor="#CCFBF1"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12 Th11"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Day 2 (Unselected) -->
-                    <LinearLayout
-                        android:id="@+id/day2Pill"
-                        android:layout_width="90dp"
-                        android:layout_height="54dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_date_pill_unselected"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="NGÀY 2"
-                            android:textColor="#94A3B8"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="13 Th11"
-                            android:textColor="#1E293B"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Day 3 (Unselected) -->
-                    <LinearLayout
-                        android:id="@+id/day3Pill"
-                        android:layout_width="90dp"
-                        android:layout_height="54dp"
-                        android:background="@drawable/bg_date_pill_unselected"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="NGÀY 3"
-                            android:textColor="#94A3B8"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="14 Th11"
-                            android:textColor="#1E293B"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
+                    android:orientation="horizontal" />
             </HorizontalScrollView>
 
             <!-- Itinerary Dynamic RecyclerView -->

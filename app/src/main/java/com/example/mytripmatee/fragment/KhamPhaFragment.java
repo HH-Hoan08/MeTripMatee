@@ -45,8 +45,13 @@ public class KhamPhaFragment extends Fragment {
     private void setupRecyclerView() {
         adapterChuyenDi = new AdapterChuyenDi(itemChuyenDi -> {
             if (getContext() != null) {
+                int tripId = 1;
+                try {
+                    tripId = Integer.parseInt(itemChuyenDi.getMaId());
+                } catch (Exception ignored) {}
                 Intent intent = ChiTietChuyenDiActivity.newIntent(
                         getContext(),
+                        tripId,
                         itemChuyenDi.getTieuDe(),
                         itemChuyenDi.getTheNgay() != null ? itemChuyenDi.getTheNgay() : "Chi tiết chuyến đi"
                 );
@@ -65,6 +70,7 @@ public class KhamPhaFragment extends Fragment {
             if (getContext() != null) {
                 Intent intent = ChiTietChuyenDiActivity.newIntent(
                         getContext(),
+                        1,
                         "Đà Lạt – Sương Mù & Thảnh Thơi",
                         "12/11 - 15/11/2026 • 3 ngày 2 đêm"
                 );

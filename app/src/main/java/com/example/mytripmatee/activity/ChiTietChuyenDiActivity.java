@@ -24,17 +24,24 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
+    public static final String EXTRA_MA_CHUYEN_DI = "extra_ma_chuyen_di";
     public static final String EXTRA_TRIP_TITLE = "extra_trip_title";
     public static final String EXTRA_TRIP_DATE = "extra_trip_date";
 
-    public static Intent newIntent(Context context, String title, String dateTag) {
+    public static Intent newIntent(Context context, int maChuyenDi, String title, String dateTag) {
         Intent intent = new Intent(context, ChiTietChuyenDiActivity.class);
+        intent.putExtra(EXTRA_MA_CHUYEN_DI, maChuyenDi);
         intent.putExtra(EXTRA_TRIP_TITLE, title);
         intent.putExtra(EXTRA_TRIP_DATE, dateTag);
         return intent;
     }
 
+    public static Intent newIntent(Context context, String title, String dateTag) {
+        return newIntent(context, 1, title, dateTag);
+    }
+
     private ActivityChiTietChuyenDiBinding binding;
+    private int maChuyenDi = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +50,10 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
         binding = ActivityChiTietChuyenDiBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        if (getIntent() != null) {
+            maChuyenDi = getIntent().getIntExtra(EXTRA_MA_CHUYEN_DI, 1);
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainDetail, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -69,7 +80,7 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
     }
 
     private void setupViewPagerAndTabs() {
-        TripDetailPagerAdapter adapter = new TripDetailPagerAdapter(this);
+        TripDetailPagerAdapter adapter = new TripDetailPagerAdapter(this, maChuyenDi);
         binding.viewPager.setAdapter(adapter);
 
         binding.viewPager.setOffscreenPageLimit(3);
@@ -98,8 +109,11 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
     private static class TripDetailPagerAdapter extends FragmentStateAdapter {
 
-        public TripDetailPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
+        private final int maChuyenDi;
+
+        public TripDetailPagerAdapter(@NonNull FragmentActivity fragmentActivity, int maChuyenDi) {
             super(fragmentActivity);
+            this.maChuyenDi = maChuyenDi;
         }
 
         @NonNull
@@ -107,7 +121,7 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         public Fragment createFragment(int position) {
             switch (position) {
                 case 0:
-                    return new LichTrinhFragment();
+                    return LichTrinhFragment.newInstance(maChuyenDi);
                 case 1:
                     return new ChiPhiChuyenDiFragment();
                 case 2:
@@ -124,3 +138,4 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         }
     }
 }
+

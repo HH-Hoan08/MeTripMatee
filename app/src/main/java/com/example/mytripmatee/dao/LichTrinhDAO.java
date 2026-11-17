@@ -150,6 +150,24 @@ public class LichTrinhDAO {
         return list;
     }
 
+    //Lấy thông tin chi tiết một hoạt động theo ID
+    public LichTrinh layHoatDongTheoId(int maHoatDong) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT * FROM LichTrinh WHERE MaHoatDong = ?";
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maHoatDong)});
+            if (cursor != null && cursor.moveToFirst()) {
+                return parseLichTrinhFromCursor(cursor);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi lấy chi tiết hoạt động theo ID", e);
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
+    }
+
     // Helper map Cursor -> Object LichTrinh
     private LichTrinh parseLichTrinhFromCursor(Cursor cursor) {
         LichTrinh item = new LichTrinh();

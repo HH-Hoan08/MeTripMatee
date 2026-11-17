@@ -16,6 +16,7 @@ import com.example.mytripmatee.adapter.AdapterLich;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ChonNgayActivity extends AppCompatActivity {
 
@@ -34,6 +35,27 @@ public class ChonNgayActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chon_ngay);
+
+        if (getIntent() != null) {
+            String incomingDi = getIntent().getStringExtra("ngayDi");
+            String incomingVe = getIntent().getStringExtra("ngayVe");
+            if (incomingDi != null && incomingDi.contains("-")) {
+                try {
+                    String[] parts = incomingDi.split("-");
+                    if (parts.length == 3) {
+                        selectedStartDate = Integer.parseInt(parts[2]);
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (incomingVe != null && incomingVe.contains("-")) {
+                try {
+                    String[] parts = incomingVe.split("-");
+                    if (parts.length == 3) {
+                        selectedEndDate = Integer.parseInt(parts[2]);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
 
         initViews();
         setupCalendar();
@@ -159,23 +181,36 @@ public class ChonNgayActivity extends AppCompatActivity {
     private void applyAndFinish() {
         String dateRange;
         String durationText;
+        String ngayDiDb;
+        String ngayVeDb;
+
+        int month = 11;
+        int year = 2026;
 
         if (selectedStartDate != null && selectedEndDate != null) {
             int duration = (selectedEndDate - selectedStartDate) + 1;
-            int nights = duration - 1;
+            int nights = Math.max(0, duration - 1);
             dateRange = selectedStartDate + "/11/2026 – " + selectedEndDate + "/11/2026";
             durationText = duration + " Ngày " + nights + " Đêm";
+            ngayDiDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedStartDate);
+            ngayVeDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedEndDate);
         } else if (selectedStartDate != null) {
             dateRange = selectedStartDate + "/11/2026";
-            durationText = "1 Ngày";
+            durationText = "1 Ngày 0 Đêm";
+            ngayDiDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedStartDate);
+            ngayVeDb = ngayDiDb;
         } else {
             dateRange = "12/11/2026 – 15/11/2026";
             durationText = "4 Ngày 3 Đêm";
+            ngayDiDb = "2026-11-12";
+            ngayVeDb = "2026-11-15";
         }
 
         Intent resultIntent = new Intent();
         resultIntent.putExtra(EXTRA_RESULT_DATE_RANGE, dateRange);
         resultIntent.putExtra(EXTRA_RESULT_DURATION, durationText);
+        resultIntent.putExtra("extra_ngay_di", ngayDiDb);
+        resultIntent.putExtra("extra_ngay_ve", ngayVeDb);
 
         setResult(RESULT_OK, resultIntent);
         Toast.makeText(this, "Đã chọn: " + dateRange + " (" + durationText + ")", Toast.LENGTH_SHORT).show();

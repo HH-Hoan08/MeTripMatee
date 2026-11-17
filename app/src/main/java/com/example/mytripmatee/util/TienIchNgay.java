@@ -24,4 +24,39 @@ public class TienIchNgay {
             return null; // Bắt lỗi ParseException nếu ngày sai
         }
     }
+
+    // Format YYYY-MM-DD -> "12 Th11"
+    public static String dinhDangNgayPill(String yyyyMMdd) {
+        if (yyyyMMdd == null || yyyyMMdd.trim().isEmpty()) return "";
+        try {
+            if (yyyyMMdd.contains("-")) {
+                String[] parts = yyyyMMdd.split("-");
+                if (parts.length == 3) {
+                    int day = Integer.parseInt(parts[2]);
+                    int month = Integer.parseInt(parts[1]);
+                    return day + " Th" + month;
+                }
+            } else if (yyyyMMdd.contains("/")) {
+                String[] parts = yyyyMMdd.split("/");
+                if (parts.length >= 2) {
+                    int day = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]);
+                    return day + " Th" + month;
+                }
+            }
+        } catch (Exception ignored) {}
+        return yyyyMMdd;
+    }
+
+    // Convert YYYY-MM-DD to DD/MM/YYYY
+    public static String dinhDangHienThi(String yyyyMMdd) {
+        if (yyyyMMdd == null || yyyyMMdd.isEmpty()) return "";
+        try {
+            String[] parts = yyyyMMdd.split("-");
+            if (parts.length == 3) {
+                return String.format(Locale.getDefault(), "%s/%s/%s", parts[2], parts[1], parts[0]);
+            }
+        } catch (Exception ignored) {}
+        return yyyyMMdd;
+    }
 }
