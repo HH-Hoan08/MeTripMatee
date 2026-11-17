@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.activity.SuaLichTrinhActivity;
 import com.example.mytripmatee.adapter.AdapterLichTrinh;
+import com.example.mytripmatee.dao.LichTrinhDAO;
 import com.example.mytripmatee.databinding.FragmentLichTrinhBinding;
 import com.example.mytripmatee.model.LichTrinh;
 
@@ -25,6 +26,8 @@ public class LichTrinhFragment extends Fragment {
 
     private FragmentLichTrinhBinding binding;
     private AdapterLichTrinh adapter;
+    private LichTrinhDAO lichTrinhDAO;
+    private int maChuyenDi = 1;
     private int selectedDay = 1;
 
     @Nullable
@@ -38,6 +41,14 @@ public class LichTrinhFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        lichTrinhDAO = new LichTrinhDAO(requireContext());
+
+        if (getArguments() != null) {
+            maChuyenDi = getArguments().getInt("maChuyenDi", 1);
+        } else if (requireActivity().getIntent() != null) {
+            maChuyenDi = requireActivity().getIntent().getIntExtra("maChuyenDi", 1);
+        }
+
         setupRecyclerView();
 
         binding.day1Pill.setOnClickListener(v -> selectDay(1));
@@ -50,6 +61,7 @@ public class LichTrinhFragment extends Fragment {
 
         View.OnClickListener openEditListener = v -> {
             Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
+            intent.putExtra("maChuyenDi", maChuyenDi);
             startActivity(intent);
         };
 
@@ -57,30 +69,48 @@ public class LichTrinhFragment extends Fragment {
         binding.fabAddActivity.setOnClickListener(openEditListener);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadDayData(selectedDay);
+    }
+
     private void setupRecyclerView() {
         adapter = new AdapterLichTrinh(new AdapterLichTrinh.SuKienChonLichTrinhListener() {
             @Override
             public void onChonMuc(LichTrinh item) {
+                if (item == null) return;
                 Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
+                intent.putExtra("maHoatDong", item.getMaHoatDong());
+                intent.putExtra("maChuyenDi", item.getMaChuyenDi());
                 startActivity(intent);
             }
 
             @Override
             public void onMoBanDo(LichTrinh item) {
-                Toast.makeText(requireContext(), "Đang mở Google Maps cho " + item.getTieuDe(), Toast.LENGTH_SHORT).show();
+                if (item != null && item.getLinkBanDo() != null && !item.getLinkBanDo().isEmpty()) {
+                    Toast.makeText(requireContext(), "Đang mở bản đồ: " + item.getTieuDe(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Không có link bản đồ", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
             public void onThayDoiCheck(LichTrinh item, boolean isChecked) {
-                String state = isChecked ? "Đã xong: " : "Bỏ chọn: ";
-                Toast.makeText(requireContext(), state + item.getTieuDe(), Toast.LENGTH_SHORT).show();
+                if (item == null) return;
+                boolean success = lichTrinhDAO.capNhatTrangThaiDaDi(item.getMaHoatDong(), isChecked);
+                if (success) {
+                    item.setDaDi(isChecked);
+                    String state = isChecked ? "Đã xong: " : "Bỏ chọn: ";
+                    Toast.makeText(requireContext(), state + item.getTieuDe(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi khi cập nhật trạng thái", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
         binding.rvItinerary.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvItinerary.setAdapter(adapter);
-
-        loadDayData(selectedDay);
     }
 
     private void selectDay(int dayNumber) {
@@ -93,104 +123,33 @@ public class LichTrinhFragment extends Fragment {
     }
 
     private void loadDayData(int dayNumber) {
-        List<LichTrinh> items = new ArrayList<>();
-        if (dayNumber == 1) {
-            items.add(new LichTrinh(
-                    "d1_1",
-                    LichTrinh.LoaiHoatDong.DI_CHUYEN,
-                    "DI CHUYỂN",
-                    "06:00 - 08:30",
-                    "Bay Tân Sơn Nhất ➔ Liên Khương",
-                    "Vietjet VJ362 • Mã vé: HG893X",
-                    "Chi phí: 1.250.000 đ",
-                    "Đã xong",
-                    true,
-                    false,
-                    null
-            ));
-            items.add(new LichTrinh(
-                    "d1_2",
-                    LichTrinh.LoaiHoatDong.AN_UONG,
-                    "ĂN UỐNG",
-                    "09:15 - 10:15",
-                    "Bánh căn Nhà Chung Đà Lạt",
-                    "📍 Số 1 Nhà Chung, P.3 • Quán đông, nên đi sớm",
-                    null,
-                    "Đánh dấu đã đi",
-                    false,
-                    true,
-                    "Cảnh báo: Khoảng cách từ Nhà Chung tới điểm kế tiếp 12km (~35p đèo)."
-            ));
-            items.add(new LichTrinh(
-                    "d1_3",
-                    LichTrinh.LoaiHoatDong.LUU_TRU,
-                    "LƯU TRÚ",
-                    "11:00 - 12:00",
-                    "Check-in Thung Lũng Mây Homestay",
-                    "Nhận phòng view đồi • Mã đặt: AGD-8821",
-                    "Chi phí: 1.800.000 đ / 2 đêm",
-                    "Đã nhận phòng",
-                    false,
-                    false,
-                    null
-            ));
-        } else if (dayNumber == 2) {
-            items.add(new LichTrinh(
-                    "d2_1",
-                    LichTrinh.LoaiHoatDong.AN_UONG,
-                    "ĂN UỐNG",
-                    "06:30 - 08:30",
-                    "Cà phê Túi Mơ To - Săn Mây",
-                    "📍 Hẻm 31 Sào Nam, P.11 • Quán đông lúc sáng sớm",
-                    null,
-                    "Đánh dấu đã đi",
-                    false,
-                    true,
-                    null
-            ));
-            items.add(new LichTrinh(
-                    "d2_2",
-                    LichTrinh.LoaiHoatDong.THAM_QUAN,
-                    "CẢNH ĐẸP",
-                    "09:00 - 11:30",
-                    "Check-in Quảng trường Lâm Viên & Hồ Xuân Hương",
-                    "Tham quan tự do, chụp ảnh nụ hoa Atiso",
-                    "Vé vào cửa: Miễn phí",
-                    "Đánh dấu đã đi",
-                    false,
-                    false,
-                    null
-            ));
-        } else {
-            items.add(new LichTrinh(
-                    "d3_1",
-                    LichTrinh.LoaiHoatDong.AN_UONG,
-                    "ĂN UỐNG",
-                    "11:30 - 13:00",
-                    "Lẩu gà lá é Tao Ngộ",
-                    "📍 3/4 Đường 3 Tháng 4 • Món ngon nổi tiếng",
-                    null,
-                    "Đã ăn",
-                    false,
-                    true,
-                    null
-            ));
-            items.add(new LichTrinh(
-                    "d3_2",
-                    LichTrinh.LoaiHoatDong.DI_CHUYEN,
-                    "DI CHUYỂN",
-                    "16:30 - 18:00",
-                    "Bay Liên Khương ➔ Tân Sơn Nhất",
-                    "Bamboo Airways QH1422",
-                    "Chi phí: 1.150.000 đ",
-                    "Chưa đi",
-                    false,
-                    false,
-                    null
-            ));
+        List<LichTrinh> allItems = lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi);
+
+        if (allItems == null || allItems.isEmpty()) {
+            adapter.setDanhSachLichTrinh(new ArrayList<>());
+            return;
         }
 
-        adapter.setDanhSachLichTrinh(items);
+        List<String> distinctDates = new ArrayList<>();
+        for (LichTrinh lt : allItems) {
+            if (lt.getNgayHoatDong() != null && !distinctDates.contains(lt.getNgayHoatDong())) {
+                distinctDates.add(lt.getNgayHoatDong());
+            }
+        }
+
+        List<LichTrinh> filteredItems = new ArrayList<>();
+        if (dayNumber <= distinctDates.size()) {
+            String targetDate = distinctDates.get(dayNumber - 1);
+            for (LichTrinh lt : allItems) {
+                if (targetDate.equals(lt.getNgayHoatDong())) {
+                    filteredItems.add(lt);
+                }
+            }
+        } else {
+            filteredItems.addAll(allItems);
+        }
+
+        adapter.setDanhSachLichTrinh(filteredItems);
     }
 
     @Override
@@ -199,3 +158,4 @@ public class LichTrinhFragment extends Fragment {
         binding = null;
     }
 }
+

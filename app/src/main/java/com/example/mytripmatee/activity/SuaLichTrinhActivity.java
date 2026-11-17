@@ -18,7 +18,9 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.dao.LichTrinhDAO;
 import com.example.mytripmatee.databinding.ActivitySuaLichTrinhBinding;
+import com.example.mytripmatee.model.LichTrinh;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -30,8 +32,12 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
     }
 
     private ActivitySuaLichTrinhBinding binding;
+    private LichTrinhDAO lichTrinhDAO;
+    private int maChuyenDi = 1;
+    private int maHoatDong = -1;
+
     private String selectedType = "DI CHUYỂN";
-    private String selectedDate = "";
+    private String selectedDateDb = "2026-12-01";
     private String selectedStartTime = "09:00";
     private String selectedEndTime = "10:30";
 
@@ -42,6 +48,13 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
 
         binding = ActivitySuaLichTrinhBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        lichTrinhDAO = new LichTrinhDAO(this);
+
+        if (getIntent() != null) {
+            maChuyenDi = getIntent().getIntExtra("maChuyenDi", 1);
+            maHoatDong = getIntent().getIntExtra("maHoatDong", -1);
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -95,8 +108,9 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog dialog = new DatePickerDialog(this, (view, y, m, d) -> {
-            selectedDate = String.format(Locale.getDefault(), "%02d/%02d/%d", d, m + 1, y);
-            binding.tvSelectedDate.setText("Ngày diễn ra: " + selectedDate);
+            selectedDateDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", y, m + 1, d);
+            String displayDate = String.format(Locale.getDefault(), "%02d/%02d/%d", d, m + 1, y);
+            binding.tvSelectedDate.setText("Ngày diễn ra: " + displayDate);
             binding.tvSelectedDate.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
         }, year, month, day);
 
@@ -133,18 +147,55 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
             return;
         }
 
-        if (selectedDate.isEmpty()) {
+        if (selectedDateDb == null || selectedDateDb.isEmpty()) {
             Toast.makeText(this, "Vui lòng chọn ngày diễn ra cho hoạt động", Toast.LENGTH_SHORT).show();
             showDatePicker();
             return;
         }
 
+        String location = binding.etLocation.getText() != null ? binding.etLocation.getText().toString().trim() : "";
         String mapUrl = binding.etMapUrl.getText() != null ? binding.etMapUrl.getText().toString().trim() : "";
-        if (!mapUrl.isEmpty() && !mapUrl.startsWith("http://") && !mapUrl.startsWith("https://") && !mapUrl.contains("maps")) {
-            Toast.makeText(this, "Cảnh báo: Link Google Maps chưa đúng định dạng URL", Toast.LENGTH_SHORT).show();
+        String notes = binding.etNotes.getText() != null ? binding.etNotes.getText().toString().trim() : "";
+
+        LichTrinh.LoaiHoatDong loai;
+        switch (selectedType) {
+            case "ĂN UỐNG":
+                loai = LichTrinh.LoaiHoatDong.AN_UONG;
+                break;
+            case "LƯU TRÚ":
+                loai = LichTrinh.LoaiHoatDong.LUU_TRU;
+                break;
+            case "CẢNH ĐẸP":
+                loai = LichTrinh.LoaiHoatDong.THAM_QUAN;
+                break;
+            case "DI CHUYỂN":
+            default:
+                loai = LichTrinh.LoaiHoatDong.DI_CHUYEN;
+                break;
         }
 
-        Toast.makeText(this, "Lưu hoạt động vào lịch trình thành công ✓", Toast.LENGTH_SHORT).show();
-        finish();
+        LichTrinh item = new LichTrinh(maChuyenDi, selectedDateDb, selectedStartTime, title, location, mapUrl, loai, notes, false);
+
+        if (maHoatDong > 0) {
+            item.setMaHoatDong(maHoatDong);
+            boolean success = lichTrinhDAO.capNhatHoatDong(item);
+            if (success) {
+                Toast.makeText(this, "Cập nhật hoạt động thành công ✓", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            } else {
+                Toast.makeText(this, "Lỗi khi cập nhật (kiểm tra lại ngày nằm trong chuyến đi)", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            long newId = lichTrinhDAO.themHoatDong(item);
+            if (newId > 0) {
+                Toast.makeText(this, "Thêm hoạt động vào lịch trình thành công ✓", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            } else {
+                Toast.makeText(this, "Lỗi khi thêm hoạt động (ngày phải nằm trong ngày đi - ngày về của chuyến đi)", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
+
