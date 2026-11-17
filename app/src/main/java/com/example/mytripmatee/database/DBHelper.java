@@ -8,7 +8,7 @@ import android.util.Log;
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     public static final String DATABASE_NAME = "mytripmatee.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     // sử dụng Singleton đảm bảo toàn ứng dụng chỉ dùng một thể hiện duy nhất của DBHelper
     private static DBHelper instance;
@@ -357,9 +357,26 @@ public class DBHelper extends SQLiteOpenHelper {
         // tài khoản demo: demo / 123456 (mật khẩu đã băm SHA-256)
         db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
                 "('demo', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Tài khoản demo');");
+        db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
+                "('phu123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Phạm Hữu Phú');");
         // chuyến đi mẫu Đà Lạt 3 ngày
         db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
                 "VALUES (1, 'Đà Lạt 3 ngày', 'Đà Lạt', '2026-12-01', '2026-12-03', 3000000, 'SAP_TOI');");
+        // 5 chuyến đi mẫu phong phú cho tài khoản demo (MaNguoiDung = 1)
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
+                "VALUES (1, 'Phú Quốc – Kỳ Nghỉ Biển Ngọc', 'Phú Quốc, Kiên Giang', '2026-12-10', '2026-12-13', 5000000, 'SAP_TOI');");
+
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
+                "VALUES (1, 'Hà Giang – Chinh Phục Mã Pí Lèng', 'Đồng Văn, Hà Giang', '2026-12-24', '2026-12-28', 4500000, 'SAP_TOI');");
+
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
+                "VALUES (1, 'Sapa – Săn Mây Đỉnh Fansipan', 'Sapa, Lào Cai', '2026-11-15', '2026-11-18', 4200000, 'DANG_DI');");
+
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
+                "VALUES (1, 'Hội An & Đà Nẵng – Phố Cổ Lung Linh', 'Hội An, Quảng Nam', '2026-11-05', '2026-11-08', 3800000, 'DA_XONG');");
+
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
+                "VALUES (1, 'Nha Trang – Thiên Đường Biển Đảo', 'Nha Trang, Khánh Hòa', '2027-01-05', '2027-01-08', 6000000, 'SAP_TOI');");
         // lịch trình
         db.execSQL("INSERT INTO LichTrinh (MaChuyenDi, NgayHoatDong, GioBatDau, TieuDe, DiaDiem, LinkBanDo, LoaiHoatDong, GhiChu, DaDi) VALUES " +
                 "(1, '2026-12-01', '06:30', 'Xe giường nằm TP.HCM - Đà Lạt', 'Bến xe Miền Đông', NULL,                             'DI_CHUYEN', NULL, 0), " +

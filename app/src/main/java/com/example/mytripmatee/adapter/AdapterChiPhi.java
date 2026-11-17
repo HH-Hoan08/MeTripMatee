@@ -8,89 +8,88 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.databinding.ItemExpenseBinding;
-import com.example.mytripmatee.model.ExpenseItem;
+import com.example.mytripmatee.databinding.ItemChiPhiBinding;
+import com.example.mytripmatee.model.ItemChiPhi;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder> {
+public class AdapterChiPhi extends RecyclerView.Adapter<AdapterChiPhi.ViewHolderChiPhi> {
 
-    public interface OnExpenseClickListener {
-        void onExpenseClick(ExpenseItem item);
+    public interface SuKienChonChiPhiListener {
+        void onChonChiPhi(ItemChiPhi item);
     }
 
-    private List<ExpenseItem> expenseList = new ArrayList<>();
-    private final OnExpenseClickListener listener;
+    private List<ItemChiPhi> danhSachChiPhi = new ArrayList<>();
+    private final SuKienChonChiPhiListener listener;
 
-    public ExpenseAdapter(OnExpenseClickListener listener) {
+    public AdapterChiPhi(SuKienChonChiPhiListener listener) {
         this.listener = listener;
     }
 
-    public void setExpenses(List<ExpenseItem> expenses) {
-        this.expenseList = expenses != null ? expenses : new ArrayList<>();
+    public void setDanhSachChiPhi(List<ItemChiPhi> danhSach) {
+        this.danhSachChiPhi = danhSach != null ? danhSach : new ArrayList<>();
         notifyDataSetChanged();
     }
 
-    public void addExpense(ExpenseItem item) {
+    public void themChiPhi(ItemChiPhi item) {
         if (item != null) {
-            this.expenseList.add(0, item);
+            this.danhSachChiPhi.add(0, item);
             notifyItemInserted(0);
         }
     }
 
     @NonNull
     @Override
-    public ExpenseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemExpenseBinding binding = ItemExpenseBinding.inflate(
+    public ViewHolderChiPhi onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemChiPhiBinding binding = ItemChiPhiBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false
         );
-        return new ExpenseViewHolder(binding);
+        return new ViewHolderChiPhi(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ExpenseViewHolder holder, int position) {
-        holder.bind(expenseList.get(position), listener);
+    public void onBindViewHolder(@NonNull ViewHolderChiPhi holder, int position) {
+        holder.bind(danhSachChiPhi.get(position), listener);
     }
 
     @Override
     public int getItemCount() {
-        return expenseList.size();
+        return danhSachChiPhi.size();
     }
 
-    static class ExpenseViewHolder extends RecyclerView.ViewHolder {
-        private final ItemExpenseBinding binding;
+    static class ViewHolderChiPhi extends RecyclerView.ViewHolder {
+        private final ItemChiPhiBinding binding;
 
-        public ExpenseViewHolder(@NonNull ItemExpenseBinding binding) {
+        public ViewHolderChiPhi(@NonNull ItemChiPhiBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
 
-        public void bind(ExpenseItem item, OnExpenseClickListener listener) {
-            binding.tvTitle.setText(item.getTitle());
-            binding.tvSubtitle.setText(item.getSubtitle());
-            binding.tvAmount.setText(item.getFormattedAmount());
+        public void bind(ItemChiPhi item, SuKienChonChiPhiListener listener) {
+            binding.tvTitle.setText(item.getTieuDe());
+            binding.tvSubtitle.setText(item.getTieuDePhu());
+            binding.tvAmount.setText(item.getSoTienDinhDang());
 
-            // Set Category Icon and background style
-            switch (item.getCategoryType()) {
-                case MOVE:
+            switch (item.getLoaiDanhMuc()) {
+                case DI_CHUYEN:
                     binding.iconContainer.setBackgroundResource(R.drawable.bg_badge_move);
                     binding.imgCategoryIcon.setImageResource(R.drawable.ic_pin_flight);
                     binding.imgCategoryIcon.setColorFilter(Color.parseColor("#4338CA"));
                     break;
-                case FOOD:
+                case AN_UONG:
                     binding.iconContainer.setBackgroundResource(R.drawable.bg_badge_amber);
                     binding.imgCategoryIcon.setImageResource(R.drawable.ic_restaurant);
                     binding.imgCategoryIcon.setColorFilter(Color.parseColor("#B45309"));
                     break;
-                case STAY:
+                case LUU_TRU:
                     binding.iconContainer.setBackgroundResource(R.drawable.bg_badge_stay);
                     binding.imgCategoryIcon.setImageResource(R.drawable.ic_hotel);
                     binding.imgCategoryIcon.setColorFilter(Color.parseColor("#7E22CE"));
                     break;
-                case OTHER:
+                case KHAC:
                 default:
                     binding.iconContainer.setBackgroundResource(R.drawable.bg_badge_teal);
                     binding.imgCategoryIcon.setImageResource(R.drawable.ic_wallet);
@@ -100,7 +99,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseV
 
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onExpenseClick(item);
+                    listener.onChonChiPhi(item);
                 }
             });
         }

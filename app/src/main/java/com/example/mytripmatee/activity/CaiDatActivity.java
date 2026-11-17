@@ -20,14 +20,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.mytripmatee.databinding.ActivitySettingsBinding;
+import com.example.mytripmatee.databinding.ActivityCaiDatBinding;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class SettingsActivity extends AppCompatActivity {
+public class CaiDatActivity extends AppCompatActivity {
 
     public static final String PREFS_NAME = "AppSettings";
     public static final String KEY_DARK_MODE = "dark_mode";
@@ -36,7 +37,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static Bitmap pendingSweepBitmap = null;
     public static boolean shouldAnimateSweep = false;
 
-    private ActivitySettingsBinding binding;
+    private ActivityCaiDatBinding binding;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -44,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         WindowCompat.enableEdgeToEdge(getWindow());
 
-        binding = ActivitySettingsBinding.inflate(getLayoutInflater());
+        binding = ActivityCaiDatBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainSettings, (v, insets) -> {
@@ -153,7 +154,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .setMessage("Khởi tạo các chuyến đi thử nghiệm (Đà Lạt, Hà Giang, Phú Quốc) cùng lịch trình chi tiết và danh sách chi tiêu?")
                 .setPositiveButton("Tạo dữ liệu", (dialog, which) -> {
                     sharedPreferences.edit().putBoolean("has_sample_data", true).apply();
-                    Toast.makeText(SettingsActivity.this, "Đã khởi tạo thành công dữ liệu mẫu!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CaiDatActivity.this, "Đã khởi tạo thành công dữ liệu mẫu!", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
@@ -191,7 +192,7 @@ public class SettingsActivity extends AppCompatActivity {
                     sharedPreferences.edit().putString(KEY_LAST_BACKUP, currentTime).apply();
                     updateBackupTimeText();
 
-                    Toast.makeText(SettingsActivity.this, "Sao lưu dữ liệu local thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CaiDatActivity.this, "Sao lưu dữ liệu local thành công!", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
@@ -212,7 +213,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .setTitle("Phục hồi dữ liệu")
                 .setMessage("Bạn có chắc chắn muốn khôi phục dữ liệu từ bản sao lưu ngày " + lastBackup + "?")
                 .setPositiveButton("Phục hồi", (dialog, which) -> {
-                    Toast.makeText(SettingsActivity.this, "Khôi phục dữ liệu từ bản sao lưu thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CaiDatActivity.this, "Khôi phục dữ liệu từ bản sao lưu thành công!", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
@@ -253,7 +254,7 @@ public class SettingsActivity extends AppCompatActivity {
                         try {
                             startActivity(intent);
                         } catch (Exception e) {
-                            Toast.makeText(SettingsActivity.this, "Không tìm thấy ứng dụng Email", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CaiDatActivity.this, "Không tìm thấy ứng dụng Email", Toast.LENGTH_SHORT).show();
                         }
                     })
                     .setNegativeButton("Đóng", null)
@@ -267,7 +268,10 @@ public class SettingsActivity extends AppCompatActivity {
                     .setTitle("Đăng xuất")
                     .setMessage("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")
                     .setPositiveButton("Đăng xuất", (dialog, which) -> {
-                        Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                        QuanLyPhien quanLyPhien = new QuanLyPhien(CaiDatActivity.this);
+                        quanLyPhien.dangXuat();
+
+                        Intent intent = new Intent(CaiDatActivity.this, DangNhapActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();

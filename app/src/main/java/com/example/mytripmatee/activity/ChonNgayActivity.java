@@ -12,12 +12,12 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.adapter.CalendarAdapter;
+import com.example.mytripmatee.adapter.AdapterLich;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomDatePickerActivity extends AppCompatActivity {
+public class ChonNgayActivity extends AppCompatActivity {
 
     public static final String EXTRA_RESULT_DATE_RANGE = "extra_result_date_range";
     public static final String EXTRA_RESULT_DURATION = "extra_result_duration";
@@ -26,14 +26,14 @@ public class CustomDatePickerActivity extends AppCompatActivity {
     private TextView tvMonthYear, tvSelectedRange;
     private View btnApplyDate, btnReset, btnPreset3N2D, btnPresetWeekend;
     private ImageButton btnBack, btnPrevMonth, btnNextMonth;
-    private CalendarAdapter adapter;
+    private AdapterLich adapter;
     private Integer selectedStartDate = 12;
     private Integer selectedEndDate = 15;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_date_picker);
+        setContentView(R.layout.activity_chon_ngay);
 
         initViews();
         setupCalendar();
@@ -57,18 +57,16 @@ public class CustomDatePickerActivity extends AppCompatActivity {
     private void setupCalendar() {
         rvCalendarDays.setLayoutManager(new GridLayoutManager(this, 7));
 
-        List<CalendarAdapter.DayItem> daysList = new ArrayList<>();
-        // Previous month days (26-31 Oct)
+        List<AdapterLich.ItemNgayLich> daysList = new ArrayList<>();
         for (int d = 26; d <= 31; d++) {
-            daysList.add(new CalendarAdapter.DayItem(d, false));
+            daysList.add(new AdapterLich.ItemNgayLich(d, false));
         }
-        // Current month days (1-30 Nov)
         for (int d = 1; d <= 30; d++) {
-            daysList.add(new CalendarAdapter.DayItem(d, true));
+            daysList.add(new AdapterLich.ItemNgayLich(d, true));
         }
 
-        adapter = new CalendarAdapter(daysList, this::onDayClick);
-        adapter.setSelectedRange(selectedStartDate, selectedEndDate);
+        adapter = new AdapterLich(daysList, this::onDayClick);
+        adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
         rvCalendarDays.setAdapter(adapter);
     }
 
@@ -82,7 +80,7 @@ public class CustomDatePickerActivity extends AppCompatActivity {
                 selectedStartDate = null;
                 selectedEndDate = null;
                 if (adapter != null) {
-                    adapter.setSelectedRange(null, null);
+                    adapter.setKhoangNgayChon(null, null);
                 }
                 updateSummaryText();
             });
@@ -93,7 +91,7 @@ public class CustomDatePickerActivity extends AppCompatActivity {
                 selectedStartDate = 12;
                 selectedEndDate = 15;
                 if (adapter != null) {
-                    adapter.setSelectedRange(selectedStartDate, selectedEndDate);
+                    adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
                 }
                 updateSummaryText();
             });
@@ -104,7 +102,7 @@ public class CustomDatePickerActivity extends AppCompatActivity {
                 selectedStartDate = 20;
                 selectedEndDate = 22;
                 if (adapter != null) {
-                    adapter.setSelectedRange(selectedStartDate, selectedEndDate);
+                    adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
                 }
                 updateSummaryText();
             });
@@ -139,7 +137,7 @@ public class CustomDatePickerActivity extends AppCompatActivity {
         }
 
         if (adapter != null) {
-            adapter.setSelectedRange(selectedStartDate, selectedEndDate);
+            adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
         }
         updateSummaryText();
     }

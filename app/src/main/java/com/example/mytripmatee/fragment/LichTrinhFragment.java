@@ -13,24 +13,24 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.mytripmatee.R;
-import com.example.mytripmatee.activity.EditItineraryActivity;
-import com.example.mytripmatee.adapter.ItineraryAdapter;
-import com.example.mytripmatee.databinding.FragmentItineraryBinding;
-import com.example.mytripmatee.model.ItineraryItem;
+import com.example.mytripmatee.activity.SuaLichTrinhActivity;
+import com.example.mytripmatee.adapter.AdapterLichTrinh;
+import com.example.mytripmatee.databinding.FragmentLichTrinhBinding;
+import com.example.mytripmatee.model.ItemLichTrinh;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItineraryFragment extends Fragment {
+public class LichTrinhFragment extends Fragment {
 
-    private FragmentItineraryBinding binding;
-    private ItineraryAdapter adapter;
+    private FragmentLichTrinhBinding binding;
+    private AdapterLichTrinh adapter;
     private int selectedDay = 1;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentItineraryBinding.inflate(inflater, container, false);
+        binding = FragmentLichTrinhBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -49,7 +49,7 @@ public class ItineraryFragment extends Fragment {
         );
 
         View.OnClickListener openEditListener = v -> {
-            Intent intent = EditItineraryActivity.newIntent(requireContext());
+            Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
             startActivity(intent);
         };
 
@@ -58,22 +58,22 @@ public class ItineraryFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        adapter = new ItineraryAdapter(new ItineraryAdapter.OnItineraryItemClickListener() {
+        adapter = new AdapterLichTrinh(new AdapterLichTrinh.SuKienChonLichTrinhListener() {
             @Override
-            public void onItemClick(ItineraryItem item) {
-                Intent intent = EditItineraryActivity.newIntent(requireContext());
+            public void onChonMuc(ItemLichTrinh item) {
+                Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
                 startActivity(intent);
             }
 
             @Override
-            public void onOpenMapsClick(ItineraryItem item) {
-                Toast.makeText(requireContext(), "Đang mở Google Maps cho " + item.getTitle(), Toast.LENGTH_SHORT).show();
+            public void onMoBanDo(ItemLichTrinh item) {
+                Toast.makeText(requireContext(), "Đang mở Google Maps cho " + item.getTieuDe(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onStatusCheckChanged(ItineraryItem item, boolean isChecked) {
+            public void onThayDoiCheck(ItemLichTrinh item, boolean isChecked) {
                 String state = isChecked ? "Đã xong: " : "Bỏ chọn: ";
-                Toast.makeText(requireContext(), state + item.getTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), state + item.getTieuDe(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -93,11 +93,11 @@ public class ItineraryFragment extends Fragment {
     }
 
     private void loadDayData(int dayNumber) {
-        List<ItineraryItem> items = new ArrayList<>();
+        List<ItemLichTrinh> items = new ArrayList<>();
         if (dayNumber == 1) {
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d1_1",
-                    ItineraryItem.ItemType.TRANSPORT,
+                    ItemLichTrinh.LoaiHoatDong.DI_CHUYEN,
                     "DI CHUYỂN",
                     "06:00 - 08:30",
                     "Bay Tân Sơn Nhất ➔ Liên Khương",
@@ -108,9 +108,9 @@ public class ItineraryFragment extends Fragment {
                     false,
                     null
             ));
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d1_2",
-                    ItineraryItem.ItemType.DINING,
+                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "09:15 - 10:15",
                     "Bánh căn Nhà Chung Đà Lạt",
@@ -121,9 +121,9 @@ public class ItineraryFragment extends Fragment {
                     true,
                     "Cảnh báo: Khoảng cách từ Nhà Chung tới điểm kế tiếp 12km (~35p đèo)."
             ));
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d1_3",
-                    ItineraryItem.ItemType.STAY,
+                    ItemLichTrinh.LoaiHoatDong.LUU_TRU,
                     "LƯU TRÚ",
                     "11:00 - 12:00",
                     "Check-in Thung Lũng Mây Homestay",
@@ -135,9 +135,9 @@ public class ItineraryFragment extends Fragment {
                     null
             ));
         } else if (dayNumber == 2) {
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d2_1",
-                    ItineraryItem.ItemType.DINING,
+                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "06:30 - 08:30",
                     "Cà phê Túi Mơ To - Săn Mây",
@@ -148,9 +148,9 @@ public class ItineraryFragment extends Fragment {
                     true,
                     null
             ));
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d2_2",
-                    ItineraryItem.ItemType.SIGHTSEEING,
+                    ItemLichTrinh.LoaiHoatDong.THAM_QUAN,
                     "CẢNH ĐẸP",
                     "09:00 - 11:30",
                     "Check-in Quảng trường Lâm Viên & Hồ Xuân Hương",
@@ -162,9 +162,9 @@ public class ItineraryFragment extends Fragment {
                     null
             ));
         } else {
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d3_1",
-                    ItineraryItem.ItemType.DINING,
+                    ItemLichTrinh.LoaiHoatDong.AN_UONG,
                     "ĂN UỐNG",
                     "11:30 - 13:00",
                     "Lẩu gà lá é Tao Ngộ",
@@ -175,9 +175,9 @@ public class ItineraryFragment extends Fragment {
                     true,
                     null
             ));
-            items.add(new ItineraryItem(
+            items.add(new ItemLichTrinh(
                     "d3_2",
-                    ItineraryItem.ItemType.TRANSPORT,
+                    ItemLichTrinh.LoaiHoatDong.DI_CHUYEN,
                     "DI CHUYỂN",
                     "16:30 - 18:00",
                     "Bay Liên Khương ➔ Tân Sơn Nhất",
@@ -190,7 +190,7 @@ public class ItineraryFragment extends Fragment {
             ));
         }
 
-        adapter.setItems(items);
+        adapter.setDanhSachLichTrinh(items);
     }
 
     @Override
