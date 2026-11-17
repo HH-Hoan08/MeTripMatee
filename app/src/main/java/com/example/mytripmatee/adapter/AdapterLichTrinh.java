@@ -170,4 +170,3 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
         }
     }
 }
-

@@ -138,4 +138,3 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         }
     }
 }
-

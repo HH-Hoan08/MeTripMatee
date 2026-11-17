@@ -1,5 +1,7 @@
 package com.example.mytripmatee.model;
 
+import com.example.mytripmatee.R;
+
 public class ChuyenDi {
     private int maChuyenDi;
     private int maNguoiDung;
@@ -131,5 +133,34 @@ public class ChuyenDi {
 
     public void setMucCanhBao(String mucCanhBao) {
         this.mucCanhBao = mucCanhBao;
+    }
+    // chuyển đổi đối tượng ChuyenDi sang TripItem để hiển thị trên RecyclerView
+    public ItemChuyenDi toTripItem() {
+        String statusLabel;
+        ItemChuyenDi.LoaiTrangThai statusType;
+
+        if ("DANG_DI".equalsIgnoreCase(trangThai)) {
+            statusLabel = "Đang diễn ra";
+            statusType = ItemChuyenDi.LoaiTrangThai.SAP_TOI;
+        } else if ("DA_XONG".equalsIgnoreCase(trangThai)) {
+            statusLabel = "Đã hoàn thành";
+            statusType = ItemChuyenDi.LoaiTrangThai.DA_HOAN_THANH;
+        } else {
+            statusLabel = "Sắp tới";
+            statusType = ItemChuyenDi.LoaiTrangThai.SAP_TOI;
+        }
+
+        String dataRange = (ngayDi != null ? ngayDi : "") + "→" + (ngayVe != null ? ngayVe : "");
+        String details = (diemDen != null && !diemDen.isEmpty()) ? diemDen : "Chưa có điểm đến";
+
+        return new ItemChuyenDi(
+                String.valueOf(maChuyenDi),
+                tenChuyenDi,
+                statusLabel,
+                statusType,
+                dataRange,
+                details,
+                R.drawable.ic_hotel
+        );
     }
 }

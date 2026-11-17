@@ -256,6 +256,10 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         String mapUrl = binding.etMapUrl.getText() != null ? binding.etMapUrl.getText().toString().trim() : "";
         String notes = binding.etNotes.getText() != null ? binding.etNotes.getText().toString().trim() : "";
 
+        if (!mapUrl.isEmpty() && !mapUrl.startsWith("http://") && !mapUrl.startsWith("https://") && !mapUrl.contains("maps")) {
+            Toast.makeText(this, "Cảnh báo: Link Google Maps chưa đúng định dạng URL", Toast.LENGTH_SHORT).show();
+        }
+
         LichTrinh.LoaiHoatDong loai;
         switch (selectedType) {
             case "ĂN UỐNG":
@@ -298,5 +302,3 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         }
     }
 }
-
-

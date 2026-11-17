@@ -2,6 +2,8 @@ package com.example.mytripmatee.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +17,11 @@ import com.example.mytripmatee.R;
 import com.example.mytripmatee.activity.CaiDatActivity;
 import com.example.mytripmatee.activity.ChiTietChuyenDiActivity;
 import com.example.mytripmatee.adapter.AdapterChuyenDi;
+import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.databinding.FragmentKhamPhaBinding;
+import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.ItemChuyenDi;
+import com.example.mytripmatee.util.QuanLyPhien;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +30,11 @@ public class KhamPhaFragment extends Fragment {
 
     private FragmentKhamPhaBinding binding;
     private AdapterChuyenDi adapterChuyenDi;
+    private ChuyenDiDAO chuyenDiDAO;
+    private QuanLyPhien quanLyPhien;
+
+    private List<ChuyenDi> fullChuyenDiList = new ArrayList<>();
+    private String currentFilter = "ALL"; // ALL, UPCOMING, DRAFT, DONE
 
     @Nullable
     @Override
@@ -37,9 +47,20 @@ public class KhamPhaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        chuyenDiDAO = new ChuyenDiDAO(requireContext());
+        quanLyPhien = new QuanLyPhien(requireContext());
+
         setupRecyclerView();
         setupFeaturedCard();
         setupSettingsButton();
+        setupSearchAndFilters();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Tự động làm mới danh sách chuyến đi từ SQLite ngay khi quay lại màn hình chính
+        loadTripsFromDatabase();
     }
 
     private void setupRecyclerView() {
@@ -61,20 +82,29 @@ public class KhamPhaFragment extends Fragment {
 
         binding.rvTrips.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvTrips.setAdapter(adapterChuyenDi);
-
-        adapterChuyenDi.setDanhSachChuyenDi(getSampleTrips());
     }
 
     private void setupFeaturedCard() {
         binding.cardFeatured.setOnClickListener(v -> {
             if (getContext() != null) {
-                Intent intent = ChiTietChuyenDiActivity.newIntent(
-                        getContext(),
-                        1,
-                        "Đà Lạt – Sương Mù & Thảnh Thơi",
-                        "12/11 - 15/11/2026 • 3 ngày 2 đêm"
-                );
-                startActivity(intent);
+                if (!fullChuyenDiList.isEmpty()) {
+                    ChuyenDi featured = fullChuyenDiList.get(0);
+                    Intent intent = ChiTietChuyenDiActivity.newIntent(
+                            getContext(),
+                            featured.getMaChuyenDi(),
+                            featured.getTenChuyenDi(),
+                            (featured.getNgayDi() != null ? featured.getNgayDi() : "") + " – " + (featured.getNgayVe() != null ? featured.getNgayVe() : "")
+                    );
+                    startActivity(intent);
+                } else {
+                    Intent intent = ChiTietChuyenDiActivity.newIntent(
+                            getContext(),
+                            1,
+                            "Đà Lạt – Sương Mù & Thảnh Thơi",
+                            "12/11 - 15/11/2026 • 3 ngày 2 đêm"
+                    );
+                    startActivity(intent);
+                }
             }
         });
     }
@@ -88,36 +118,97 @@ public class KhamPhaFragment extends Fragment {
         });
     }
 
-    private List<ItemChuyenDi> getSampleTrips() {
-        List<ItemChuyenDi> danhSach = new ArrayList<>();
-        danhSach.add(new ItemChuyenDi(
-                "1",
-                "Phú Quốc – Nghỉ Dưỡng Biển Ngọc",
-                "Bản nháp",
-                ItemChuyenDi.LoaiTrangThai.NHAP,
-                "Tết 2027",
-                "4 ngày 3 đêm • 12 mục đã lập",
-                R.drawable.img_phuquoc
-        ));
-        danhSach.add(new ItemChuyenDi(
-                "2",
-                "Hà Giang – Chinh Phục Mã Pí Lèng",
-                "Đã xong",
-                ItemChuyenDi.LoaiTrangThai.DA_HOAN_THANH,
-                "T10/2026",
-                "3 ngày 2 đêm • Hoàn thành 100%",
-                R.drawable.img_hagiang
-        ));
-        danhSach.add(new ItemChuyenDi(
-                "3",
-                "Đà Lạt – Sương Mù & Thảnh Thơi",
-                "Sắp tới",
-                ItemChuyenDi.LoaiTrangThai.SAP_TOI,
-                "12/11 - 15/11/2026",
-                "3 ngày 2 đêm • Đang đếm ngược",
-                R.drawable.img_dalat
-        ));
-        return danhSach;
+    private void setupSearchAndFilters() {
+        if (binding.etSearch != null) {
+            binding.etSearch.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filterTrips(s.toString().trim());
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        if (binding.tabAll != null) {
+            binding.tabAll.setOnClickListener(v -> {
+                currentFilter = "ALL";
+                filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
+            });
+        }
+        if (binding.tabUpcoming != null) {
+            binding.tabUpcoming.setOnClickListener(v -> {
+                currentFilter = "UPCOMING";
+                filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
+            });
+        }
+        if (binding.tabDraft != null) {
+            binding.tabDraft.setOnClickListener(v -> {
+                currentFilter = "DRAFT";
+                filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
+            });
+        }
+        if (binding.tabDone != null) {
+            binding.tabDone.setOnClickListener(v -> {
+                currentFilter = "DONE";
+                filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
+            });
+        }
+    }
+
+    private void loadTripsFromDatabase() {
+        int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (userId <= 0) userId = 1;
+
+        fullChuyenDiList = chuyenDiDAO.layDanhSachChuyenDi(userId);
+
+        filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
+
+        // Cập nhật thẻ nổi bật (Featured Card)
+        if (!fullChuyenDiList.isEmpty()) {
+            ChuyenDi featured = fullChuyenDiList.get(0);
+            binding.cardFeatured.setVisibility(View.VISIBLE);
+            binding.tvFeaturedTitle.setText(featured.getTenChuyenDi());
+            if (binding.tvFeaturedSub != null) {
+                String sub = (featured.getDiemDen() != null ? featured.getDiemDen() : "") +
+                        " • " + (featured.getNgayDi() != null ? featured.getNgayDi() : "");
+                binding.tvFeaturedSub.setText(sub);
+            }
+        } else {
+            binding.cardFeatured.setVisibility(View.GONE);
+        }
+    }
+
+    private void filterTrips(String keyword) {
+        List<ItemChuyenDi> filteredItems = new ArrayList<>();
+        String lowerKeyword = keyword.toLowerCase();
+
+        for (ChuyenDi cd : fullChuyenDiList) {
+            boolean matchesKeyword = lowerKeyword.isEmpty() ||
+                    (cd.getTenChuyenDi() != null && cd.getTenChuyenDi().toLowerCase().contains(lowerKeyword)) ||
+                    (cd.getDiemDen() != null && cd.getDiemDen().toLowerCase().contains(lowerKeyword));
+
+            if (!matchesKeyword) continue;
+
+            boolean matchesStatus = true;
+            String status = cd.getTrangThai() != null ? cd.getTrangThai() : "SAP_TOI";
+
+            if ("UPCOMING".equals(currentFilter)) {
+                matchesStatus = "SAP_TOI".equalsIgnoreCase(status) || "DANG_DI".equalsIgnoreCase(status);
+            } else if ("DRAFT".equals(currentFilter)) {
+                matchesStatus = "BAN_NHAP".equalsIgnoreCase(status);
+            } else if ("DONE".equals(currentFilter)) {
+                matchesStatus = "DA_XONG".equalsIgnoreCase(status);
+            }
+
+            if (matchesStatus) {
+                filteredItems.add(cd.toTripItem());
+            }
+        }
+
+        if (adapterChuyenDi != null) {
+            adapterChuyenDi.setDanhSachChuyenDi(filteredItems);
+        }
     }
 
     @Override

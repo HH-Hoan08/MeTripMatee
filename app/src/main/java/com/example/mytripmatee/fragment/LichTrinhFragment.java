@@ -378,4 +378,3 @@ public class LichTrinhFragment extends Fragment {
         binding = null;
     }
 }
-

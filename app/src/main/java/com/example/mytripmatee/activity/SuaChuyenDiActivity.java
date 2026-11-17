@@ -1,6 +1,5 @@
 package com.example.mytripmatee.activity;
 
-import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -8,6 +7,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,9 +19,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.model.ChuyenDi;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.text.SimpleDateFormat;
@@ -33,17 +35,21 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private MaterialButton btnSaveTop, btnSaveBottom, btnDelete;
     private TextInputEditText etTripName, etDestination;
+    private EditText etBudget;
     private TextView tvHeaderTitle;
     private TextView tvTripTitleCover, tvDurationBadgeCover, tvTripMetaCover;
     private TextView tvDurationBadgeTime, tvDateRangeTime, tvCountdownTime;
     private TextView btnTabEdit, btnTabCreate;
     private MaterialCardView cvTime;
-    private ChuyenDiDAO chuyenDiDAO;
 
     private boolean isCreateMode = false;
-    private int maChuyenDi = 1;
-    private String ngayDiDb = "2026-11-12";
-    private String ngayVeDb = "2026-11-15";
+    private int tripId = -1;
+    private ChuyenDi currentTrip;
+
+    private ChuyenDiDAO chuyenDiDAO;
+    private QuanLyPhien quanLyPhien;
+    private String selectedNgayDi = "2026-11-12";
+    private String selectedNgayVe = "2026-11-15";
 
     private final ActivityResultLauncher<Intent> chonNgayLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -51,8 +57,8 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                     Intent data = result.getData();
                     String nDi = data.getStringExtra("extra_ngay_di");
                     String nVe = data.getStringExtra("extra_ngay_ve");
-                    if (nDi != null && !nDi.isEmpty()) ngayDiDb = nDi;
-                    if (nVe != null && !nVe.isEmpty()) ngayVeDb = nVe;
+                    if (nDi != null && !nDi.isEmpty()) selectedNgayDi = nDi;
+                    if (nVe != null && !nVe.isEmpty()) selectedNgayVe = nVe;
                     updateDateDisplay();
                 }
             });
@@ -63,45 +69,18 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sua_chuyen_di);
 
         chuyenDiDAO = new ChuyenDiDAO(this);
+        quanLyPhien = new QuanLyPhien(this);
 
         initViews();
         setupListeners();
 
-        boolean startInCreateMode = getIntent().getBooleanExtra("mode_create", false);
-        maChuyenDi = getIntent().getIntExtra("maChuyenDi", 1);
-        switchMode(startInCreateMode);
+        isCreateMode = getIntent().getBooleanExtra("mode_create", false);
+        tripId = getIntent().getIntExtra("trip_id", getIntent().getIntExtra("maChuyenDi", -1));
 
-        if (!startInCreateMode) {
-            loadExistingTripData();
-        }
-
-        String incomingTitle = getIntent().getStringExtra("trip_title");
-        if (incomingTitle != null && !incomingTitle.isEmpty()) {
-            if (etTripName != null)
-                etTripName.setText(incomingTitle);
-            if (tvTripTitleCover != null)
-                tvTripTitleCover.setText(incomingTitle);
-            if (btnTabEdit != null)
-                btnTabEdit.setText(incomingTitle + " (Chỉnh sửa)");
-        }
-    }
-
-    private void loadExistingTripData() {
-        ChuyenDi existing = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
-        if (existing != null) {
-            if (etTripName != null && existing.getTenChuyenDi() != null) {
-                etTripName.setText(existing.getTenChuyenDi());
-            }
-            if (etDestination != null && existing.getDiemDen() != null) {
-                etDestination.setText(existing.getDiemDen());
-            }
-            if (existing.getNgayDi() != null) {
-                ngayDiDb = existing.getNgayDi();
-            }
-            if (existing.getNgayVe() != null) {
-                ngayVeDb = existing.getNgayVe();
-            }
-            updateDateDisplay();
+        if (isCreateMode || tripId <= 0) {
+            setupCreateMode();
+        } else {
+            setupEditMode(tripId);
         }
     }
 
@@ -116,6 +95,8 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         etTripName = findViewById(R.id.etTripName);
         etDestination = findViewById(R.id.etDestination);
+        etBudget = findViewById(R.id.etBudget);
+
         tvTripTitleCover = findViewById(R.id.tvTripTitleCover);
         tvDurationBadgeCover = findViewById(R.id.tvDurationBadgeCover);
         tvTripMetaCover = findViewById(R.id.tvTripMetaCover);
@@ -126,74 +107,83 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         tvCountdownTime = findViewById(R.id.tvCountdownTime);
     }
 
-    private void switchMode(boolean createMode) {
-        this.isCreateMode = createMode;
+    private void setupCreateMode() {
+        isCreateMode = true;
+        if (tvHeaderTitle != null) tvHeaderTitle.setText("Thêm chuyến đi mới");
+        if (btnDelete != null) btnDelete.setVisibility(View.GONE);
+        if (btnSaveBottom != null) btnSaveBottom.setText("Lưu & Tạo chuyến đi ✓");
 
-        if (createMode) {
-            if (btnTabCreate != null) {
-                btnTabCreate.setBackgroundResource(R.drawable.bg_pill_white);
-                btnTabCreate.setTextColor(Color.parseColor("#00896A"));
-                btnTabCreate.setTypeface(null, Typeface.BOLD);
-            }
-            if (btnTabEdit != null) {
-                btnTabEdit.setBackgroundColor(Color.TRANSPARENT);
-                btnTabEdit.setTextColor(Color.parseColor("#64748B"));
-                btnTabEdit.setTypeface(null, Typeface.NORMAL);
-            }
-
-            if (tvHeaderTitle != null)
-                tvHeaderTitle.setText("Thêm chuyến đi mới");
-            if (etTripName != null)
-                etTripName.setText("Hành trình mới cùng bạn bè");
-            if (etDestination != null)
-                etDestination.setText("Nha Trang, Khánh Hòa");
-            if (btnDelete != null)
-                btnDelete.setVisibility(View.GONE);
-            if (btnSaveBottom != null)
-                btnSaveBottom.setText("Lưu & Tạo chuyến đi ✓");
-            updateDateDisplay();
-        } else {
-            if (btnTabEdit != null) {
-                btnTabEdit.setBackgroundResource(R.drawable.bg_pill_white);
-                btnTabEdit.setTextColor(Color.parseColor("#00896A"));
-                btnTabEdit.setTypeface(null, Typeface.BOLD);
-            }
-            if (btnTabCreate != null) {
-                btnTabCreate.setBackgroundColor(Color.TRANSPARENT);
-                btnTabCreate.setTextColor(Color.parseColor("#64748B"));
-                btnTabCreate.setTypeface(null, Typeface.NORMAL);
-            }
-
-            if (tvHeaderTitle != null)
-                tvHeaderTitle.setText("Chỉnh sửa chuyến đi");
-            if (btnDelete != null)
-                btnDelete.setVisibility(View.VISIBLE);
-            if (btnSaveBottom != null)
-                btnSaveBottom.setText("Lưu & Cập nhật lịch trình ✓");
-            updateDateDisplay();
+        // Cập nhật giao diện 2 tab: Tạo chuyến mới (active), Chỉnh sửa (inactive)
+        if (btnTabCreate != null) {
+            btnTabCreate.setBackgroundResource(R.drawable.bg_pill_white);
+            btnTabCreate.setTextColor(Color.parseColor("#00896A"));
+            btnTabCreate.setTypeface(null, Typeface.BOLD);
         }
+        if (btnTabEdit != null) {
+            btnTabEdit.setBackgroundColor(Color.TRANSPARENT);
+            btnTabEdit.setTextColor(Color.parseColor("#64748B"));
+            btnTabEdit.setTypeface(null, Typeface.NORMAL);
+            if (tripId <= 0) {
+                btnTabEdit.setText("Chỉnh sửa");
+            }
+        }
+
+        // Ngày mặc định: hôm nay và 3 ngày sau
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+        selectedNgayDi = sdf.format(cal.getTime());
+        cal.add(Calendar.DAY_OF_MONTH, 3);
+        selectedNgayVe = sdf.format(cal.getTime());
+
+        if (etTripName != null) etTripName.setText("");
+        if (etDestination != null) etDestination.setText("");
+        if (etBudget != null) etBudget.setText("3000000");
+        if (tvTripTitleCover != null) tvTripTitleCover.setText("Tên chuyến đi mới");
+        updateDateDisplay();
     }
 
-    private void showDateRangePicker() {
-        Calendar cal = Calendar.getInstance();
-        DatePickerDialog dialogDi = new DatePickerDialog(this, (view, y1, m1, d1) -> {
-            ngayDiDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", y1, m1 + 1, d1);
+    private void setupEditMode(int id) {
+        isCreateMode = false;
+        currentTrip = chuyenDiDAO.layChuyenDiTheoId(id);
+        if (currentTrip == null) {
+            Toast.makeText(this, "Không tìm thấy chuyến đi!", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
-            DatePickerDialog dialogVe = new DatePickerDialog(SuaChuyenDiActivity.this, (view2, y2, m2, d2) -> {
-                ngayVeDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", y2, m2 + 1, d2);
-                updateDateDisplay();
-            }, y1, m1, d1);
-            dialogVe.setTitle("Chọn ngày về (kết thúc)");
-            dialogVe.show();
+        if (tvHeaderTitle != null) tvHeaderTitle.setText("Chỉnh sửa chuyến đi");
+        if (btnDelete != null) btnDelete.setVisibility(View.VISIBLE);
+        if (btnSaveBottom != null) btnSaveBottom.setText("Lưu & Cập nhật chuyến đi ✓");
 
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        dialogDi.setTitle("Chọn ngày đi (bắt đầu)");
-        dialogDi.show();
+        // Cập nhật giao diện 2 tab: Chỉnh sửa (active), Tạo chuyến mới (inactive)
+        if (btnTabEdit != null) {
+            btnTabEdit.setBackgroundResource(R.drawable.bg_pill_white);
+            btnTabEdit.setTextColor(Color.parseColor("#00896A"));
+            btnTabEdit.setTypeface(null, Typeface.BOLD);
+            String shortName = (currentTrip.getDiemDen() != null && !currentTrip.getDiemDen().isEmpty())
+                    ? currentTrip.getDiemDen().split(",")[0].trim()
+                    : currentTrip.getTenChuyenDi();
+            btnTabEdit.setText(shortName + " (Chỉnh sửa)");
+        }
+        if (btnTabCreate != null) {
+            btnTabCreate.setBackgroundColor(Color.TRANSPARENT);
+            btnTabCreate.setTextColor(Color.parseColor("#64748B"));
+            btnTabCreate.setTypeface(null, Typeface.NORMAL);
+        }
+
+        selectedNgayDi = currentTrip.getNgayDi();
+        selectedNgayVe = currentTrip.getNgayVe();
+
+        if (etTripName != null) etTripName.setText(currentTrip.getTenChuyenDi());
+        if (tvTripTitleCover != null) tvTripTitleCover.setText(currentTrip.getTenChuyenDi());
+        if (etDestination != null) etDestination.setText(currentTrip.getDiemDen());
+        if (etBudget != null) etBudget.setText(String.valueOf(currentTrip.getNganSach()));
+        updateDateDisplay();
     }
 
     private void updateDateDisplay() {
-        String displayNgayDi = TienIchNgay.dinhDangHienThi(ngayDiDb);
-        String displayNgayVe = TienIchNgay.dinhDangHienThi(ngayVeDb);
+        String displayNgayDi = TienIchNgay.dinhDangHienThi(selectedNgayDi);
+        String displayNgayVe = TienIchNgay.dinhDangHienThi(selectedNgayVe);
 
         if (tvDateRangeTime != null) {
             tvDateRangeTime.setText("Ngày đi: " + displayNgayDi + "\nNgày về: " + displayNgayVe);
@@ -202,8 +192,8 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         long diffDays = 1;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            Date d1 = sdf.parse(ngayDiDb);
-            Date d2 = sdf.parse(ngayVeDb);
+            Date d1 = sdf.parse(selectedNgayDi);
+            Date d2 = sdf.parse(selectedNgayVe);
             if (d1 != null && d2 != null) {
                 long diffMs = d2.getTime() - d1.getTime();
                 diffDays = Math.max(1, (diffMs / (24 * 60 * 60 * 1000)) + 1);
@@ -219,30 +209,35 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        if (btnTabEdit != null) {
-            btnTabEdit.setOnClickListener(v -> switchMode(false));
-        }
+        // Chuyển đổi giữa 2 tab: Tạo chuyến mới và Chỉnh sửa
         if (btnTabCreate != null) {
-            btnTabCreate.setOnClickListener(v -> switchMode(true));
+            btnTabCreate.setOnClickListener(v -> {
+                if (!isCreateMode) {
+                    setupCreateMode();
+                }
+            });
+        }
+
+        if (btnTabEdit != null) {
+            btnTabEdit.setOnClickListener(v -> {
+                if (isCreateMode) {
+                    if (tripId > 0) {
+                        setupEditMode(tripId);
+                    } else {
+                        Toast.makeText(this, "Chưa có thông tin chuyến đi để chỉnh sửa", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
 
         if (etTripName != null && tvTripTitleCover != null) {
             etTripName.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    String currentText = s.toString().trim();
-                    if (currentText.isEmpty()) {
-                        tvTripTitleCover.setText("Tên chuyến đi...");
-                    } else {
-                        tvTripTitleCover.setText(currentText);
-                    }
+                    tvTripTitleCover.setText(s.toString().trim().isEmpty() ? "Tên chuyến đi..." : s.toString().trim());
                 }
-
-                @Override
-                public void afterTextChanged(Editable s) {}
+                @Override public void afterTextChanged(Editable s) {}
             });
         }
 
@@ -251,21 +246,14 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (btnSaveBottom != null) btnSaveBottom.setOnClickListener(saveListener);
 
         if (btnDelete != null) {
-            btnDelete.setOnClickListener(v -> {
-                if (!isCreateMode && maChuyenDi > 0) {
-                    chuyenDiDAO.xoaChuyenDi(maChuyenDi);
-                }
-                Toast.makeText(SuaChuyenDiActivity.this, "Đã xóa chuyến đi", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK);
-                finish();
-            });
+            btnDelete.setOnClickListener(v -> confirmDelete());
         }
 
         if (cvTime != null) {
             cvTime.setOnClickListener(v -> {
                 Intent intent = new Intent(SuaChuyenDiActivity.this, ChonNgayActivity.class);
-                intent.putExtra("ngayDi", ngayDiDb);
-                intent.putExtra("ngayVe", ngayVeDb);
+                intent.putExtra("ngayDi", selectedNgayDi);
+                intent.putExtra("ngayVe", selectedNgayVe);
                 chonNgayLauncher.launch(intent);
             });
         }
@@ -274,6 +262,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private void saveTrip() {
         String tripName = etTripName.getText() != null ? etTripName.getText().toString().trim() : "";
         String destination = etDestination.getText() != null ? etDestination.getText().toString().trim() : "";
+        String budgetStr = etBudget != null && etBudget.getText() != null ? etBudget.getText().toString().trim() : "";
 
         if (tripName.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập tên chuyến đi", Toast.LENGTH_SHORT).show();
@@ -281,17 +270,68 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             return;
         }
 
-        ChuyenDi cd = new ChuyenDi(1, tripName, destination, ngayDiDb, ngayVeDb, 5000000);
-        if (!isCreateMode && maChuyenDi > 0) {
-            cd.setMaChuyenDi(maChuyenDi);
-            chuyenDiDAO.capNhatChuyenDi(cd);
-        } else {
-            chuyenDiDAO.themChuyenDi(cd);
+        long budget = 0;
+        try {
+            budget = Long.parseLong(budgetStr.replaceAll("[^0-9]", ""));
+        } catch (Exception ignored) {}
+
+        if (budget <= 0) {
+            Toast.makeText(this, "Vui lòng nhập ngân sách hợp lệ (> 0 VNĐ)", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        String msg = isCreateMode ? "Tạo chuyến đi mới thành công ✓" : "Lưu chuyến đi thành công ✓";
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        setResult(RESULT_OK);
-        finish();
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentUserId <= 0) currentUserId = 1;
+
+        if (isCreateMode) {
+            // Thêm mới (INSERT)
+            ChuyenDi newTrip = new ChuyenDi(currentUserId, tripName, destination, selectedNgayDi, selectedNgayVe, budget);
+            long id = chuyenDiDAO.themChuyenDi(newTrip);
+            if (id > 0) {
+                Toast.makeText(this, "Tạo chuyến đi thành công", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            } else {
+                Toast.makeText(this, "Tạo thất bại (vui lòng kiểm tra ngày yyyy-MM-dd)", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            // Cập nhật (UPDATE)
+            if (currentTrip != null) {
+                currentTrip.setTenChuyenDi(tripName);
+                currentTrip.setDiemDen(destination);
+                currentTrip.setNganSach(budget);
+                currentTrip.setNgayDi(selectedNgayDi);
+                currentTrip.setNgayVe(selectedNgayVe);
+
+                boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip);
+                if (success) {
+                    Toast.makeText(this, "Cập nhật chuyến đi thành công", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_OK);
+                    finish();
+                } else {
+                    Toast.makeText(this, "Cập nhật thất bại (vui lòng kiểm tra ngày của lịch trình/chi phí)", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    private void confirmDelete() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Xóa chuyến đi")
+                .setMessage("Bạn có chắc chắn muốn xóa chuyến đi này không? Mọi lịch trình và chi phí đi kèm cũng sẽ bị xóa vĩnh viễn.")
+                .setPositiveButton("Xóa vĩnh viễn", (dialog, which) -> {
+                    if (tripId > 0) {
+                        boolean deleted = chuyenDiDAO.xoaChuyenDi(tripId);
+                        if (deleted) {
+                            Toast.makeText(SuaChuyenDiActivity.this, "Đã xóa chuyến đi thành công", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
+                            finish();
+                        } else {
+                            Toast.makeText(SuaChuyenDiActivity.this, "Xóa thất bại", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 }
