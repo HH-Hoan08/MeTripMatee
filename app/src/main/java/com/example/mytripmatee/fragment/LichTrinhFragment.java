@@ -216,19 +216,9 @@ public class LichTrinhFragment extends Fragment {
     }
 
     private void loadDayData(int dayNumber) {
-        List<LichTrinh> allItems = (maChuyenDi > 0) ? lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi) : new ArrayList<>();
-        ChuyenDi chuyenDi = (maChuyenDi > 0) ? chuyenDiDAO.layChuyenDiTheoId(maChuyenDi) : null;
-
-        if (chuyenDi != null && chuyenDi.getDiemDen() != null && !chuyenDi.getDiemDen().isEmpty() && binding != null && binding.tvWeatherLocation != null) {
-            binding.tvWeatherLocation.setText(chuyenDi.getDiemDen() + " • 19°C Trời se lạnh");
-        }
-
-        List<String> tripDates = calculateTripDates(chuyenDi, allItems);
-
-        renderDayPills(tripDates, dayNumber);
-
-        if (chuyenDi == null || maChuyenDi <= 0) {
+        if (maChuyenDi <= 0) {
             adapter.setDanhSachLichTrinh(new ArrayList<>());
+            renderDayPills(new ArrayList<>(), 1);
             if (binding != null && binding.tvEmptyState != null) {
                 SimpleDateFormat sdfDmy = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                 String todayDisplayStr = sdfDmy.format(new Date());
@@ -238,11 +228,23 @@ public class LichTrinhFragment extends Fragment {
             return;
         }
 
+        List<LichTrinh> allItems = lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi);
+        ChuyenDi chuyenDi = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+
+        if (chuyenDi != null && chuyenDi.getDiemDen() != null && !chuyenDi.getDiemDen().isEmpty() && binding != null && binding.tvWeatherLocation != null) {
+            binding.tvWeatherLocation.setText(chuyenDi.getDiemDen() + " • 19°C Trời se lạnh");
+        }
+
+        List<String> tripDates = calculateTripDates(chuyenDi, allItems);
+
+        renderDayPills(tripDates, dayNumber);
+
         if (allItems == null || allItems.isEmpty()) {
             adapter.setDanhSachLichTrinh(new ArrayList<>());
             if (binding != null && binding.tvEmptyState != null) {
                 binding.tvEmptyState.setVisibility(View.VISIBLE);
-                binding.tvEmptyState.setText("Chưa có hoạt động nào cho chuyến đi này.\nBấm '+ Thêm hoạt động' để bổ sung!");
+                String tripTitle = (chuyenDi != null && chuyenDi.getTenChuyenDi() != null) ? chuyenDi.getTenChuyenDi() : "chuyến đi này";
+                binding.tvEmptyState.setText("Chưa có hoạt động nào cho " + tripTitle + ".\nBấm '+ Thêm hoạt động' để bổ sung!");
             }
             return;
         }
