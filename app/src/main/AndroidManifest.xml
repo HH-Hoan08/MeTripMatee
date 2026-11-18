@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mytripmatee">
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".activity.DangNhapActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.RegisterActivity"
+            android:name=".activity.DangKiActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
@@ -31,24 +31,24 @@
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.TripDetailActivity"
+            android:name=".activity.ChiTietChuyenDiActivity"
             android:exported="false"
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.EditTripActivity"
+            android:name=".activity.SuaChuyenDiActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.CustomDatePickerActivity"
+            android:name=".activity.ChonNgayActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.EditItineraryActivity"
+            android:name=".activity.SuaLichTrinhActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.SettingsActivity"
+            android:name=".activity.CaiDatActivity"
             android:exported="false"
             android:theme="@style/Theme.Mytripmatee"
             android:windowSoftInputMode="adjustResize" />

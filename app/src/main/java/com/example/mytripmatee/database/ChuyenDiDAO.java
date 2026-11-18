@@ -99,6 +99,33 @@ public class ChuyenDiDAO {
         return null;
     }
 
+    // lấy chuyến đi đang diễn ra trong ngày hôm nay (NgayDi <= ngayHomNay <= NgayVe)
+    public ChuyenDi layChuyenDiHomNay(int maNguoiDung, String ngayHomNay) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT c.*, " +
+                "       COALESCE(v.TongChi, 0) AS TongChi, " +
+                "       COALESCE(v.ConLai, c.NganSach) AS ConLai, " +
+                "       COALESCE(v.TyLeSuDung, 0.0) AS TyLeSuDung, " +
+                "       COALESCE(v.MucCanhBao, 'BINH_THUONG') AS MucCanhBao " +
+                "FROM ChuyenDi c " +
+                "LEFT JOIN v_TongChiChuyenDi v ON c.MaChuyenDi = v.MaChuyenDi " +
+                "WHERE c.MaNguoiDung = ? AND ? BETWEEN c.NgayDi AND c.NgayVe " +
+                "ORDER BY c.NgayDi ASC LIMIT 1";
+
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), ngayHomNay});
+            if (cursor != null && cursor.moveToFirst()) {
+                return parseChuyenDiFromCursor(cursor);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi lấy chuyến đi hôm nay", e);
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
+    }
+
     // cập nhật thông tin chuyến đi (Update)
     public boolean capNhatChuyenDi(ChuyenDi chuyenDi) {
         if (chuyenDi == null) return false;

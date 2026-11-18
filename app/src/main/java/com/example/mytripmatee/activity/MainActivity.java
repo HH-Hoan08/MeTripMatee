@@ -19,11 +19,11 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.databinding.ActivityMainBinding;
-import com.example.mytripmatee.fragment.ExpenseFragment;
-import com.example.mytripmatee.fragment.ExploreFragment;
-import com.example.mytripmatee.fragment.ItineraryFragment;
-import com.example.mytripmatee.fragment.MapFragment;
-import com.example.mytripmatee.util.SessionManager;
+import com.example.mytripmatee.fragment.BanDoFragment;
+import com.example.mytripmatee.fragment.ChiPhiFragment;
+import com.example.mytripmatee.fragment.KhamPhaFragment;
+import com.example.mytripmatee.fragment.LichTrinhFragment;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.tabs.TabLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,19 +34,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // kiểm tra session
-        SessionManager sessionManager = new SessionManager(this);
-        if (!sessionManager.isLoggedIn()) {
-            Intent intent = new Intent(this, LoginActivity.class);
+        QuanLyPhien quanLyPhien = new QuanLyPhien(this);
+        if (!quanLyPhien.daDangNhap()) {
+            Intent intent = new Intent(this, DangNhapActivity.class);
             startActivity(intent);
             finish();
             return;
         }
-        int currentUserId = sessionManager.getUserId();
-        String currentUserName = sessionManager.getFullName();
-        android.content.SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, MODE_PRIVATE);
-        if (prefs.contains(SettingsActivity.KEY_DARK_MODE)) {
-            boolean isDark = prefs.getBoolean(SettingsActivity.KEY_DARK_MODE, false);
+        android.content.SharedPreferences prefs = getSharedPreferences(CaiDatActivity.PREFS_NAME, MODE_PRIVATE);
+        if (prefs.contains(CaiDatActivity.KEY_DARK_MODE)) {
+            boolean isDark = prefs.getBoolean(CaiDatActivity.KEY_DARK_MODE, false);
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
                     isDark ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
             );
@@ -70,19 +67,16 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPagerAndTabs() {
         binding.viewPager.setAdapter(new MainPagerAdapter(this));
 
-        // Add 2 tabs to Left TabLayout (Khám phá, Lịch trình)
         TabLayout.Tab tab0 = binding.tabLayoutLeft.newTab().setText("Khám phá").setIcon(R.drawable.ic_explore);
         TabLayout.Tab tab1 = binding.tabLayoutLeft.newTab().setText("Lịch trình").setIcon(R.drawable.ic_calendar_month);
         binding.tabLayoutLeft.addTab(tab0);
         binding.tabLayoutLeft.addTab(tab1);
 
-        // Add 2 tabs to Right TabLayout (Bản đồ, Ví chi tiêu)
         TabLayout.Tab tab2 = binding.tabLayoutRight.newTab().setText("Bản đồ").setIcon(R.drawable.ic_map);
         TabLayout.Tab tab3 = binding.tabLayoutRight.newTab().setText("Ví chi tiêu").setIcon(R.drawable.ic_wallet);
         binding.tabLayoutRight.addTab(tab2);
         binding.tabLayoutRight.addTab(tab3);
 
-        // Left Tab selection
         binding.tabLayoutLeft.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -98,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Right Tab selection
         binding.tabLayoutRight.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -114,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Sync tabs when ViewPager2 is swiped
         binding.viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -126,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Initial tab selection state
         updateTabSelection(0);
     }
 
@@ -156,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
         ColorStateList inactiveColorStateList = ColorStateList.valueOf(mutedColor);
 
         if (position < 2) {
-            // Left tab active
             binding.tabLayoutLeft.setTabTextColors(mutedColor, tealColor);
             binding.tabLayoutLeft.setTabIconTint(activeColorStateList);
             binding.tabLayoutLeft.setSelectedTabIndicatorHeight(indicatorHeightPx);
@@ -167,13 +157,11 @@ public class MainActivity extends AppCompatActivity {
                 tabLeft.select();
             }
 
-            // Right tab inactive
             binding.tabLayoutRight.setTabTextColors(mutedColor, mutedColor);
             binding.tabLayoutRight.setTabIconTint(inactiveColorStateList);
             binding.tabLayoutRight.setSelectedTabIndicatorHeight(0);
             binding.tabLayoutRight.setSelectedTabIndicatorColor(Color.TRANSPARENT);
         } else {
-            // Right tab active
             int rightIndex = position - 2;
             binding.tabLayoutRight.setTabTextColors(mutedColor, tealColor);
             binding.tabLayoutRight.setTabIconTint(activeColorStateList);
@@ -185,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
                 tabRight.select();
             }
 
-            // Left tab inactive
             binding.tabLayoutLeft.setTabTextColors(mutedColor, mutedColor);
             binding.tabLayoutLeft.setTabIconTint(inactiveColorStateList);
             binding.tabLayoutLeft.setSelectedTabIndicatorHeight(0);
@@ -195,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupAddTripButton() {
         binding.btnAddTrip.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, EditTripActivity.class);
+            Intent intent = new Intent(MainActivity.this, SuaChuyenDiActivity.class);
             intent.putExtra("mode_create", true);
             startActivity(intent);
         });
@@ -216,10 +203,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment createFragment(int position) {
             switch (position) {
-                case 1:  return new ItineraryFragment();
-                case 2:  return new MapFragment();
-                case 3:  return new ExpenseFragment();
-                default: return new ExploreFragment();
+                case 1:  return new LichTrinhFragment();
+                case 2:  return new BanDoFragment();
+                case 3:  return new ChiPhiFragment();
+                default: return new KhamPhaFragment();
             }
         }
 
