@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChiPhi;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
@@ -172,11 +173,13 @@ public class ChiPhiFragment extends Fragment {
             tripOptions.add("Hà Giang T10/2026");
         }
 
-        ArrayAdapter<String> tripAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, tripOptions);
+        ArrayAdapter<String> tripAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, tripOptions);
+        tripAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         binding.spFilterDate.setAdapter(tripAdapter);
 
         String[] categoryOptions = new String[]{"Tất cả danh mục", "Di chuyển", "Ăn uống", "Khách sạn", "Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, categoryOptions);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categoryOptions);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         binding.spFilterCategory.setAdapter(catAdapter);
 
         AdapterView.OnItemSelectedListener filterListener = new AdapterView.OnItemSelectedListener() {
@@ -218,6 +221,43 @@ public class ChiPhiFragment extends Fragment {
 
         adapterChiPhi.setDanhSachChiPhi(chiPhiDaLoc);
         recalculateTotals(hasFilter, tripPos);
+        updateCategoryCards();
+    }
+
+    private void updateCategoryCards() {
+        long sumMove = 0;
+        long sumFood = 0;
+        long sumStay = 0;
+
+        List<ItemChiPhi> targetList = chiPhiDaLoc;
+        for (ItemChiPhi item : targetList) {
+            if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.DI_CHUYEN) {
+                sumMove += item.getSoTien();
+            } else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.AN_UONG) {
+                sumFood += item.getSoTien();
+            } else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.LUU_TRU) {
+                sumStay += item.getSoTien();
+            }
+        }
+
+        binding.tvCatMoveAmount.setText(formatShortMoney(sumMove));
+        binding.tvCatFoodAmount.setText(formatShortMoney(sumFood));
+        binding.tvCatStayAmount.setText(formatShortMoney(sumStay));
+    }
+
+    private String formatShortMoney(long amount) {
+        if (amount <= 0) return "0 đ";
+        if (amount >= 1_000_000) {
+            double m = amount / 1_000_000.0;
+            if (m == (long) m) {
+                return String.format(Locale.getDefault(), "%dM", (long) m);
+            } else {
+                return String.format(Locale.getDefault(), "%.2fM", m).replace(".00", "");
+            }
+        } else if (amount >= 1_000) {
+            return (amount / 1000) + "K";
+        }
+        return amount + " đ";
     }
 
     /**
@@ -267,6 +307,14 @@ public class ChiPhiFragment extends Fragment {
         binding.tvRemainingAmount.setText("Còn lại: " + formatMoney(remaining));
         binding.pbBudgetSpending.setProgress(percent);
         binding.tvBadgePercent.setText("Đã chi " + percent + "%");
+
+        // Cảnh báo ngân sách (chỉ hiện khi đã tiêu >= 80% ngân sách)
+        if (percent >= 80) {
+            binding.layoutWarningCard.setVisibility(View.VISIBLE);
+            binding.tvWarningText.setText("Cảnh báo: Chi tiêu đã chạm " + percent + "% hạn mức dự trù.");
+        } else {
+            binding.layoutWarningCard.setVisibility(View.GONE);
+        }
     }
 
     private ItemChiPhi.LoaiDanhMuc mapCategoryToEnum(int maDanhMuc, String tenDanhMuc) {
@@ -294,11 +342,13 @@ public class ChiPhiFragment extends Fragment {
         dialog.setContentView(dialogBinding.getRoot());
 
         String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categories);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         dialogBinding.spCategory.setAdapter(catAdapter);
 
         String[] payers = new String[]{"Tôi", "Hoàn", "Phú", "Cả nhóm"};
-        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, payers);
+        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, payers);
+        payerAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         dialogBinding.spPayer.setAdapter(payerAdapter);
 
         dialogBinding.btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
@@ -332,30 +382,21 @@ public class ChiPhiFragment extends Fragment {
 
             int catPos = dialogBinding.spCategory.getSelectedItemPosition();
             int maDanhMuc;
-            ItemChiPhi.LoaiDanhMuc loaiDanhMuc;
             switch (catPos) {
                 case 1:
                     maDanhMuc = 1;
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.AN_UONG;
                     break;
                 case 2:
                     maDanhMuc = 3;
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.LUU_TRU;
                     break;
                 case 3:
                     maDanhMuc = 6;
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.KHAC;
                     break;
                 case 0:
                 default:
                     maDanhMuc = 2;
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.DI_CHUYEN;
                     break;
             }
-
-            String selectedPayer = payers[dialogBinding.spPayer.getSelectedItemPosition()];
-            String catName = categories[catPos];
-            String selectedTrip = binding.spFilterDate.getSelectedItem() != null ? binding.spFilterDate.getSelectedItem().toString() : "Đà Lạt 12/11";
 
             int targetMaChuyenDi = 1;
             if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {

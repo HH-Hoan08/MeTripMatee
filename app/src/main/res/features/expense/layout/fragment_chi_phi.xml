@@ -164,13 +164,15 @@
 
                     <!-- Khung Cảnh báo Hạn mức -->
                     <LinearLayout
+                        android:id="@+id/layoutWarningCard"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:background="@drawable/bg_alert_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="12dp">
+                        android:padding="12dp"
+                        android:visibility="gone">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -179,6 +181,7 @@
                             app:tint="#BE123C" />
 
                         <TextView
+                            android:id="@+id/tvWarningText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
@@ -225,10 +228,11 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvCatMoveAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="2.4M"
+                            android:text="0 đ"
                             android:textColor="@color/badge_move_text"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -262,10 +266,11 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvCatFoodAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="1.8M"
+                            android:text="0 đ"
                             android:textColor="#D97706"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -299,10 +304,11 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvCatStayAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="1.25M"
+                            android:text="0 đ"
                             android:textColor="@color/badge_stay_text"
                             android:textSize="18sp"
                             android:textStyle="bold" />

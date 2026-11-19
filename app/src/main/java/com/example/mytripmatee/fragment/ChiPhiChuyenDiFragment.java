@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChiPhi;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
@@ -180,11 +181,13 @@ public class ChiPhiChuyenDiFragment extends Fragment {
         dialog.setContentView(dialogBinding.getRoot());
 
         String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categories);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         dialogBinding.spCategory.setAdapter(catAdapter);
 
         String[] payers = new String[]{"Tôi", "Hoàn", "Phú", "Cả nhóm"};
-        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, payers);
+        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, payers);
+        payerAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         dialogBinding.spPayer.setAdapter(payerAdapter);
 
         dialogBinding.btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
