@@ -12,6 +12,7 @@ public class ChuyenDi {
     private long nganSach;      // VND
     private String trangThai;   // saptoi, dangdi, daxong
     private String anhBia;      // url
+    private int soThanhVien = 1;
     // Các trường thống kê mở rộng (từ VIEW v_TongChiChuyenDi)
     private long tongChi;
     private long conLai;
@@ -134,6 +135,15 @@ public class ChuyenDi {
     public void setMucCanhBao(String mucCanhBao) {
         this.mucCanhBao = mucCanhBao;
     }
+
+    public int getSoThanhVien() {
+        return soThanhVien;
+    }
+
+    public void setSoThanhVien(int soThanhVien) {
+        this.soThanhVien = Math.max(1, soThanhVien);
+    }
+
     // chuyển đổi đối tượng ChuyenDi sang TripItem để hiển thị trên RecyclerView
     public ItemChuyenDi toTripItem() {
         String statusLabel;
@@ -152,6 +162,9 @@ public class ChuyenDi {
 
         String dataRange = (ngayDi != null ? ngayDi : "") + "→" + (ngayVe != null ? ngayVe : "");
         String details = (diemDen != null && !diemDen.isEmpty()) ? diemDen : "Chưa có điểm đến";
+        if (soThanhVien > 1) {
+            details += " • " + soThanhVien + " thành viên";
+        }
 
         return new ItemChuyenDi(
                 String.valueOf(maChuyenDi),

@@ -14,7 +14,7 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Drag Handle Indicator (Dành cho BottomSheet / Dialog) -->
+        <!-- Drag Handle Indicator -->
         <View
             android:layout_width="40dp"
             android:layout_height="4dp"
@@ -48,8 +48,8 @@
                 android:clickable="true"
                 android:contentDescription="Đóng"
                 android:focusable="true"
-                android:src="@drawable/ic_add"
                 android:rotation="45"
+                android:src="@drawable/ic_add"
                 app:tint="@color/text_secondary" />
         </RelativeLayout>
 
@@ -87,10 +87,10 @@
             android:layout_marginTop="6dp"
             android:background="@drawable/bg_pill_white"
             android:hint="Ví dụ: Ăn tối lẩu gà lá é, Vé tham quan..."
-            android:textColorHint="@color/text_muted"
-            android:textColor="@color/text_primary"
             android:inputType="textCapSentences"
             android:paddingHorizontal="14dp"
+            android:textColor="#1E293B"
+            android:textColorHint="#94A3B8"
             android:textSize="14sp" />
 
         <!-- 3. Nhập số tiền -->
@@ -110,10 +110,10 @@
             android:layout_marginTop="6dp"
             android:background="@drawable/bg_pill_white"
             android:hint="0 đ"
-            android:textColorHint="@color/text_muted"
-            android:textColor="@color/teal_primary_dark"
             android:inputType="number"
             android:paddingHorizontal="14dp"
+            android:textColor="#0F766E"
+            android:textColorHint="#94A3B8"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -149,7 +149,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:text="Hủy"
-                android:textColor="@color/text_secondary" />
+                android:textColor="#CBD5E1" />
 
             <Button
                 android:id="@+id/btnSaveExpense"

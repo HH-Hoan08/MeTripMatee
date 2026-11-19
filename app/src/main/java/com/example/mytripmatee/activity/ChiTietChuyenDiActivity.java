@@ -15,11 +15,13 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.databinding.ActivityChiTietChuyenDiBinding;
 import com.example.mytripmatee.fragment.ChiPhiChuyenDiFragment;
 import com.example.mytripmatee.fragment.LichTrinhFragment;
 import com.example.mytripmatee.fragment.ThongKeChuyenDiFragment;
 import com.example.mytripmatee.fragment.ThuVienAnhFragment;
+import com.example.mytripmatee.model.ChuyenDi;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class ChiTietChuyenDiActivity extends AppCompatActivity {
@@ -77,6 +79,22 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         }
 
         binding.btnBack.setOnClickListener(v -> finish());
+
+        // chuyển sang màn hình chỉnh sửa chuyến đi
+        binding.btnShare.setOnClickListener(v -> {
+            com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
+            int currentUserId = quanLyPhien.getMaNguoiDung();
+            ChuyenDiDAO dao = new ChuyenDiDAO(this);
+            ChuyenDi cd = dao.layChuyenDiTheoId(maChuyenDi);
+            if (cd != null && cd.getMaNguoiDung() != currentUserId) {
+                android.widget.Toast.makeText(this, "Chỉ Trưởng nhóm (người tạo) mới có quyền chỉnh sửa hoặc xóa chuyến đi!", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Intent intent = new Intent(ChiTietChuyenDiActivity.this, SuaChuyenDiActivity.class);
+            intent.putExtra("mode_create", false);
+            intent.putExtra("trip_id", maChuyenDi);
+            startActivity(intent);
+        });
     }
 
     private void setupViewPagerAndTabs() {
@@ -123,7 +141,7 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
                 case 0:
                     return LichTrinhFragment.newInstance(maChuyenDi);
                 case 1:
-                    return new ChiPhiChuyenDiFragment();
+                    return ChiPhiChuyenDiFragment.newInstance(maChuyenDi);
                 case 2:
                     return new ThongKeChuyenDiFragment();
                 case 3:
@@ -135,6 +153,38 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         @Override
         public int getItemCount() {
             return 4;
+        }
+    }
+
+    // thêm hàm onResume để khi sửa tên chuyến đi hoặc xóa chuyến đi bên SuaChuyenDiActivity,
+    // màn hình ChiTietChuyenDiActivity tự động cập nhật hoặc tự đóng lại
+    @Override
+    protected void onResume() {
+        super.onResume();
+        capNhatThongTinChuyenDi();
+    }
+
+    private void capNhatThongTinChuyenDi() {
+        ChuyenDiDAO dao = new com.example.mytripmatee.database.ChuyenDiDAO(this);
+        ChuyenDi cd = dao.layChuyenDiTheoId(maChuyenDi);
+
+        // nếu chuyến đi vừa bị xóa bên SuaChuyenDiActivity, tự đóng màn hình chi tiết luôn
+        if (cd == null) {
+            finish();
+            return;
+        }
+        // nếu vừa sửa tên/ngày, cập nhật lại lên Header
+        binding.tvTripTitle.setText(cd.getTenChuyenDi());
+        String sub = (cd.getNgayDi() != null ? cd.getNgayDi() : "") + " – " + (cd.getNgayVe() != null ? cd.getNgayVe() : "");
+        binding.tvTripSubtitle.setText(sub);
+
+        // Phân quyền: Chỉ Trưởng nhóm (người tạo chuyến đi) mới thấy nút sửa/xóa
+        com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
+        int currentUserId = quanLyPhien.getMaNguoiDung();
+        if (cd.getMaNguoiDung() == currentUserId) {
+            binding.btnShare.setVisibility(android.view.View.VISIBLE);
+        } else {
+            binding.btnShare.setVisibility(android.view.View.GONE);
         }
     }
 }

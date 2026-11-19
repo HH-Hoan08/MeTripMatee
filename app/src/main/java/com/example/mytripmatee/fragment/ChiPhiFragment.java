@@ -1,5 +1,7 @@
 package com.example.mytripmatee.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -7,108 +9,236 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChiPhi;
-import com.example.mytripmatee.databinding.DialogChiPhiBinding;
-import com.example.mytripmatee.databinding.FragmentChiPhiBinding;
+import com.example.mytripmatee.adapter.AdapterChiaTien;
+import com.example.mytripmatee.dao.ChiPhiDAO;
+import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.database.NguoiDungDAO;
+import com.example.mytripmatee.model.ChiPhi;
+import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.ItemChiPhi;
+import com.example.mytripmatee.model.ItemChiaTien;
+import com.example.mytripmatee.model.NguoiDung;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ChiPhiFragment extends Fragment {
 
-    private FragmentChiPhiBinding binding;
+    static class BalanceMember {
+        String name;
+        long balance;
+
+        BalanceMember(String name, long balance) {
+            this.name = name;
+            this.balance = balance;
+        }
+    }
+
     private AdapterChiPhi adapterChiPhi;
+    private AdapterChiaTien adapterChiaTien;
+    private ChuyenDiDAO chuyenDiDAO;
+    private ChiPhiDAO chiPhiDAO;
+    private NguoiDungDAO nguoiDungDAO;
+    private QuanLyPhien quanLyPhien;
+
+    private List<ChuyenDi> danhSachChuyenDi = new ArrayList<>();
     private final List<ItemChiPhi> tatCaChiPhi = new ArrayList<>();
     private final List<ItemChiPhi> chiPhiDaLoc = new ArrayList<>();
-    private final long tongNganSach = 8000000;
+
+    private RecyclerView rvExpenses;
+    private RecyclerView rvGroupSplit;
+    private Spinner spFilterDate;
+    private Spinner spFilterCategory;
+    private TextView tvCatMoveAmount;
+    private TextView tvCatFoodAmount;
+    private TextView tvCatStayAmount;
+    private TextView tvTotalBudget;
+    private TextView tvSpentAmount;
+    private TextView tvRemainingAmount;
+    private ProgressBar pbBudgetSpending;
+    private TextView tvBadgePercent;
+    private View layoutWarningCard;
+    private TextView tvWarningText;
+    private TextView btnAddExpense;
+    private View btnAutoSplit;
+    private TextView tvSplitMemberCount;
+    private TextView tvGroupSplitDetail;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentChiPhiBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+        return inflater.inflate(R.layout.fragment_chi_phi, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        chuyenDiDAO = new ChuyenDiDAO(requireContext());
+        chiPhiDAO = new ChiPhiDAO(requireContext());
+        nguoiDungDAO = new NguoiDungDAO(requireContext());
+        quanLyPhien = new QuanLyPhien(requireContext());
+
+        rvExpenses = view.findViewById(R.id.rvExpenses);
+        rvGroupSplit = view.findViewById(R.id.rvGroupSplit);
+        spFilterDate = view.findViewById(R.id.spFilterDate);
+        spFilterCategory = view.findViewById(R.id.spFilterCategory);
+        tvCatMoveAmount = view.findViewById(R.id.tvCatMoveAmount);
+        tvCatFoodAmount = view.findViewById(R.id.tvCatFoodAmount);
+        tvCatStayAmount = view.findViewById(R.id.tvCatStayAmount);
+        tvTotalBudget = view.findViewById(R.id.tvTotalBudget);
+        tvSpentAmount = view.findViewById(R.id.tvSpentAmount);
+        tvRemainingAmount = view.findViewById(R.id.tvRemainingAmount);
+        pbBudgetSpending = view.findViewById(R.id.pbBudgetSpending);
+        tvBadgePercent = view.findViewById(R.id.tvBadgePercent);
+        layoutWarningCard = view.findViewById(R.id.layoutWarningCard);
+        tvWarningText = view.findViewById(R.id.tvWarningText);
+        btnAddExpense = view.findViewById(R.id.btnAddExpense);
+        btnAutoSplit = view.findViewById(R.id.btnAutoSplit);
+        tvSplitMemberCount = view.findViewById(R.id.tvSplitMemberCount);
+        tvGroupSplitDetail = view.findViewById(R.id.tvGroupSplitDetail);
+
         setupRecyclerView();
-        loadSampleAllExpenses();
-        setupFilters();
+        loadDataFromDatabase();
         setupAddExpenseButton();
         setupActionButtons();
     }
 
-    private void setupRecyclerView() {
-        adapterChiPhi = new AdapterChiPhi(item ->
-                Toast.makeText(requireContext(), item.getTieuDe() + " (" + item.getTenChuyenDi() + "): " + item.getSoTienDinhDang(), Toast.LENGTH_SHORT).show()
-        );
-
-        binding.rvExpenses.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvExpenses.setAdapter(adapterChiPhi);
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadDataFromDatabase();
     }
 
-    private void loadSampleAllExpenses() {
-        tatCaChiPhi.clear();
-        tatCaChiPhi.add(new ItemChiPhi(
-                "1",
-                "Vé máy bay Vietjet VJ362",
-                "Di chuyển • Tân Sơn Nhất ➔ Liên Khương",
-                1250000,
-                ItemChiPhi.LoaiDanhMuc.DI_CHUYEN,
-                "Tôi",
-                "Đà Lạt 12/11"
-        ));
-        tatCaChiPhi.add(new ItemChiPhi(
-                "2",
-                "Thung Lũng Mây Homestay",
-                "Lưu trú • 2 đêm (View đồi)",
-                1800000,
-                ItemChiPhi.LoaiDanhMuc.LUU_TRU,
-                "Hoàn",
-                "Đà Lạt 12/11"
-        ));
-        tatCaChiPhi.add(new ItemChiPhi(
-                "3",
-                "Lẩu gà lá é Tao Ngộ",
-                "Ăn uống • Bữa tối nhóm 4 người",
-                650000,
-                ItemChiPhi.LoaiDanhMuc.AN_UONG,
-                "Phú",
-                "Đà Lạt 12/11"
-        ));
-        tatCaChiPhi.add(new ItemChiPhi(
-                "4",
-                "Resort Biển Ngọc Phú Quốc",
-                "Lưu trú • Đặt cọc phòng Tết",
-                1750000,
-                ItemChiPhi.LoaiDanhMuc.LUU_TRU,
-                "Tôi",
-                "Phú Quốc Tết 2027"
-        ));
+    private void setupRecyclerView() {
+        adapterChiPhi = new AdapterChiPhi(this::hienThiMenuTuyChonChiPhi);
+        if (rvExpenses != null) {
+            rvExpenses.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rvExpenses.setAdapter(adapterChiPhi);
+        }
 
-        applyFilters();
+        if (rvGroupSplit != null) {
+            adapterChiaTien = new AdapterChiaTien();
+            rvGroupSplit.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rvGroupSplit.setAdapter(adapterChiaTien);
+        }
+    }
+
+    private boolean kiemTraQuyenChinhSua() {
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        int targetTripId = getTargetTripId();
+        ChuyenDi currentTrip = chuyenDiDAO.layChuyenDiTheoId(targetTripId);
+
+        if (currentTrip != null && currentTrip.getMaNguoiDung() != currentUserId) {
+            Toast.makeText(requireContext(), "Bạn là thành viên được mời. Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa/thêm/xóa chi phí!", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void hienThiMenuTuyChonChiPhi(ItemChiPhi item) {
+        if (!kiemTraQuyenChinhSua()) {
+            return;
+        }
+
+        String[] options = new String[]{"Chỉnh sửa khoản chi", "Xóa khoản chi"};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(item.getTieuDe())
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        showEditExpenseDialog(item);
+                    } else if (which == 1) {
+                        xacNhanXoaChiPhi(item);
+                    }
+                })
+                .show();
+    }
+
+    private void loadDataFromDatabase() {
+        int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (userId <= 0) userId = 1;
+
+        danhSachChuyenDi = chuyenDiDAO.layDanhSachChuyenDi(userId);
+        tatCaChiPhi.clear();
+
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            for (ChuyenDi cd : danhSachChuyenDi) {
+                List<ChiPhi> listCp = chiPhiDAO.layDanhSachChiPhiTheoChuyenDi(cd.getMaChuyenDi());
+                if (listCp != null) {
+                    for (ChiPhi cp : listCp) {
+                        ItemChiPhi.LoaiDanhMuc loai = mapCategoryToEnum(cp.getMaDanhMuc(), cp.getTenDanhMuc());
+                        String sub = (cp.getTenDanhMuc() != null ? cp.getTenDanhMuc() : "Chi phí") +
+                                (cp.getGhiChu() != null && !cp.getGhiChu().isEmpty() ? " • " + cp.getGhiChu() : "");
+
+                        String ghiChu = cp.getGhiChu();
+                        String displayTitle = ghiChu != null ? ghiChu : (cp.getTenDanhMuc() != null ? cp.getTenDanhMuc() : "Khoản chi");
+                        String nguoiChi = "Tôi";
+
+                        if (ghiChu != null && ghiChu.contains(" (Thanh toán: ")) {
+                            int idx = ghiChu.indexOf(" (Thanh toán: ");
+                            displayTitle = ghiChu.substring(0, idx);
+                            nguoiChi = ghiChu.substring(idx + " (Thanh toán: ".length(), ghiChu.length() - 1);
+                        }
+
+                        ItemChiPhi item = new ItemChiPhi(
+                                String.valueOf(cp.getMaChiPhi()),
+                                displayTitle,
+                                sub,
+                                cp.getSoTien(),
+                                loai,
+                                nguoiChi,
+                                cd.getTenChuyenDi()
+                        );
+                        tatCaChiPhi.add(item);
+                    }
+                }
+            }
+        }
+
+        setupFilters();
     }
 
     private void setupFilters() {
-        String[] tripOptions = new String[]{"Tất cả chuyến đi", "Đà Lạt 12/11", "Phú Quốc Tết 2027", "Hà Giang T10/2026"};
-        ArrayAdapter<String> tripAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, tripOptions);
-        binding.spFilterDate.setAdapter(tripAdapter);
+        List<String> tripOptions = new ArrayList<>();
+        tripOptions.add("Tất cả chuyến đi");
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            for (ChuyenDi cd : danhSachChuyenDi) {
+                tripOptions.add(cd.getTenChuyenDi());
+            }
+        }
+
+        ArrayAdapter<String> tripAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, tripOptions);
+        tripAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spFilterDate != null) spFilterDate.setAdapter(tripAdapter);
 
         String[] categoryOptions = new String[]{"Tất cả danh mục", "Di chuyển", "Ăn uống", "Khách sạn", "Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, categoryOptions);
-        binding.spFilterCategory.setAdapter(catAdapter);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categoryOptions);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spFilterCategory != null) spFilterCategory.setAdapter(catAdapter);
 
         AdapterView.OnItemSelectedListener filterListener = new AdapterView.OnItemSelectedListener() {
             @Override
@@ -120,17 +250,34 @@ public class ChiPhiFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) {}
         };
 
-        binding.spFilterDate.setOnItemSelectedListener(filterListener);
-        binding.spFilterCategory.setOnItemSelectedListener(filterListener);
+        if (spFilterDate != null) spFilterDate.setOnItemSelectedListener(filterListener);
+        if (spFilterCategory != null) spFilterCategory.setOnItemSelectedListener(filterListener);
+
+        applyFilters();
+    }
+
+    private int getTargetTripId() {
+        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            if (tripPos > 0 && tripPos - 1 < danhSachChuyenDi.size()) {
+                return danhSachChuyenDi.get(tripPos - 1).getMaChuyenDi();
+            } else {
+                return danhSachChuyenDi.get(0).getMaChuyenDi();
+            }
+        }
+        return 1;
     }
 
     private void applyFilters() {
-        String selectedTrip = binding.spFilterDate.getSelectedItem() != null ? binding.spFilterDate.getSelectedItem().toString() : "Tất cả chuyến đi";
-        int catPos = binding.spFilterCategory.getSelectedItemPosition();
+        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
+        String selectedTrip = (spFilterDate != null && spFilterDate.getSelectedItem() != null) ? spFilterDate.getSelectedItem().toString() : "Tất cả chuyến đi";
+        int catPos = spFilterCategory != null ? spFilterCategory.getSelectedItemPosition() : 0;
+
+        boolean hasFilter = (tripPos > 0) || (catPos > 0);
 
         chiPhiDaLoc.clear();
         for (ItemChiPhi item : tatCaChiPhi) {
-            boolean matchTrip = selectedTrip.equals("Tất cả chuyến đi") || item.getTenChuyenDi().contains(selectedTrip) || selectedTrip.contains(item.getTenChuyenDi());
+            boolean matchTrip = (tripPos == 0) || (item.getTenChuyenDi() != null && item.getTenChuyenDi().contains(selectedTrip)) || selectedTrip.contains(item.getTenChuyenDi());
             boolean matchCategory = true;
             if (catPos == 1) matchCategory = (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.DI_CHUYEN);
             else if (catPos == 2) matchCategory = (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.AN_UONG);
@@ -142,126 +289,593 @@ public class ChiPhiFragment extends Fragment {
             }
         }
 
-        adapterChiPhi.setDanhSachChiPhi(chiPhiDaLoc);
-        recalculateTotals();
+        if (adapterChiPhi != null) {
+            adapterChiPhi.setDanhSachChiPhi(chiPhiDaLoc);
+        }
+        recalculateTotals(hasFilter, tripPos);
+        updateCategoryCards();
+
+        int targetTripId = getTargetTripId();
+        SharedPreferences sp = requireContext().getSharedPreferences("group_split_pref", Context.MODE_PRIVATE);
+        boolean hasCalculated = sp.getBoolean("has_calculated_split_" + targetTripId, false);
+
+        if (hasCalculated) {
+            thucHienChiaTienNhom();
+        } else {
+            datTrangThaiBanDauChiaTien();
+        }
     }
 
-    private void recalculateTotals() {
-        long totalSpent = 0;
-        for (ItemChiPhi item : chiPhiDaLoc) {
-            totalSpent += item.getSoTien();
+    private void datTrangThaiBanDauChiaTien() {
+        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
+        ChuyenDi targetTrip = null;
+
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            if (tripPos > 0 && tripPos - 1 < danhSachChuyenDi.size()) {
+                targetTrip = danhSachChuyenDi.get(tripPos - 1);
+            } else {
+                targetTrip = danhSachChuyenDi.get(0);
+            }
         }
 
-        long remaining = tongNganSach - totalSpent;
-        int percent = (int) Math.min(100, (totalSpent * 100) / tongNganSach);
+        if (targetTrip != null) {
+            List<Integer> memberIds = chuyenDiDAO.layDanhSachIdThanhVien(targetTrip.getMaChuyenDi());
+            int totalMembers = (memberIds != null && !memberIds.isEmpty()) ? memberIds.size() : targetTrip.getSoThanhVien();
+            if (tvSplitMemberCount != null) tvSplitMemberCount.setText(totalMembers + " Người");
+        } else {
+            if (tvSplitMemberCount != null) tvSplitMemberCount.setText("0 Người");
+        }
 
-        binding.tvTotalBudget.setText(formatMoney(tongNganSach));
-        binding.tvSpentAmount.setText("Đã tiêu: " + formatMoney(totalSpent));
-        binding.tvRemainingAmount.setText("Còn lại: " + formatMoney(Math.max(0, remaining)));
-        binding.pbBudgetSpending.setProgress(percent);
-        binding.tvBadgePercent.setText("Đã chi " + percent + "%");
+        if (tvGroupSplitDetail != null) {
+            tvGroupSplitDetail.setVisibility(View.VISIBLE);
+            tvGroupSplitDetail.setText("Nhấn nút dưới đây để tính toán & chia đều tiền nhóm");
+        }
+        if (rvGroupSplit != null) {
+            rvGroupSplit.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateCategoryCards() {
+        long sumMove = 0;
+        long sumFood = 0;
+        long sumStay = 0;
+
+        for (ItemChiPhi item : chiPhiDaLoc) {
+            if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.DI_CHUYEN) {
+                sumMove += item.getSoTien();
+            } else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.AN_UONG) {
+                sumFood += item.getSoTien();
+            } else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.LUU_TRU) {
+                sumStay += item.getSoTien();
+            }
+        }
+
+        if (tvCatMoveAmount != null) tvCatMoveAmount.setText(formatShortMoney(sumMove));
+        if (tvCatFoodAmount != null) tvCatFoodAmount.setText(formatShortMoney(sumFood));
+        if (tvCatStayAmount != null) tvCatStayAmount.setText(formatShortMoney(sumStay));
+    }
+
+    private String formatShortMoney(long amount) {
+        if (amount <= 0) return "0 đ";
+        if (amount >= 1_000_000) {
+            double m = amount / 1_000_000.0;
+            if (m == (long) m) {
+                return String.format(Locale.getDefault(), "%dM", (long) m);
+            } else {
+                return String.format(Locale.getDefault(), "%.2fM", m).replace(".00", "");
+            }
+        } else if (amount >= 1_000) {
+            return (amount / 1000) + "K";
+        }
+        return amount + " đ";
+    }
+
+    private void recalculateTotals(boolean hasFilter, int tripPos) {
+        long budget = 0;
+        long totalSpent = 0;
+
+        if (!hasFilter) {
+            if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+                for (ChuyenDi cd : danhSachChuyenDi) {
+                    budget += cd.getNganSach();
+                    totalSpent += cd.getTongChi();
+                }
+            } else {
+                budget = 0;
+                totalSpent = 0;
+            }
+        } else {
+            for (ItemChiPhi item : chiPhiDaLoc) {
+                totalSpent += item.getSoTien();
+            }
+
+            if (tripPos > 0 && danhSachChuyenDi != null && tripPos - 1 < danhSachChuyenDi.size()) {
+                ChuyenDi selectedCd = danhSachChuyenDi.get(tripPos - 1);
+                budget = selectedCd.getNganSach();
+            } else {
+                if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+                    for (ChuyenDi cd : danhSachChuyenDi) {
+                        budget += cd.getNganSach();
+                    }
+                } else {
+                    budget = 0;
+                }
+            }
+        }
+
+        long remaining = Math.max(0, budget - totalSpent);
+        int percent = budget > 0 ? (int) Math.min(100, (totalSpent * 100) / budget) : 0;
+
+        if (tvTotalBudget != null) tvTotalBudget.setText(formatMoney(budget));
+        if (tvSpentAmount != null) tvSpentAmount.setText("Đã tiêu: " + formatMoney(totalSpent));
+        if (tvRemainingAmount != null) tvRemainingAmount.setText("Còn lại: " + formatMoney(remaining));
+        if (pbBudgetSpending != null) pbBudgetSpending.setProgress(percent);
+        if (tvBadgePercent != null) tvBadgePercent.setText("Đã chi " + percent + "%");
+
+        if (layoutWarningCard != null) {
+            if (budget > 0 && percent >= 80) {
+                layoutWarningCard.setVisibility(View.VISIBLE);
+                if (tvWarningText != null) tvWarningText.setText("Cảnh báo: Chi tiêu đã chạm " + percent + "% hạn mức dự trù.");
+            } else {
+                layoutWarningCard.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private List<String> layDanhSachNguoiThanhToan(int maChuyenDi) {
+        List<String> payers = new ArrayList<>();
+        payers.add("Tôi");
+
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        List<Integer> listMemberIds = chuyenDiDAO.layDanhSachIdThanhVien(maChuyenDi);
+
+        if (listMemberIds != null && !listMemberIds.isEmpty()) {
+            for (int mId : listMemberIds) {
+                if (mId != currentUserId) {
+                    NguoiDung nd = nguoiDungDAO.layTheoId(mId);
+                    if (nd != null) {
+                        String ten = (nd.getHoTen() != null && !nd.getHoTen().isEmpty()) ? nd.getHoTen() : nd.getTenDangNhap();
+                        payers.add(ten);
+                    }
+                }
+            }
+        }
+        return payers;
+    }
+
+    private void thucHienChiaTienNhom() {
+        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
+        ChuyenDi targetTrip = null;
+
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            if (tripPos > 0 && tripPos - 1 < danhSachChuyenDi.size()) {
+                targetTrip = danhSachChuyenDi.get(tripPos - 1);
+            } else {
+                targetTrip = danhSachChuyenDi.get(0);
+            }
+        }
+
+        if (targetTrip == null) {
+            if (tvSplitMemberCount != null) tvSplitMemberCount.setText("0 Người");
+            if (tvGroupSplitDetail != null) {
+                tvGroupSplitDetail.setVisibility(View.VISIBLE);
+                tvGroupSplitDetail.setText("Chưa có chuyến đi để chia tiền nhóm");
+            }
+            if (rvGroupSplit != null) rvGroupSplit.setVisibility(View.GONE);
+            return;
+        }
+
+        List<Integer> memberIds = chuyenDiDAO.layDanhSachIdThanhVien(targetTrip.getMaChuyenDi());
+        int totalMembers = (memberIds != null && !memberIds.isEmpty()) ? memberIds.size() : targetTrip.getSoThanhVien();
+        if (totalMembers <= 0) totalMembers = 1;
+
+        if (tvSplitMemberCount != null) {
+            tvSplitMemberCount.setText(totalMembers + " Người");
+        }
+
+        if (chiPhiDaLoc == null || chiPhiDaLoc.isEmpty()) {
+            if (tvGroupSplitDetail != null) {
+                tvGroupSplitDetail.setVisibility(View.VISIBLE);
+                tvGroupSplitDetail.setText("Chưa có khoản chi tiêu nào để chia tiền nhóm");
+            }
+            if (rvGroupSplit != null) rvGroupSplit.setVisibility(View.GONE);
+            return;
+        }
+
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        NguoiDung curUserObj = nguoiDungDAO.layTheoId(currentUserId);
+        String curUserFullName = (curUserObj != null && curUserObj.getHoTen() != null) ? curUserObj.getHoTen() : "";
+        String curUserUsername = (curUserObj != null && curUserObj.getTenDangNhap() != null) ? curUserObj.getTenDangNhap() : "";
+
+        // Tên bản thân hiển thị trên UI BẮT BUỘC luôn luôn là "Tôi"
+        final String currentUserName = "Tôi";
+
+        Map<String, Long> mapTongTraMoiNguoi = new HashMap<>();
+
+        // 1. Luôn đưa "Tôi" (người đang đăng nhập thanh) vào nhóm
+        mapTongTraMoiNguoi.put(currentUserName, 0L);
+
+        // 2. Chỉ nạp các thành viên KHÁC trong chuyến đi từ DB (loại trừ tài khoản đang đăng nhập)
+        if (memberIds != null) {
+            for (int mId : memberIds) {
+                if (mId != currentUserId) {
+                    NguoiDung nd = nguoiDungDAO.layTheoId(mId);
+                    if (nd != null) {
+                        String ten = (nd.getHoTen() != null && !nd.getHoTen().isEmpty()) ? nd.getHoTen() : nd.getTenDangNhap();
+                        if (!ten.equalsIgnoreCase(curUserFullName) && !ten.equalsIgnoreCase(curUserUsername)) {
+                            mapTongTraMoiNguoi.put(ten, 0L);
+                        }
+                    }
+                }
+            }
+        }
+
+        long totalSpent = 0;
+        for (ItemChiPhi cp : chiPhiDaLoc) {
+            if (cp.getSoTien() > 0) {
+                totalSpent += cp.getSoTien();
+                String payerName = (cp.getNguoiChi() != null && !cp.getNguoiChi().isEmpty()) ? cp.getNguoiChi() : currentUserName;
+
+                // Nếu người trả là "Tôi" hoặc trùng với họ tên/username của bạn -> quy về "Tôi"
+                if ("Tôi".equalsIgnoreCase(payerName)
+                        || (!curUserFullName.isEmpty() && curUserFullName.equalsIgnoreCase(payerName))
+                        || (!curUserUsername.isEmpty() && curUserUsername.equalsIgnoreCase(payerName))) {
+                    payerName = currentUserName;
+                }
+
+                // Nếu người trả không thuộc thành viên chuyến đi -> quy về "Tôi"
+                if (!mapTongTraMoiNguoi.containsKey(payerName)) {
+                    payerName = currentUserName;
+                }
+
+                long curPaid = mapTongTraMoiNguoi.get(payerName);
+                mapTongTraMoiNguoi.put(payerName, curPaid + cp.getSoTien());
+            }
+        }
+
+        List<ItemChiaTien> danhSachChiaTien = new ArrayList<>();
+
+        // Hiển thị tổng số tiền thực tế từng người đã đứng ra trả (+Số tiền)
+        for (Map.Entry<String, Long> entry : mapTongTraMoiNguoi.entrySet()) {
+            String payerName = entry.getKey();
+            long paidAmount = entry.getValue();
+            if (paidAmount > 0) {
+                String initial = !payerName.isEmpty() ? String.valueOf(payerName.charAt(0)).toUpperCase() : "T";
+                String desc = payerName + " đã trả tổng cộng";
+                danhSachChiaTien.add(new ItemChiaTien(initial, true, desc, paidAmount));
+            }
+        }
+
+        // Thuật toán cấn trừ nợ chính xác (-Số tiền)
+        int memberCount = mapTongTraMoiNguoi.size();
+        if (memberCount > 1 && totalSpent > 0) {
+            long fairShare = totalSpent / memberCount;
+
+            List<BalanceMember> creditors = new ArrayList<>();
+            List<BalanceMember> debtors = new ArrayList<>();
+
+            for (Map.Entry<String, Long> entry : mapTongTraMoiNguoi.entrySet()) {
+                long netBalance = entry.getValue() - fairShare;
+                if (netBalance > 0) {
+                    creditors.add(new BalanceMember(entry.getKey(), netBalance));
+                } else if (netBalance < 0) {
+                    debtors.add(new BalanceMember(entry.getKey(), Math.abs(netBalance)));
+                }
+            }
+
+            for (BalanceMember debtor : debtors) {
+                for (BalanceMember creditor : creditors) {
+                    if (debtor.balance <= 0) break;
+                    if (creditor.balance <= 0) continue;
+
+                    long owe = Math.min(debtor.balance, creditor.balance);
+
+                    String initial = !debtor.name.isEmpty() ? String.valueOf(debtor.name.charAt(0)).toUpperCase() : "N";
+                    String desc = debtor.name + " nợ " + creditor.name;
+                    danhSachChiaTien.add(new ItemChiaTien(initial, false, desc, owe));
+
+                    debtor.balance -= owe;
+                    creditor.balance -= owe;
+                }
+            }
+        }
+
+        if (!danhSachChiaTien.isEmpty()) {
+            if (tvGroupSplitDetail != null) tvGroupSplitDetail.setVisibility(View.GONE);
+            if (rvGroupSplit != null) rvGroupSplit.setVisibility(View.VISIBLE);
+            if (adapterChiaTien != null) adapterChiaTien.setDanhSach(danhSachChiaTien);
+        } else {
+            if (tvGroupSplitDetail != null) {
+                tvGroupSplitDetail.setVisibility(View.VISIBLE);
+                tvGroupSplitDetail.setText("Chưa có dữ liệu chia tiền nhóm");
+            }
+            if (rvGroupSplit != null) rvGroupSplit.setVisibility(View.GONE);
+        }
+    }
+
+    private ItemChiPhi.LoaiDanhMuc mapCategoryToEnum(int maDanhMuc, String tenDanhMuc) {
+        if (tenDanhMuc != null) {
+            String lower = tenDanhMuc.toLowerCase();
+            if (lower.contains("ăn") || lower.contains("uống")) return ItemChiPhi.LoaiDanhMuc.AN_UONG;
+            if (lower.contains("di chuyển") || lower.contains("xe") || lower.contains("vé")) return ItemChiPhi.LoaiDanhMuc.DI_CHUYEN;
+            if (lower.contains("lưu trú") || lower.contains("khách sạn") || lower.contains("homestay")) return ItemChiPhi.LoaiDanhMuc.LUU_TRU;
+        }
+        switch (maDanhMuc) {
+            case 1: return ItemChiPhi.LoaiDanhMuc.AN_UONG;
+            case 2: return ItemChiPhi.LoaiDanhMuc.DI_CHUYEN;
+            case 3: return ItemChiPhi.LoaiDanhMuc.LUU_TRU;
+            default: return ItemChiPhi.LoaiDanhMuc.KHAC;
+        }
     }
 
     private void setupAddExpenseButton() {
-        binding.btnAddExpense.setOnClickListener(v -> showAddExpenseDialog());
+        if (btnAddExpense != null) {
+            btnAddExpense.setOnClickListener(v -> {
+                if (!kiemTraQuyenChinhSua()) {
+                    return;
+                }
+                showAddExpenseDialog();
+            });
+        }
     }
 
     private void showAddExpenseDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        DialogChiPhiBinding dialogBinding = DialogChiPhiBinding.inflate(getLayoutInflater());
-        dialog.setContentView(dialogBinding.getRoot());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_chi_phi, null);
+        dialog.setContentView(dialogView);
+
+        Spinner spCategory = dialogView.findViewById(R.id.spCategory);
+        Spinner spPayer = dialogView.findViewById(R.id.spPayer);
+        ImageView btnCloseDialog = dialogView.findViewById(R.id.btnCloseDialog);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        Button btnSaveExpense = dialogView.findViewById(R.id.btnSaveExpense);
+        EditText edtExpenseTitle = dialogView.findViewById(R.id.edtExpenseTitle);
+        EditText edtExpenseAmount = dialogView.findViewById(R.id.edtExpenseAmount);
 
         String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories);
-        dialogBinding.spCategory.setAdapter(catAdapter);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categories);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spCategory != null) spCategory.setAdapter(catAdapter);
 
-        String[] payers = new String[]{"Tôi", "Hoàn", "Phú", "Cả nhóm"};
-        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, payers);
-        dialogBinding.spPayer.setAdapter(payerAdapter);
+        int targetMaChuyenDi = getTargetTripId();
 
-        dialogBinding.btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
-        dialogBinding.btnCancel.setOnClickListener(v -> dialog.dismiss());
+        List<String> payers = layDanhSachNguoiThanhToan(targetMaChuyenDi);
+        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, payers);
+        payerAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spPayer != null) spPayer.setAdapter(payerAdapter);
 
-        dialogBinding.btnSaveExpense.setOnClickListener(v -> {
-            String title = dialogBinding.edtExpenseTitle.getText().toString().trim();
-            String amountStr = dialogBinding.edtExpenseAmount.getText().toString().trim();
+        if (btnCloseDialog != null) btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-            if (TextUtils.isEmpty(title)) {
-                dialogBinding.edtExpenseTitle.setError("Vui lòng nhập tên khoản chi");
-                return;
-            }
-            if (TextUtils.isEmpty(amountStr)) {
-                dialogBinding.edtExpenseAmount.setError("Vui lòng nhập số tiền");
-                return;
-            }
+        final int finalTargetTripId = targetMaChuyenDi;
 
-            long amount = 0;
-            try {
-                amount = Long.parseLong(amountStr);
-            } catch (NumberFormatException e) {
-                dialogBinding.edtExpenseAmount.setError("Số tiền không hợp lệ");
-                return;
-            }
+        if (btnSaveExpense != null) {
+            btnSaveExpense.setOnClickListener(v -> {
+                String title = edtExpenseTitle != null ? edtExpenseTitle.getText().toString().trim() : "";
+                String amountStr = edtExpenseAmount != null ? edtExpenseAmount.getText().toString().trim() : "";
 
-            int catPos = dialogBinding.spCategory.getSelectedItemPosition();
-            ItemChiPhi.LoaiDanhMuc loaiDanhMuc;
-            switch (catPos) {
-                case 1:
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.AN_UONG;
-                    break;
-                case 2:
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.LUU_TRU;
-                    break;
-                case 3:
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.KHAC;
-                    break;
-                case 0:
-                default:
-                    loaiDanhMuc = ItemChiPhi.LoaiDanhMuc.DI_CHUYEN;
-                    break;
-            }
+                if (TextUtils.isEmpty(title)) {
+                    if (edtExpenseTitle != null) edtExpenseTitle.setError("Vui lòng nhập tên khoản chi");
+                    return;
+                }
+                if (TextUtils.isEmpty(amountStr)) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Vui lòng nhập số tiền");
+                    return;
+                }
 
-            String selectedPayer = payers[dialogBinding.spPayer.getSelectedItemPosition()];
-            String catName = categories[catPos];
-            String selectedTrip = binding.spFilterDate.getSelectedItem() != null ? binding.spFilterDate.getSelectedItem().toString() : "Đà Lạt 12/11";
+                long amount;
+                try {
+                    amount = Long.parseLong(amountStr.replaceAll("[^0-9]", ""));
+                } catch (NumberFormatException e) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Số tiền không hợp lệ");
+                    return;
+                }
 
-            ItemChiPhi newItem = new ItemChiPhi(
-                    String.valueOf(System.currentTimeMillis()),
-                    title,
-                    catName + " • " + selectedPayer + " thanh toán",
-                    amount,
-                    loaiDanhMuc,
-                    selectedPayer,
-                    selectedTrip
-            );
+                if (amount <= 0) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Số tiền phải lớn hơn 0");
+                    return;
+                }
 
-            tatCaChiPhi.add(0, newItem);
-            applyFilters();
+                int catPos = spCategory != null ? spCategory.getSelectedItemPosition() : 0;
+                int maDanhMuc;
+                switch (catPos) {
+                    case 1: maDanhMuc = 1; break;
+                    case 2: maDanhMuc = 3; break;
+                    case 3: maDanhMuc = 6; break;
+                    case 0:
+                    default: maDanhMuc = 2; break;
+                }
 
-            Toast.makeText(requireContext(), "Đã thêm khoản chi phí mới!", Toast.LENGTH_SHORT).show();
-            dialog.dismiss();
-        });
+                if (finalTargetTripId <= 0) {
+                    Toast.makeText(requireContext(), "Vui lòng tạo chuyến đi trước khi thêm chi phí", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                String ngayChiDb = sdfYmd.format(new Date());
+
+                ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(finalTargetTripId);
+                if (cd != null && cd.getNgayDi() != null && !cd.getNgayDi().isEmpty()) {
+                    ngayChiDb = cd.getNgayDi();
+                }
+
+                String selectedPayer = spPayer != null && spPayer.getSelectedItem() != null ? spPayer.getSelectedItem().toString() : "Tôi";
+                String noteToSave = title;
+                if (!"Tôi".equalsIgnoreCase(selectedPayer)) {
+                    noteToSave = title + " (Thanh toán: " + selectedPayer + ")";
+                }
+
+                ChiPhi chiPhi = new ChiPhi(finalTargetTripId, maDanhMuc, amount, ngayChiDb, noteToSave);
+                long id = chiPhiDAO.themChiPhi(chiPhi);
+
+                if (id > 0) {
+                    Toast.makeText(requireContext(), "Đã thêm khoản chi phí thành công!", Toast.LENGTH_SHORT).show();
+                }
+
+                loadDataFromDatabase();
+                dialog.dismiss();
+            });
+        }
 
         dialog.show();
     }
 
-    private void setupActionButtons() {
-        binding.btnExport.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Đang xuất báo cáo chi tiêu dạng Excel / PDF...", Toast.LENGTH_SHORT).show()
-        );
+    private void showEditExpenseDialog(ItemChiPhi item) {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_chi_phi, null);
+        dialog.setContentView(dialogView);
 
-        binding.btnAutoSplit.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Đang tự động chia đều tiền nhóm (Ai nợ Ai)...", Toast.LENGTH_SHORT).show()
-        );
+        Spinner spCategory = dialogView.findViewById(R.id.spCategory);
+        Spinner spPayer = dialogView.findViewById(R.id.spPayer);
+        ImageView btnCloseDialog = dialogView.findViewById(R.id.btnCloseDialog);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        Button btnSaveExpense = dialogView.findViewById(R.id.btnSaveExpense);
+        EditText edtExpenseTitle = dialogView.findViewById(R.id.edtExpenseTitle);
+        EditText edtExpenseAmount = dialogView.findViewById(R.id.edtExpenseAmount);
+
+        String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categories);
+        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spCategory != null) spCategory.setAdapter(catAdapter);
+
+        if (spCategory != null) {
+            if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.AN_UONG) spCategory.setSelection(1);
+            else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.LUU_TRU) spCategory.setSelection(2);
+            else if (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.KHAC) spCategory.setSelection(3);
+            else spCategory.setSelection(0);
+        }
+
+        int targetMaChuyenDi = getTargetTripId();
+
+        List<String> payers = layDanhSachNguoiThanhToan(targetMaChuyenDi);
+        ArrayAdapter<String> payerAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, payers);
+        payerAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+        if (spPayer != null) spPayer.setAdapter(payerAdapter);
+
+        if (spPayer != null && item.getNguoiChi() != null) {
+            int pIndex = payers.indexOf(item.getNguoiChi());
+            if (pIndex >= 0) spPayer.setSelection(pIndex);
+        }
+
+        if (edtExpenseTitle != null) edtExpenseTitle.setText(item.getTieuDe());
+        if (edtExpenseAmount != null) edtExpenseAmount.setText(String.valueOf(item.getSoTien()));
+        if (btnSaveExpense != null) btnSaveExpense.setText("Cập nhật chi phí");
+
+        if (btnCloseDialog != null) btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (btnSaveExpense != null) {
+            btnSaveExpense.setOnClickListener(v -> {
+                String title = edtExpenseTitle != null ? edtExpenseTitle.getText().toString().trim() : "";
+                String amountStr = edtExpenseAmount != null ? edtExpenseAmount.getText().toString().trim() : "";
+
+                if (TextUtils.isEmpty(title)) {
+                    if (edtExpenseTitle != null) edtExpenseTitle.setError("Vui lòng nhập tên khoản chi");
+                    return;
+                }
+                if (TextUtils.isEmpty(amountStr)) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Vui lòng nhập số tiền");
+                    return;
+                }
+
+                long amount;
+                try {
+                    amount = Long.parseLong(amountStr.replaceAll("[^0-9]", ""));
+                } catch (NumberFormatException e) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Số tiền không hợp lệ");
+                    return;
+                }
+
+                if (amount <= 0) {
+                    if (edtExpenseAmount != null) edtExpenseAmount.setError("Số tiền phải lớn hơn 0");
+                    return;
+                }
+
+                int catPos = spCategory != null ? spCategory.getSelectedItemPosition() : 0;
+                int maDanhMuc;
+                switch (catPos) {
+                    case 1: maDanhMuc = 1; break;
+                    case 2: maDanhMuc = 3; break;
+                    case 3: maDanhMuc = 6; break;
+                    case 0:
+                    default: maDanhMuc = 2; break;
+                }
+
+                int maChiPhi = 0;
+                try {
+                    maChiPhi = Integer.parseInt(item.getMaId());
+                } catch (NumberFormatException ignored) {}
+
+                SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                String ngayChiDb = sdfYmd.format(new Date());
+
+                String selectedPayer = spPayer != null && spPayer.getSelectedItem() != null ? spPayer.getSelectedItem().toString() : "Tôi";
+                String noteToSave = title;
+                if (!"Tôi".equalsIgnoreCase(selectedPayer)) {
+                    noteToSave = title + " (Thanh toán: " + selectedPayer + ")";
+                }
+
+                ChiPhi chiPhi = new ChiPhi();
+                chiPhi.setMaChiPhi(maChiPhi);
+                chiPhi.setMaDanhMuc(maDanhMuc);
+                chiPhi.setSoTien(amount);
+                chiPhi.setNgayChi(ngayChiDb);
+                chiPhi.setGhiChu(noteToSave);
+
+                boolean updated = chiPhiDAO.capNhatChiPhi(chiPhi);
+                if (updated) {
+                    Toast.makeText(requireContext(), "Cập nhật chi phí thành công!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Không thể cập nhật chi phí", Toast.LENGTH_SHORT).show();
+                }
+
+                loadDataFromDatabase();
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void xacNhanXoaChiPhi(ItemChiPhi item) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Xóa khoản chi")
+                .setMessage("Bạn có chắc chắn muốn xóa khoản chi '" + item.getTieuDe() + "' không?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    int maChiPhi = 0;
+                    try {
+                        maChiPhi = Integer.parseInt(item.getMaId());
+                    } catch (NumberFormatException ignored) {}
+
+                    if (maChiPhi > 0) {
+                        boolean deleted = chiPhiDAO.xoaChiPhi(maChiPhi);
+                        if (deleted) {
+                            Toast.makeText(requireContext(), "Đã xóa khoản chi!", Toast.LENGTH_SHORT).show();
+                            loadDataFromDatabase();
+                        } else {
+                            Toast.makeText(requireContext(), "Lỗi khi xóa khoản chi", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void setupActionButtons() {
+        if (btnAutoSplit != null) {
+            btnAutoSplit.setOnClickListener(v -> {
+                int targetTripId = getTargetTripId();
+                SharedPreferences sp = requireContext().getSharedPreferences("group_split_pref", Context.MODE_PRIVATE);
+                sp.edit().putBoolean("has_calculated_split_" + targetTripId, true).apply();
+
+                thucHienChiaTienNhom();
+                Toast.makeText(requireContext(), "Đã tính toán chia tiền nhóm!", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
     private String formatMoney(long amount) {
         return String.format(Locale.getDefault(), "%,d đ", amount).replace(',', '.');
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
     }
 }

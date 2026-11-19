@@ -58,19 +58,21 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tvSchedulePercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="33%"
+                        android:text="0%"
                         android:textColor="@color/teal_primary"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvScheduleCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="1/3 địa điểm đã đi"
+                        android:text="0/0 địa điểm đã đi"
                         android:textColor="@color/text_muted"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -102,19 +104,21 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tvBudgetPercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="61%"
+                        android:text="0%"
                         android:textColor="#B45309"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvBudgetDetail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="3.05M / 5.00M đ"
+                        android:text="0đ / 0đ"
                         android:textColor="@color/text_muted"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -168,10 +172,11 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvTotalDistance"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="~320 km"
+                            android:text="0 km"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -191,10 +196,11 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvMainVehicle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Máy bay + Xe máy"
+                            android:text="Chưa xác định"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -230,7 +236,7 @@
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
-                <!-- Bar 1: Lưu trú (59%) -->
+                <!-- Bar 1: Lưu trú -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -244,32 +250,34 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Lưu trú (Homestay)"
+                            android:text="Lưu trú"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvStaySpent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="1.800.000 đ (59%)"
+                            android:text="0 đ (0%)"
                             android:textColor="@color/text_primary"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
 
                     <ProgressBar
+                        android:id="@+id/pbStaySpent"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:layout_marginTop="6dp"
                         android:max="100"
-                        android:progress="59"
+                        android:progress="0"
                         android:progressDrawable="@drawable/bg_pill_teal"
                         android:progressTint="#7E22CE" />
                 </LinearLayout>
 
-                <!-- Bar 2: Di chuyển (41%) -->
+                <!-- Bar 2: Di chuyển -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -283,29 +291,113 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Di chuyển (Máy bay)"
+                            android:text="Di chuyển"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tvMoveSpent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:text="1.250.000 đ (41%)"
+                            android:text="0 đ (0%)"
                             android:textColor="@color/text_primary"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </RelativeLayout>
 
                     <ProgressBar
+                        android:id="@+id/pbMoveSpent"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:layout_marginTop="6dp"
                         android:max="100"
-                        android:progress="41"
+                        android:progress="0"
                         android:progressDrawable="@drawable/bg_pill_teal"
                         android:progressTint="#4338CA" />
+                </LinearLayout>
+
+                <!-- Bar 3: Ăn uống -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ăn uống"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvFoodSpent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="0 đ (0%)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbFoodSpent"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_pill_teal"
+                        android:progressTint="#D97706" />
+                </LinearLayout>
+
+                <!-- Bar 4: Giải trí / Khác -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Giải trí / Khác"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvOtherSpent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="0 đ (0%)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbOtherSpent"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_pill_teal"
+                        android:progressTint="#0D9488" />
                 </LinearLayout>
 
             </LinearLayout>
