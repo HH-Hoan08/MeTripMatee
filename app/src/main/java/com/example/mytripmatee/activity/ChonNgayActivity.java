@@ -14,7 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterLich;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -28,39 +31,53 @@ public class ChonNgayActivity extends AppCompatActivity {
     private View btnApplyDate, btnReset, btnPreset3N2D, btnPresetWeekend;
     private ImageButton btnBack, btnPrevMonth, btnNextMonth;
     private AdapterLich adapter;
-    private Integer selectedStartDate = 12;
-    private Integer selectedEndDate = 15;
+    // Các biến điều khiển lịch và ngày chọn
+    private Calendar ngayHomNay;             // mốc thời gian thực tế hiện tại để cấm ngày quá khứ
+    private Calendar lichDangXem;            // tháng/năm hiện tại đang được hiển thị trên lịch
+    private String ngayBatDauChonStr = null;
+    private String ngayKetThucChonStr = null;
+    private List<AdapterLich.ItemNgayLich> danhSachNgayLich = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chon_ngay);
 
-        if (getIntent() != null) {
-            String incomingDi = getIntent().getStringExtra("ngayDi");
-            String incomingVe = getIntent().getStringExtra("ngayVe");
-            if (incomingDi != null && incomingDi.contains("-")) {
+        // khởi tạo ngày hôm nay làm mốc chặn
+        ngayHomNay = Calendar.getInstance();
+        ngayHomNay.set(Calendar.HOUR_OF_DAY, 0);
+        ngayHomNay.set(Calendar.MINUTE, 0);
+        ngayHomNay.set(Calendar.SECOND, 0);
+        ngayHomNay.set(Calendar.MILLISECOND, 0);
+
+        // mặc định lịch đang mở tháng hiện tại
+        lichDangXem = (Calendar) ngayHomNay.clone();
+
+        // nhận ngày đi và ngày về truyền từ màn hình sửa
+        if(getIntent() != null) {
+            String ngayDiTruyenVao = getIntent().getStringExtra("ngayDi");
+            String ngayVeTruyenVao = getIntent().getStringExtra("ngayVe");
+            if (ngayDiTruyenVao != null && ngayDiTruyenVao.length() == 10) {
+                ngayBatDauChonStr = ngayDiTruyenVao;
                 try {
-                    String[] parts = incomingDi.split("-");
-                    if (parts.length == 3) {
-                        selectedStartDate = Integer.parseInt(parts[2]);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date ngayDiDate = sdf.parse(ngayDiTruyenVao);
+
+                    // nếu chuyến đi ở năm 2027, tự động mở ngay lịch năm 2027
+                    if(ngayDiDate != null && ngayDiDate.after(ngayHomNay.getTime())) {
+                        lichDangXem.setTime(ngayDiDate);
                     }
-                } catch (Exception ignored) {}
-            }
-            if (incomingVe != null && incomingVe.contains("-")) {
-                try {
-                    String[] parts = incomingVe.split("-");
-                    if (parts.length == 3) {
-                        selectedEndDate = Integer.parseInt(parts[2]);
-                    }
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
         initViews();
-        setupCalendar();
-        setupListeners();
-        updateSummaryText();
+        caiDatRecyclerViewLich();
+        caiDatSuKienNutBam();
+        capNhatLichHienThi();
+        capNhatChuTomTat();
     }
 
     private void initViews() {
@@ -76,144 +93,177 @@ public class ChonNgayActivity extends AppCompatActivity {
         btnPresetWeekend = findViewById(R.id.btnPresetWeekend);
     }
 
-    private void setupCalendar() {
+    private void caiDatRecyclerViewLich() {
         rvCalendarDays.setLayoutManager(new GridLayoutManager(this, 7));
-
-        List<AdapterLich.ItemNgayLich> daysList = new ArrayList<>();
-        for (int d = 26; d <= 31; d++) {
-            daysList.add(new AdapterLich.ItemNgayLich(d, false));
-        }
-        for (int d = 1; d <= 30; d++) {
-            daysList.add(new AdapterLich.ItemNgayLich(d, true));
-        }
-
-        adapter = new AdapterLich(daysList, this::onDayClick);
-        adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
+        adapter = new AdapterLich(danhSachNgayLich, this::xuLyChonNgay);
         rvCalendarDays.setAdapter(adapter);
     }
 
-    private void setupListeners() {
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+    private void capNhatLichHienThi() {
+        danhSachNgayLich.clear();
+        int thangHienThi = lichDangXem.get(Calendar.MONTH); // 0 - 11
+        int namHienThi = lichDangXem.get(Calendar.YEAR);
+        tvMonthYear.setText(String.format(Locale.getDefault(), "Tháng %d, %d", thangHienThi + 1, namHienThi));
 
-        if (btnReset != null) {
-            btnReset.setOnClickListener(v -> {
-                selectedStartDate = null;
-                selectedEndDate = null;
-                if (adapter != null) {
-                    adapter.setKhoangNgayChon(null, null);
-                }
-                updateSummaryText();
-            });
-        }
-
-        if (btnPreset3N2D != null) {
-            btnPreset3N2D.setOnClickListener(v -> {
-                selectedStartDate = 12;
-                selectedEndDate = 15;
-                if (adapter != null) {
-                    adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
-                }
-                updateSummaryText();
-            });
-        }
-
-        if (btnPresetWeekend != null) {
-            btnPresetWeekend.setOnClickListener(v -> {
-                selectedStartDate = 20;
-                selectedEndDate = 22;
-                if (adapter != null) {
-                    adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
-                }
-                updateSummaryText();
-            });
-        }
-
+        // nếu tháng/năm đang xem <= tháng/năm hiện tại thì KHÓA nút mũi tên lùi (<)
+        boolean laThangHienTaiHoacQuaKhu = (namHienThi < ngayHomNay.get(Calendar.YEAR)) ||
+                (namHienThi == ngayHomNay.get(Calendar.YEAR) && thangHienThi <= ngayHomNay.get(Calendar.MONTH));
         if (btnPrevMonth != null) {
-            btnPrevMonth.setOnClickListener(v ->
-                    Toast.makeText(this, "Xem lịch Tháng 10, 2026", Toast.LENGTH_SHORT).show()
-            );
+            btnPrevMonth.setEnabled(!laThangHienTaiHoacQuaKhu);
+            btnPrevMonth.setAlpha(laThangHienTaiHoacQuaKhu ? 0.25f : 1.0f);
         }
 
-        if (btnNextMonth != null) {
-            btnNextMonth.setOnClickListener(v ->
-                    Toast.makeText(this, "Xem lịch Tháng 12, 2026", Toast.LENGTH_SHORT).show()
-            );
+        // tính toán thứ của ngày mùng 1
+        Calendar lichTam = (Calendar) lichDangXem.clone();
+        lichTam.set(Calendar.DAY_OF_MONTH, 1);
+        int thuTrongTuan = lichTam.get(Calendar.DAY_OF_WEEK);
+        // tính số ngày đệm phía trước (theo chuẩn Thứ 2 đầu tuần)
+        int soNgayDemPhiaTruoc = (thuTrongTuan == Calendar.SUNDAY) ? 6 : (thuTrongTuan - Calendar.MONDAY);
+        // thêm các ngày đệm của tháng trước (làm xám)
+        Calendar lichThangTruoc = (Calendar) lichDangXem.clone();
+        lichThangTruoc.add(Calendar.MONTH, -1);
+        int soNgayThangTruoc = lichThangTruoc.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for (int i = soNgayDemPhiaTruoc - 1; i >= 0; i--) {
+            danhSachNgayLich.add(new AdapterLich.ItemNgayLich(
+                    soNgayThangTruoc - i,
+                    lichThangTruoc.get(Calendar.MONTH),
+                    lichThangTruoc.get(Calendar.YEAR),
+                    false, true
+            ));
         }
-
-        if (btnApplyDate != null) {
-            btnApplyDate.setOnClickListener(v -> applyAndFinish());
+        // thêm các ngày của tháng hiện tại
+        int soNgayTrongThang = lichDangXem.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for (int ngay = 1; ngay <= soNgayTrongThang; ngay++) {
+            Calendar lichKiemTra = (Calendar) lichDangXem.clone();
+            lichKiemTra.set(Calendar.DAY_OF_MONTH, ngay);
+            lichKiemTra.set(Calendar.HOUR_OF_DAY, 0);
+            lichKiemTra.set(Calendar.MINUTE, 0);
+            lichKiemTra.set(Calendar.SECOND, 0);
+            lichKiemTra.set(Calendar.MILLISECOND, 0);
+            // đánh dấu là đã qua nếu ngày này < ngayHomNay
+            boolean daQua = lichKiemTra.before(ngayHomNay);
+            danhSachNgayLich.add(new AdapterLich.ItemNgayLich(
+                    ngay, thangHienThi, namHienThi, true, daQua
+            ));
+        }
+        if (adapter != null) {
+            adapter.setKhoangNgayChon(ngayBatDauChonStr, ngayKetThucChonStr);
+            adapter.capNhatDanhSach(danhSachNgayLich);
         }
     }
 
-    private void onDayClick(int dayClicked) {
-        if (selectedStartDate == null) {
-            selectedStartDate = dayClicked;
-            selectedEndDate = null;
-        } else if (selectedEndDate == null && dayClicked > selectedStartDate) {
-            selectedEndDate = dayClicked;
+    private void caiDatSuKienNutBam() {
+        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+
+        // nút sang tháng sau (>) -> tự do sang Tháng 12/2026, 2027, 2028...
+        if (btnNextMonth != null) {
+            btnNextMonth.setOnClickListener(v -> {
+                lichDangXem.add(Calendar.MONTH, 1);
+                capNhatLichHienThi();
+            });
+        }
+
+        // nút lùi về tháng trước (<) -> bị cấm nếu đang ở tháng hiện tại
+        if (btnPrevMonth != null) {
+            btnPrevMonth.setOnClickListener(v -> {
+                lichDangXem.add(Calendar.MONTH, -1);
+                capNhatLichHienThi();
+            });
+        }
+
+        // bấm "Tháng 11, 2026" để nhảy nhanh sang năm 2027
+        if (tvMonthYear != null) {
+            tvMonthYear.setOnClickListener(v -> hienThiChonNhanhNamThang());
+        }
+
+        // nút Đặt lại
+        if (btnReset != null) {
+            btnReset.setOnClickListener(v -> {
+                ngayBatDauChonStr = null;
+                ngayKetThucChonStr = null;
+                if (adapter != null) adapter.setKhoangNgayChon(null, null);
+                capNhatChuTomTat();
+            });
+        }
+
+        // nút Áp dụng ✓
+        if (btnApplyDate != null) {
+            btnApplyDate.setOnClickListener(v -> xacNhanVaDong());
+        }
+    }
+
+    // hộp thoại chọn nhanh năm 2026, 2027, 2028
+    private void hienThiChonNhanhNamThang() {
+        String[] danhSachNam = {"2026", "2027", "2028"};
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Chọn năm khởi hành")
+                .setItems(danhSachNam, (dialog, vitri) -> {
+                    int namDaChon = Integer.parseInt(danhSachNam[vitri]);
+                    lichDangXem.set(Calendar.YEAR, namDaChon);
+                    // nếu chọn năm hiện tại thì không được để tháng nhỏ hơn tháng hiện tại
+                    if (namDaChon == ngayHomNay.get(Calendar.YEAR) && lichDangXem.get(Calendar.MONTH) < ngayHomNay.get(Calendar.MONTH)) {
+                        lichDangXem.set(Calendar.MONTH, ngayHomNay.get(Calendar.MONTH));
+                    }
+                    capNhatLichHienThi();
+                })
+                .show();
+    }
+
+    private void xuLyChonNgay(AdapterLich.ItemNgayLich itemNgay) {
+        if (itemNgay.daQua || !itemNgay.laThangHienTai) return;
+
+        String chuoiNgayChon = itemNgay.layChuoiNgayChuan();
+
+        if (ngayBatDauChonStr == null) {
+            ngayBatDauChonStr = chuoiNgayChon;
+            ngayKetThucChonStr = null;
+        } else if (ngayKetThucChonStr == null) {
+            if (chuoiNgayChon.compareTo(ngayBatDauChonStr) >= 0) {
+                ngayKetThucChonStr = chuoiNgayChon;
+            } else {
+                // nếu bấm ngày trước ngày bắt đầu thì lấy ngày này làm ngày bắt đầu mới
+                ngayBatDauChonStr = chuoiNgayChon;
+                ngayKetThucChonStr = null;
+            }
         } else {
-            selectedStartDate = dayClicked;
-            selectedEndDate = null;
+            // nếu đã chọn cả 2 ngày rồi thì bấm lại để chọn đợt mới
+            ngayBatDauChonStr = chuoiNgayChon;
+            ngayKetThucChonStr = null;
         }
 
         if (adapter != null) {
-            adapter.setKhoangNgayChon(selectedStartDate, selectedEndDate);
+            adapter.setKhoangNgayChon(ngayBatDauChonStr, ngayKetThucChonStr);
         }
-        updateSummaryText();
+        capNhatChuTomTat();
     }
 
-    private void updateSummaryText() {
+    private void capNhatChuTomTat() {
         if (tvSelectedRange == null) return;
 
-        if (selectedStartDate != null && selectedEndDate != null) {
-            int duration = (selectedEndDate - selectedStartDate) + 1;
-            int nights = duration - 1;
-            tvSelectedRange.setText("Thời gian đã chọn:\n" + selectedStartDate + " Th11 → " + selectedEndDate + " Th11, 2026 (" + duration + "N" + nights + "Đ)");
-        } else if (selectedStartDate != null) {
-            tvSelectedRange.setText("Đang chọn ngày về (từ ngày " + selectedStartDate + " Th11)...");
+        if (ngayBatDauChonStr != null && ngayKetThucChonStr != null) {
+            tvSelectedRange.setText("Thời gian đã chọn:\n" + ngayBatDauChonStr + " → " + ngayKetThucChonStr);
+        } else if (ngayBatDauChonStr != null) {
+            tvSelectedRange.setText("Đang chọn ngày về (từ ngày " + ngayBatDauChonStr + ")...");
         } else {
             tvSelectedRange.setText("Chưa chọn ngày");
         }
     }
 
-    private void applyAndFinish() {
-        String dateRange;
-        String durationText;
-        String ngayDiDb;
-        String ngayVeDb;
-
-        int month = 11;
-        int year = 2026;
-
-        if (selectedStartDate != null && selectedEndDate != null) {
-            int duration = (selectedEndDate - selectedStartDate) + 1;
-            int nights = Math.max(0, duration - 1);
-            dateRange = selectedStartDate + "/11/2026 – " + selectedEndDate + "/11/2026";
-            durationText = duration + " Ngày " + nights + " Đêm";
-            ngayDiDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedStartDate);
-            ngayVeDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedEndDate);
-        } else if (selectedStartDate != null) {
-            dateRange = selectedStartDate + "/11/2026";
-            durationText = "1 Ngày 0 Đêm";
-            ngayDiDb = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month, selectedStartDate);
-            ngayVeDb = ngayDiDb;
-        } else {
-            dateRange = "12/11/2026 – 15/11/2026";
-            durationText = "4 Ngày 3 Đêm";
-            ngayDiDb = "2026-11-12";
-            ngayVeDb = "2026-11-15";
+    private void xacNhanVaDong() {
+        if (ngayBatDauChonStr == null) {
+            Toast.makeText(this, "Vui lòng chọn ngày khởi hành", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(EXTRA_RESULT_DATE_RANGE, dateRange);
-        resultIntent.putExtra(EXTRA_RESULT_DURATION, durationText);
-        resultIntent.putExtra("extra_ngay_di", ngayDiDb);
-        resultIntent.putExtra("extra_ngay_ve", ngayVeDb);
+        String ngayDi = ngayBatDauChonStr;
+        String ngayVe = (ngayKetThucChonStr != null) ? ngayKetThucChonStr : ngayBatDauChonStr;
 
-        setResult(RESULT_OK, resultIntent);
-        Toast.makeText(this, "Đã chọn: " + dateRange + " (" + durationText + ")", Toast.LENGTH_SHORT).show();
+        Intent ketQuaIntent = new Intent();
+        ketQuaIntent.putExtra("extra_ngay_di", ngayDi); // yyyy-MM-dd
+        ketQuaIntent.putExtra("extra_ngay_ve", ngayVe); // yyyy-MM-dd
+        ketQuaIntent.putExtra(EXTRA_RESULT_DATE_RANGE, ngayDi + " – " + ngayVe);
+
+        setResult(RESULT_OK, ketQuaIntent);
         finish();
     }
 }
