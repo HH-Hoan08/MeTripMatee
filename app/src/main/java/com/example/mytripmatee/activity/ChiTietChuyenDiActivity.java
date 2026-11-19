@@ -82,6 +82,14 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
         // chuyển sang màn hình chỉnh sửa chuyến đi
         binding.btnShare.setOnClickListener(v -> {
+            com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
+            int currentUserId = quanLyPhien.getMaNguoiDung();
+            ChuyenDiDAO dao = new ChuyenDiDAO(this);
+            ChuyenDi cd = dao.layChuyenDiTheoId(maChuyenDi);
+            if (cd != null && cd.getMaNguoiDung() != currentUserId) {
+                android.widget.Toast.makeText(this, "Chỉ Trưởng nhóm (người tạo) mới có quyền chỉnh sửa hoặc xóa chuyến đi!", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent intent = new Intent(ChiTietChuyenDiActivity.this, SuaChuyenDiActivity.class);
             intent.putExtra("mode_create", false);
             intent.putExtra("trip_id", maChuyenDi);
@@ -169,5 +177,14 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         binding.tvTripTitle.setText(cd.getTenChuyenDi());
         String sub = (cd.getNgayDi() != null ? cd.getNgayDi() : "") + " – " + (cd.getNgayVe() != null ? cd.getNgayVe() : "");
         binding.tvTripSubtitle.setText(sub);
+
+        // Phân quyền: Chỉ Trưởng nhóm (người tạo chuyến đi) mới thấy nút sửa/xóa
+        com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
+        int currentUserId = quanLyPhien.getMaNguoiDung();
+        if (cd.getMaNguoiDung() == currentUserId) {
+            binding.btnShare.setVisibility(android.view.View.VISIBLE);
+        } else {
+            binding.btnShare.setVisibility(android.view.View.GONE);
+        }
     }
 }
