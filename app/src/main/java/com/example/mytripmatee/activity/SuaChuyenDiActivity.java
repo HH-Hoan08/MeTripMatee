@@ -204,18 +204,44 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         }
 
         long diffDays = 1;
+        long daysUntilStart = 0;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date d1 = sdf.parse(selectedNgayDi);
             Date d2 = sdf.parse(selectedNgayVe);
+            Date today = sdf.parse(sdf.format(new Date()));
+
             if (d1 != null && d2 != null) {
                 long diffMs = d2.getTime() - d1.getTime();
                 diffDays = Math.max(1, (diffMs / (24 * 60 * 60 * 1000)) + 1);
             }
+
+            if (d1 != null && today != null) {
+                long diffMsToday = d1.getTime() - today.getTime();
+                daysUntilStart = diffMsToday / (24 * 60 * 60 * 1000);
+            }
         } catch (Exception ignored) {}
 
-        String durationStr = diffDays + " Ngày " + Math.max(0, diffDays - 1) + " Đêm";
-        if (tvDurationBadgeTime != null) tvDurationBadgeTime.setText(durationStr);
+        String durationStr;
+        if (diffDays <= 1) {
+            durationStr = "1 Ngày (Trong ngày)";
+        } else {
+            durationStr = diffDays + " Ngày " + (diffDays - 1) + " Đêm";
+        }
+
+        if (tvDurationBadgeTime != null) {
+            tvDurationBadgeTime.setText(durationStr);
+        }
+
+        if (tvCountdownTime != null) {
+            if (daysUntilStart > 0) {
+                tvCountdownTime.setText("Còn " + daysUntilStart + " ngày");
+            } else if (daysUntilStart == 0) {
+                tvCountdownTime.setText("Hôm nay");
+            } else {
+                tvCountdownTime.setText("Đã đi");
+            }
+        }
     }
 
     private void setupListeners() {
