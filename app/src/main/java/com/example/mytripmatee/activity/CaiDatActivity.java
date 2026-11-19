@@ -5,9 +5,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -18,11 +20,13 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.mytripmatee.R;
 import com.example.mytripmatee.databinding.ActivityCaiDatBinding;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -39,6 +43,7 @@ public class CaiDatActivity extends AppCompatActivity {
 
     public static Bitmap pendingSweepBitmap = null;
     public static boolean shouldAnimateSweep = false;
+    public static boolean isAnimatingDarkMode = false;
 
     private ActivityCaiDatBinding binding;
     private SharedPreferences sharedPreferences;
@@ -74,11 +79,16 @@ public class CaiDatActivity extends AppCompatActivity {
     }
 
     /**
-     * Hiệu ứng tỏa nước Circular Reveal từ tâm mượt mà, không bị nhảy giật hay giữ màu cũ ở cuối
+     * Hiệu ứng tỏa nước Circular Reveal từ tâm mượt mà, chống spam công tắc khi animation đang chạy
      */
     private void checkAndPerformWaterRippleAnimation() {
         if (shouldAnimateSweep && pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
             shouldAnimateSweep = false;
+            isAnimatingDarkMode = true;
+
+            if (binding.rowDarkMode != null) {
+                binding.rowDarkMode.setEnabled(false);
+            }
 
             // 1. Phủ ngay ảnh chụp màn hình cũ lên overlay phía trên
             binding.overlayView.setImageBitmap(pendingSweepBitmap);
@@ -86,7 +96,13 @@ public class CaiDatActivity extends AppCompatActivity {
             binding.overlayView.setVisibility(View.VISIBLE);
 
             binding.mainSettings.post(() -> {
-                if (isFinishing() || isDestroyed()) return;
+                if (isFinishing() || isDestroyed()) {
+                    isAnimatingDarkMode = false;
+                    if (binding.rowDarkMode != null) {
+                        binding.rowDarkMode.setEnabled(true);
+                    }
+                    return;
+                }
 
                 int width = binding.mainSettings.getWidth();
                 int height = binding.mainSettings.getHeight();
@@ -101,7 +117,7 @@ public class CaiDatActivity extends AppCompatActivity {
                 int centerY = height / 2;
                 float maxRadius = (float) Math.hypot(centerX, centerY);
 
-                // 3. Tỏa giao diện mới (đã đổi theme chuẩn ở đằng sau) từ tâm ra 4 góc
+                // 3. Tỏa giao diện mới từ tâm ra 4 góc
                 Animator revealAnimator = ViewAnimationUtils.createCircularReveal(
                         binding.mainSettings,
                         centerX,
@@ -124,6 +140,13 @@ public class CaiDatActivity extends AppCompatActivity {
                     public void onAnimationEnd(Animator animation) {
                         binding.overlayView.setVisibility(View.GONE);
                         binding.overlayView.setAlpha(1.0f);
+
+                        // Mở khóa lại hàng chọn sau khi 100% hiệu ứng tỏa nước đã kết thúc
+                        isAnimatingDarkMode = false;
+                        if (binding.rowDarkMode != null) {
+                            binding.rowDarkMode.setEnabled(true);
+                        }
+
                         if (pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
                             pendingSweepBitmap.recycle();
                             pendingSweepBitmap = null;
@@ -133,6 +156,11 @@ public class CaiDatActivity extends AppCompatActivity {
 
                 revealAnimator.start();
             });
+        } else {
+            isAnimatingDarkMode = false;
+            if (binding.rowDarkMode != null) {
+                binding.rowDarkMode.setEnabled(true);
+            }
         }
     }
 
@@ -145,12 +173,34 @@ public class CaiDatActivity extends AppCompatActivity {
         boolean isDarkSystem = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
         boolean isDarkModeSaved = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
 
-        binding.switchDarkMode.setOnCheckedChangeListener(null);
-        binding.switchDarkMode.setChecked(isDarkModeSaved);
+        updateDarkModeUI(isDarkModeSaved);
 
-        binding.switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            boolean currentMode = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
-            if (currentMode == isChecked) return;
+        View.OnClickListener toggleClickListener = v -> {
+            if (isAnimatingDarkMode) return;
+
+            boolean currentSavedMode = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
+            boolean newMode = !currentSavedMode;
+
+            isAnimatingDarkMode = true;
+            binding.rowDarkMode.setEnabled(false);
+
+            // Animate Icon bên trái (iconDarkMode) xoay 360 và thu phóng lật mặt
+            if (binding.iconDarkMode != null) {
+                binding.iconDarkMode.animate()
+                        .rotationBy(360f)
+                        .scaleX(0.2f)
+                        .scaleY(0.2f)
+                        .setDuration(220)
+                        .withEndAction(() -> {
+                            updateDarkModeUI(newMode);
+                            binding.iconDarkMode.animate()
+                                    .scaleX(1.0f)
+                                    .scaleY(1.0f)
+                                    .setDuration(220)
+                                    .start();
+                        })
+                        .start();
+            }
 
             // 1. Chụp ảnh màn hình giao diện hiện tại
             try {
@@ -165,21 +215,41 @@ public class CaiDatActivity extends AppCompatActivity {
             } catch (Exception e) {
                 pendingSweepBitmap = null;
                 shouldAnimateSweep = false;
+                isAnimatingDarkMode = false;
+                binding.rowDarkMode.setEnabled(true);
             }
 
-            // 2. Lưu cài đặt Dark Mode
-            sharedPreferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
+            // 2. Lưu cài đặt Dark Mode mới
+            sharedPreferences.edit().putBoolean(KEY_DARK_MODE, newMode).apply();
 
             // 3. Đổi Night Mode -> Activity sẽ recreate ngay đằng sau lớp overlayView
-            if (isChecked) {
+            if (newMode) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
 
-            // Triệt xóa animation chuyển giao diện mặc định để không bị giật
+            // Triệt xóa animation chuyển giao diện mặc định
             overridePendingTransition(0, 0);
-        });
+        };
+
+        binding.rowDarkMode.setOnClickListener(toggleClickListener);
+    }
+
+    private void updateDarkModeUI(boolean isDark) {
+        if (binding.iconDarkMode != null) {
+            if (isDark) {
+                binding.iconDarkMode.setImageResource(R.drawable.ic_dark_mode);
+                binding.iconDarkMode.setImageTintList(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, R.color.teal_primary)
+                ));
+            } else {
+                binding.iconDarkMode.setImageResource(R.drawable.ic_sun);
+                binding.iconDarkMode.setImageTintList(ColorStateList.valueOf(
+                        Color.parseColor("#F59E0B")
+                ));
+            }
+        }
     }
 
     private void setupSampleData() {

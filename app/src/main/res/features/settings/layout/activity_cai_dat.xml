@@ -113,15 +113,19 @@
                         android:orientation="vertical"
                         android:paddingHorizontal="16dp">
 
-                        <!-- Row: Dark Mode -->
+                        <!-- Row: Dark Mode (Clickable Row with Sun/Moon Icon on the Left) -->
                         <RelativeLayout
+                            android:id="@+id/rowDarkMode"
                             android:layout_width="match_parent"
-                            android:layout_height="64dp">
+                            android:layout_height="64dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <ImageView
                                 android:id="@+id/iconDarkMode"
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
                                 android:layout_alignParentStart="true"
                                 android:layout_centerVertical="true"
                                 android:contentDescription="Chế độ tối"
@@ -133,11 +137,12 @@
                                 android:layout_height="wrap_content"
                                 android:layout_centerVertical="true"
                                 android:layout_marginStart="16dp"
-                                android:layout_toStartOf="@id/switchDarkMode"
+                                android:layout_toStartOf="@id/btnDarkModeChevron"
                                 android:layout_toEndOf="@id/iconDarkMode"
                                 android:orientation="vertical">
 
                                 <TextView
+                                    android:id="@+id/tvDarkModeTitle"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Chế độ tối (Dark Mode)"
@@ -146,6 +151,7 @@
                                     android:textStyle="bold" />
 
                                 <TextView
+                                    android:id="@+id/tvDarkModeSub"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
@@ -154,13 +160,15 @@
                                     android:textSize="12sp" />
                             </LinearLayout>
 
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/switchDarkMode"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                            <ImageView
+                                android:id="@+id/btnDarkModeChevron"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
                                 android:layout_alignParentEnd="true"
                                 android:layout_centerVertical="true"
-                                app:useMaterialThemeColors="true" />
+                                android:contentDescription="Tiếp tục"
+                                android:src="@drawable/ic_chevron_right"
+                                app:tint="@color/text_muted" />
                         </RelativeLayout>
 
                     </LinearLayout>
