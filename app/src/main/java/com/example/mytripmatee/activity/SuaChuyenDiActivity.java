@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -15,6 +13,11 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.database.ChuyenDiDAO;
@@ -36,7 +39,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private MaterialButton btnSaveTop, btnSaveBottom, btnDelete;
     private TextInputEditText etTripName, etDestination;
     private EditText etBudget;
-    private TextView tvHeaderTitle;
+    private TextView tvHeaderTitle, tvHeaderSub;
     private TextView tvDurationBadgeTime, tvDateRangeTime, tvCountdownTime;
     private TextView btnTabEdit, btnTabCreate;
     private MaterialCardView cvTime;
@@ -65,7 +68,18 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
+
         setContentView(R.layout.activity_sua_chuyen_di);
+
+        View rootView = findViewById(R.id.rootLayout);
+        if (rootView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
 
         chuyenDiDAO = new ChuyenDiDAO(this);
         quanLyPhien = new QuanLyPhien(this);
@@ -89,6 +103,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         btnSaveBottom = findViewById(R.id.btnSaveBottom);
         btnDelete = findViewById(R.id.btnDelete);
         tvHeaderTitle = findViewById(R.id.tvHeaderTitle);
+        tvHeaderSub = findViewById(R.id.tvHeaderSub);
         btnTabEdit = findViewById(R.id.btnTabEdit);
         btnTabCreate = findViewById(R.id.btnTabCreate);
 
@@ -105,25 +120,27 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private void setupCreateMode() {
         isCreateMode = true;
         if (tvHeaderTitle != null) tvHeaderTitle.setText("Thêm chuyến đi mới");
+        if (tvHeaderSub != null) tvHeaderSub.setText("Tạo hành trình mới cho riêng bạn");
         if (btnDelete != null) btnDelete.setVisibility(View.GONE);
         if (btnSaveBottom != null) btnSaveBottom.setText("Lưu & Tạo chuyến đi ✓");
 
-        // Cập nhật giao diện 2 tab: Tạo chuyến mới (active), Chỉnh sửa (inactive)
+        int activeColor = ContextCompat.getColor(this, R.color.teal_primary);
+        int inactiveColor = ContextCompat.getColor(this, R.color.text_secondary);
+
         if (btnTabCreate != null) {
             btnTabCreate.setBackgroundResource(R.drawable.bg_pill_white);
-            btnTabCreate.setTextColor(Color.parseColor("#00896A"));
+            btnTabCreate.setTextColor(activeColor);
             btnTabCreate.setTypeface(null, Typeface.BOLD);
         }
         if (btnTabEdit != null) {
             btnTabEdit.setBackgroundColor(Color.TRANSPARENT);
-            btnTabEdit.setTextColor(Color.parseColor("#64748B"));
+            btnTabEdit.setTextColor(inactiveColor);
             btnTabEdit.setTypeface(null, Typeface.NORMAL);
             if (tripId <= 0) {
                 btnTabEdit.setText("Chỉnh sửa");
             }
         }
 
-        // Ngày mặc định: hôm nay và 3 ngày sau
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar cal = Calendar.getInstance();
         selectedNgayDi = sdf.format(cal.getTime());
@@ -147,13 +164,16 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         }
 
         if (tvHeaderTitle != null) tvHeaderTitle.setText("Chỉnh sửa chuyến đi");
+        if (tvHeaderSub != null) tvHeaderSub.setText("Quản lý thông tin & lịch trình");
         if (btnDelete != null) btnDelete.setVisibility(View.VISIBLE);
         if (btnSaveBottom != null) btnSaveBottom.setText("Lưu & Cập nhật chuyến đi ✓");
 
-        // Cập nhật giao diện 2 tab: Chỉnh sửa (active), Tạo chuyến mới (inactive)
+        int activeColor = ContextCompat.getColor(this, R.color.teal_primary);
+        int inactiveColor = ContextCompat.getColor(this, R.color.text_secondary);
+
         if (btnTabEdit != null) {
             btnTabEdit.setBackgroundResource(R.drawable.bg_pill_white);
-            btnTabEdit.setTextColor(Color.parseColor("#00896A"));
+            btnTabEdit.setTextColor(activeColor);
             btnTabEdit.setTypeface(null, Typeface.BOLD);
             String shortName = (currentTrip.getDiemDen() != null && !currentTrip.getDiemDen().isEmpty())
                     ? currentTrip.getDiemDen().split(",")[0].trim()
@@ -162,7 +182,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         }
         if (btnTabCreate != null) {
             btnTabCreate.setBackgroundColor(Color.TRANSPARENT);
-            btnTabCreate.setTextColor(Color.parseColor("#64748B"));
+            btnTabCreate.setTextColor(inactiveColor);
             btnTabCreate.setTypeface(null, Typeface.NORMAL);
         }
 
@@ -201,7 +221,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        // Chuyển đổi giữa 2 tab: Tạo chuyến mới và Chỉnh sửa
         if (btnTabCreate != null) {
             btnTabCreate.setOnClickListener(v -> {
                 if (!isCreateMode) {
@@ -265,7 +284,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (currentUserId <= 0) currentUserId = 1;
 
         if (isCreateMode) {
-            // Thêm mới (INSERT)
             ChuyenDi newTrip = new ChuyenDi(currentUserId, tripName, destination, selectedNgayDi, selectedNgayVe, budget);
             long id = chuyenDiDAO.themChuyenDi(newTrip);
             if (id > 0) {
@@ -276,7 +294,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 Toast.makeText(this, "Tạo thất bại (vui lòng kiểm tra ngày yyyy-MM-dd)", Toast.LENGTH_LONG).show();
             }
         } else {
-            // Cập nhật (UPDATE)
             if (currentTrip != null) {
                 currentTrip.setTenChuyenDi(tripName);
                 currentTrip.setDiemDen(destination);
