@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_main"
     android:orientation="vertical"
-    tools:context=".TripDetailActivity">
+    tools:context=".ChiTietChuyenDiActivity">
 
     <!-- Header / Top Bar -->
     <RelativeLayout
@@ -88,8 +88,8 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_gravity="center"
-                android:contentDescription="Tùy chọn"
-                android:src="@drawable/ic_tune"
+                android:contentDescription="Chỉnh sửa chuyến đi"
+                android:src="@android:drawable/ic_menu_edit"
                 app:tint="@color/text_primary" />
         </FrameLayout>
 

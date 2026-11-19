@@ -37,7 +37,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private TextInputEditText etTripName, etDestination;
     private EditText etBudget;
     private TextView tvHeaderTitle;
-    private TextView tvTripTitleCover, tvDurationBadgeCover, tvTripMetaCover;
     private TextView tvDurationBadgeTime, tvDateRangeTime, tvCountdownTime;
     private TextView btnTabEdit, btnTabCreate;
     private MaterialCardView cvTime;
@@ -97,10 +96,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         etDestination = findViewById(R.id.etDestination);
         etBudget = findViewById(R.id.etBudget);
 
-        tvTripTitleCover = findViewById(R.id.tvTripTitleCover);
-        tvDurationBadgeCover = findViewById(R.id.tvDurationBadgeCover);
-        tvTripMetaCover = findViewById(R.id.tvTripMetaCover);
-
         cvTime = findViewById(R.id.cvTime);
         tvDurationBadgeTime = findViewById(R.id.tvDurationBadgeTime);
         tvDateRangeTime = findViewById(R.id.tvDateRangeTime);
@@ -138,7 +133,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (etTripName != null) etTripName.setText("");
         if (etDestination != null) etDestination.setText("");
         if (etBudget != null) etBudget.setText("3000000");
-        if (tvTripTitleCover != null) tvTripTitleCover.setText("Tên chuyến đi mới");
+
         updateDateDisplay();
     }
 
@@ -175,7 +170,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         selectedNgayVe = currentTrip.getNgayVe();
 
         if (etTripName != null) etTripName.setText(currentTrip.getTenChuyenDi());
-        if (tvTripTitleCover != null) tvTripTitleCover.setText(currentTrip.getTenChuyenDi());
         if (etDestination != null) etDestination.setText(currentTrip.getDiemDen());
         if (etBudget != null) etBudget.setText(String.valueOf(currentTrip.getNganSach()));
         updateDateDisplay();
@@ -202,8 +196,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         String durationStr = diffDays + " Ngày " + Math.max(0, diffDays - 1) + " Đêm";
         if (tvDurationBadgeTime != null) tvDurationBadgeTime.setText(durationStr);
-        if (tvDurationBadgeCover != null) tvDurationBadgeCover.setText(durationStr);
-        if (tvTripMetaCover != null) tvTripMetaCover.setText("📅 " + displayNgayDi + " – " + displayNgayVe + " • 👥 3 thành viên");
     }
 
     private void setupListeners() {
@@ -227,17 +219,6 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                         Toast.makeText(this, "Chưa có thông tin chuyến đi để chỉnh sửa", Toast.LENGTH_SHORT).show();
                     }
                 }
-            });
-        }
-
-        if (etTripName != null && tvTripTitleCover != null) {
-            etTripName.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    tvTripTitleCover.setText(s.toString().trim().isEmpty() ? "Tên chuyến đi..." : s.toString().trim());
-                }
-                @Override public void afterTextChanged(Editable s) {}
             });
         }
 

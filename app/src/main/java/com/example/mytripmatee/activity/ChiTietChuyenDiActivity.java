@@ -15,11 +15,13 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.databinding.ActivityChiTietChuyenDiBinding;
 import com.example.mytripmatee.fragment.ChiPhiChuyenDiFragment;
 import com.example.mytripmatee.fragment.LichTrinhFragment;
 import com.example.mytripmatee.fragment.ThongKeChuyenDiFragment;
 import com.example.mytripmatee.fragment.ThuVienAnhFragment;
+import com.example.mytripmatee.model.ChuyenDi;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class ChiTietChuyenDiActivity extends AppCompatActivity {
@@ -77,6 +79,14 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         }
 
         binding.btnBack.setOnClickListener(v -> finish());
+
+        // chuyển sang màn hình chỉnh sửa chuyến đi
+        binding.btnShare.setOnClickListener(v -> {
+            Intent intent = new Intent(ChiTietChuyenDiActivity.this, SuaChuyenDiActivity.class);
+            intent.putExtra("mode_create", false);
+            intent.putExtra("trip_id", maChuyenDi);
+            startActivity(intent);
+        });
     }
 
     private void setupViewPagerAndTabs() {
@@ -136,5 +146,28 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         public int getItemCount() {
             return 4;
         }
+    }
+
+    // thêm hàm onResume để khi sửa tên chuyến đi hoặc xóa chuyến đi bên SuaChuyenDiActivity,
+    // màn hình ChiTietChuyenDiActivity tự động cập nhật hoặc tự đóng lại
+    @Override
+    protected void onResume() {
+        super.onResume();
+        capNhatThongTinChuyenDi();
+    }
+
+    private void capNhatThongTinChuyenDi() {
+        ChuyenDiDAO dao = new com.example.mytripmatee.database.ChuyenDiDAO(this);
+        ChuyenDi cd = dao.layChuyenDiTheoId(maChuyenDi);
+
+        // nếu chuyến đi vừa bị xóa bên SuaChuyenDiActivity, tự đóng màn hình chi tiết luôn
+        if (cd == null) {
+            finish();
+            return;
+        }
+        // nếu vừa sửa tên/ngày, cập nhật lại lên Header
+        binding.tvTripTitle.setText(cd.getTenChuyenDi());
+        String sub = (cd.getNgayDi() != null ? cd.getNgayDi() : "") + " – " + (cd.getNgayVe() != null ? cd.getNgayVe() : "");
+        binding.tvTripSubtitle.setText(sub);
     }
 }
