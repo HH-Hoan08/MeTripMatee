@@ -1,5 +1,7 @@
 package com.example.mytripmatee.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +11,8 @@ import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
+import android.view.ViewAnimationUtils;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -67,35 +70,68 @@ public class CaiDatActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        checkAndPerformSweepAnimation();
+        checkAndPerformWaterRippleAnimation();
     }
 
-    private void checkAndPerformSweepAnimation() {
+    /**
+     * Hiệu ứng tỏa nước Circular Reveal từ tâm mượt mà, không bị nhảy giật hay giữ màu cũ ở cuối
+     */
+    private void checkAndPerformWaterRippleAnimation() {
         if (shouldAnimateSweep && pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
             shouldAnimateSweep = false;
-            binding.overlayView.setImageBitmap(pendingSweepBitmap);
-            binding.overlayView.setVisibility(View.VISIBLE);
-            binding.overlayView.setTranslationX(0f);
 
-            binding.overlayView.post(() -> {
-                int screenWidth = binding.getRoot().getWidth();
-                if (screenWidth <= 0) {
-                    screenWidth = getResources().getDisplayMetrics().widthPixels;
+            // 1. Phủ ngay ảnh chụp màn hình cũ lên overlay phía trên
+            binding.overlayView.setImageBitmap(pendingSweepBitmap);
+            binding.overlayView.setAlpha(1.0f);
+            binding.overlayView.setVisibility(View.VISIBLE);
+
+            binding.mainSettings.post(() -> {
+                if (isFinishing() || isDestroyed()) return;
+
+                int width = binding.mainSettings.getWidth();
+                int height = binding.mainSettings.getHeight();
+
+                if (width <= 0 || height <= 0) {
+                    width = getResources().getDisplayMetrics().widthPixels;
+                    height = getResources().getDisplayMetrics().heightPixels;
                 }
 
+                // 2. Tọa độ tâm màn hình (Center X, Center Y)
+                int centerX = width / 2;
+                int centerY = height / 2;
+                float maxRadius = (float) Math.hypot(centerX, centerY);
+
+                // 3. Tỏa giao diện mới (đã đổi theme chuẩn ở đằng sau) từ tâm ra 4 góc
+                Animator revealAnimator = ViewAnimationUtils.createCircularReveal(
+                        binding.mainSettings,
+                        centerX,
+                        centerY,
+                        0f,
+                        maxRadius
+                );
+                revealAnimator.setDuration(600);
+                revealAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+
+                // 4. Mờ dần đồng thời lớp ảnh cũ (Alpha Dissolve 1.0 -> 0.0 trong 600ms)
                 binding.overlayView.animate()
-                        .translationX(screenWidth)
-                        .setDuration(450)
-                        .setInterpolator(new DecelerateInterpolator(1.5f))
-                        .withEndAction(() -> {
-                            binding.overlayView.setVisibility(View.GONE);
-                            binding.overlayView.setTranslationX(0f);
-                            if (pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
-                                pendingSweepBitmap.recycle();
-                                pendingSweepBitmap = null;
-                            }
-                        })
+                        .alpha(0.0f)
+                        .setDuration(600)
+                        .setInterpolator(new AccelerateDecelerateInterpolator())
                         .start();
+
+                revealAnimator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        binding.overlayView.setVisibility(View.GONE);
+                        binding.overlayView.setAlpha(1.0f);
+                        if (pendingSweepBitmap != null && !pendingSweepBitmap.isRecycled()) {
+                            pendingSweepBitmap.recycle();
+                            pendingSweepBitmap = null;
+                        }
+                    }
+                });
+
+                revealAnimator.start();
             });
         }
     }
@@ -116,6 +152,7 @@ public class CaiDatActivity extends AppCompatActivity {
             boolean currentMode = sharedPreferences.getBoolean(KEY_DARK_MODE, isDarkSystem);
             if (currentMode == isChecked) return;
 
+            // 1. Chụp ảnh màn hình giao diện hiện tại
             try {
                 View rootView = binding.getRoot();
                 if (rootView.getWidth() > 0 && rootView.getHeight() > 0) {
@@ -130,14 +167,17 @@ public class CaiDatActivity extends AppCompatActivity {
                 shouldAnimateSweep = false;
             }
 
+            // 2. Lưu cài đặt Dark Mode
             sharedPreferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
 
+            // 3. Đổi Night Mode -> Activity sẽ recreate ngay đằng sau lớp overlayView
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
 
+            // Triệt xóa animation chuyển giao diện mặc định để không bị giật
             overridePendingTransition(0, 0);
         });
     }
@@ -236,7 +276,7 @@ public class CaiDatActivity extends AppCompatActivity {
                     .setMessage("1. Bảo mật dữ liệu: Toàn bộ thông tin lịch trình và chi tiêu cá nhân được bảo lưu an toàn trên thiết bị của bạn.\n\n" +
                             "2. Dữ liệu sao lưu: Các tệp sao lưu local lưu giữ trên máy cá nhân và không chia sẻ cho bên thứ ba mà không có sự đồng ý của bạn.\n\n" +
                             "3. Quyền hạn: Ứng dụng chỉ yêu cầu các quyền truy cập cần thiết để lưu trữ dữ liệu và hiển thị bản đồ.")
-                    .setPositiveButton("Đã hiểu", null)
+                    .setPositiveButton("Đóng", null)
                     .show();
         });
 
