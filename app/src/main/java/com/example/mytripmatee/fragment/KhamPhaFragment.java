@@ -18,12 +18,15 @@ import com.example.mytripmatee.activity.CaiDatActivity;
 import com.example.mytripmatee.activity.ChiTietChuyenDiActivity;
 import com.example.mytripmatee.adapter.AdapterChuyenDi;
 import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.databinding.FragmentKhamPhaBinding;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.ItemChuyenDi;
+import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class KhamPhaFragment extends Fragment {
@@ -50,6 +53,7 @@ public class KhamPhaFragment extends Fragment {
         chuyenDiDAO = new ChuyenDiDAO(requireContext());
         quanLyPhien = new QuanLyPhien(requireContext());
 
+        setupUserHeader();
         setupRecyclerView();
         setupFeaturedCard();
         setupSettingsButton();
@@ -59,8 +63,60 @@ public class KhamPhaFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Tự động làm mới danh sách chuyến đi từ SQLite ngay khi quay lại màn hình chính
+        // Tự động làm mới thông tin người dùng và danh sách chuyến đi từ SQLite ngay khi quay lại màn hình chính
+        setupUserHeader();
         loadTripsFromDatabase();
+    }
+
+    private void setupUserHeader() {
+        if (binding == null) return;
+
+        // 1. Cập nhật lời chào thời gian thực theo giờ trong ngày (Sáng / Chiều / Tối)
+        Calendar cal = Calendar.getInstance();
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        String greeting;
+        if (hour >= 5 && hour < 12) {
+            greeting = "Chào buổi sáng ✨";
+        } else if (hour >= 12 && hour < 18) {
+            greeting = "Chào buổi chiều ☀️";
+        } else {
+            greeting = "Chào buổi tối 🌙";
+        }
+        if (binding.tvGreeting != null) {
+            binding.tvGreeting.setText(greeting);
+        }
+
+        // 2. Lấy Họ Tên / Tên Đăng Nhập của tài khoản đang đăng nhập
+        String displayName = null;
+        if (quanLyPhien != null) {
+            displayName = quanLyPhien.getHoTen();
+            if (displayName == null || displayName.trim().isEmpty()) {
+                displayName = quanLyPhien.getTenDangNhap();
+            }
+        }
+
+        if ((displayName == null || displayName.trim().isEmpty()) && getContext() != null) {
+            int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+            if (userId > 0) {
+                NguoiDungDAO nguoiDungDAO = new NguoiDungDAO(requireContext());
+                NguoiDung user = nguoiDungDAO.layTheoId(userId);
+                if (user != null) {
+                    if (user.getHoTen() != null && !user.getHoTen().trim().isEmpty()) {
+                        displayName = user.getHoTen().trim();
+                    } else if (user.getTenDangNhap() != null && !user.getTenDangNhap().trim().isEmpty()) {
+                        displayName = user.getTenDangNhap().trim();
+                    }
+                }
+            }
+        }
+
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = "Người dùng MeTripMatee";
+        }
+
+        if (binding.tvUserName != null) {
+            binding.tvUserName.setText(displayName);
+        }
     }
 
     private void setupRecyclerView() {
