@@ -8,7 +8,7 @@ import android.util.Log;
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     public static final String DATABASE_NAME = "mytripmatee.db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 4;
 
     // sử dụng Singleton đảm bảo toàn ứng dụng chỉ dùng một thể hiện duy nhất của DBHelper
     private static DBHelper instance;
@@ -77,6 +77,7 @@ public class DBHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE IF EXISTS Anh;");
             db.execSQL("DROP TABLE IF EXISTS ChiPhi;");
             db.execSQL("DROP TABLE IF EXISTS LichTrinh;");
+            db.execSQL("DROP TABLE IF EXISTS ThanhVienChuyenDi;");
             db.execSQL("DROP TABLE IF EXISTS DanhMuc;");
             db.execSQL("DROP TABLE IF EXISTS ChuyenDi;");
             db.execSQL("DROP TABLE IF EXISTS NguoiDung;");
@@ -115,6 +116,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "    NganSach     INTEGER NOT NULL," +
                 "    TrangThai    TEXT    NOT NULL DEFAULT 'SAP_TOI'," +
                 "    AnhBia       TEXT," +
+                "    SoThanhVien  INTEGER NOT NULL DEFAULT 1," +
                 "    CONSTRAINT fk_ChuyenDi_NguoiDung FOREIGN KEY (MaNguoiDung)" +
                 "        REFERENCES NguoiDung (MaNguoiDung) ON DELETE CASCADE ON UPDATE CASCADE," +
                 "    CONSTRAINT uq_ChuyenDi_KhongTrung UNIQUE (MaNguoiDung, TenChuyenDi, NgayDi)," +
@@ -129,6 +131,16 @@ public class DBHelper extends SQLiteOpenHelper {
                 "    CONSTRAINT ck_ChuyenDi_NgayVeSauNgayDi CHECK (NgayVe >= NgayDi)," +
                 "    CONSTRAINT ck_ChuyenDi_NganSach CHECK (NganSach > 0 AND NganSach <= 100000000000)," +
                 "    CONSTRAINT ck_ChuyenDi_TrangThai CHECK (TrangThai IN ('SAP_TOI', 'DANG_DI', 'DA_XONG'))" +
+                ");");
+        // bảng ThanhVienChuyenDi (Quan hệ nhiều-nhiều giữa Chuyến đi và Thành viên tham gia)
+        db.execSQL("CREATE TABLE ThanhVienChuyenDi (" +
+                "    MaChuyenDi   INTEGER NOT NULL," +
+                "    MaNguoiDung  INTEGER NOT NULL," +
+                "    PRIMARY KEY (MaChuyenDi, MaNguoiDung)," +
+                "    CONSTRAINT fk_TVCD_ChuyenDi FOREIGN KEY (MaChuyenDi)" +
+                "        REFERENCES ChuyenDi (MaChuyenDi) ON DELETE CASCADE ON UPDATE CASCADE," +
+                "    CONSTRAINT fk_TVCD_NguoiDung FOREIGN KEY (MaNguoiDung)" +
+                "        REFERENCES NguoiDung (MaNguoiDung) ON DELETE CASCADE ON UPDATE CASCADE" +
                 ");");
         // bảng LichTrinh
         db.execSQL("CREATE TABLE LichTrinh (" +
@@ -222,6 +234,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE INDEX idx_ChiPhi_ChuyenDi    ON ChiPhi (MaChuyenDi, NgayChi);");
         db.execSQL("CREATE INDEX idx_ChiPhi_DanhMuc     ON ChiPhi (MaDanhMuc);");
         db.execSQL("CREATE INDEX idx_Anh_ChuyenDi       ON Anh (MaChuyenDi);");
+        db.execSQL("CREATE INDEX idx_ThanhVienChuyenDi_NguoiDung ON ThanhVienChuyenDi (MaNguoiDung, MaChuyenDi);");
     }
     // hàm tạo trigger
     private void createTriggers(SQLiteDatabase db) {
@@ -359,6 +372,12 @@ public class DBHelper extends SQLiteOpenHelper {
                 "('demo', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Tài khoản demo');");
         db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
                 "('phu123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Phạm Hữu Phú');");
+        db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
+                "('linh123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Nguyễn Văn Linh');");
+        db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
+                "('nam123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Phạm Hoàng Nam');");
+        db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
+                "('lan123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Hoàng Thị Lan');");
         // chuyến đi mẫu Đà Lạt 3 ngày
         db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
                 "VALUES (1, 'Đà Lạt 3 ngày', 'Đà Lạt', '2026-12-01', '2026-12-03', 3000000, 'SAP_TOI');");
@@ -375,8 +394,11 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
                 "VALUES (1, 'Hội An & Đà Nẵng – Phố Cổ Lung Linh', 'Hội An, Quảng Nam', '2026-11-05', '2026-11-08', 3800000, 'DA_XONG');");
 
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Nha Trang – Thiên Đường Biển Đảo', 'Nha Trang, Khánh Hòa', '2027-01-05', '2027-01-08', 6000000, 'SAP_TOI');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien) " +
+                "VALUES (1, 'Nha Trang – Thiên Đường Biển Đảo', 'Nha Trang, Khánh Hòa', '2027-01-05', '2027-01-08', 6000000, 'SAP_TOI', 2);");
+        // thành viên tham gia các chuyến đi
+        db.execSQL("INSERT INTO ThanhVienChuyenDi (MaChuyenDi, MaNguoiDung) VALUES " +
+                "(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (6, 2);");
         // lịch trình
         db.execSQL("INSERT INTO LichTrinh (MaChuyenDi, NgayHoatDong, GioBatDau, TieuDe, DiaDiem, LinkBanDo, LoaiHoatDong, GhiChu, DaDi) VALUES " +
                 "(1, '2026-12-01', '06:30', 'Xe giường nằm TP.HCM - Đà Lạt', 'Bến xe Miền Đông', NULL,                             'DI_CHUYEN', NULL, 0), " +

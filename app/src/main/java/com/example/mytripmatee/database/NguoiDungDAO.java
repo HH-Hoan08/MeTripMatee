@@ -9,6 +9,9 @@ import android.util.Log;
 import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.TienIchMatKhau;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NguoiDungDAO {
     private static final String TAG = "NguoiDungDAO";
     private final DBHelper dbHelper;
@@ -106,5 +109,30 @@ public class NguoiDungDAO {
         values.put("MatKhau", TienIchMatKhau.bamMatKhau(matKhauMoiTho));
         int rows = db.update("NguoiDung", values, "MaNguoiDung = ?", new String[]{String.valueOf(maNguoiDung)});
         return rows > 0;
+    }
+
+    // lấy danh sách tất cả người dùng trong SQLite để chọn làm thành viên tham gia
+    public List<NguoiDung> layTatCaNguoiDung() {
+        List<NguoiDung> list = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT MaNguoiDung, TenDangNhap, MatKhau, HoTen FROM NguoiDung ORDER BY HoTen ASC", null);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    NguoiDung user = new NguoiDung();
+                    user.setMaNguoiDung(cursor.getInt(cursor.getColumnIndexOrThrow("MaNguoiDung")));
+                    user.setTenDangNhap(cursor.getString(cursor.getColumnIndexOrThrow("TenDangNhap")));
+                    user.setMatKhau(cursor.getString(cursor.getColumnIndexOrThrow("MatKhau")));
+                    user.setHoTen(cursor.getString(cursor.getColumnIndexOrThrow("HoTen")));
+                    list.add(user);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi lấy danh sách người dùng", e);
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return list;
     }
 }

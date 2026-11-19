@@ -18,8 +18,8 @@ public class ChuyenDiDAO {
     public ChuyenDiDAO(Context context) {
         this.dbHelper = DBHelper.getInstance(context);
     }
-    // thêm chuyến đi mới
-    public long themChuyenDi(ChuyenDi chuyenDi) {
+    // thêm chuyến đi mới kèm danh sách thành viên
+    public long themChuyenDi(ChuyenDi chuyenDi, List<Integer> danhSachIdThanhVien) {
         if (chuyenDi == null) return -1;
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -31,22 +31,46 @@ public class ChuyenDiDAO {
         values.put("NganSach", chuyenDi.getNganSach());
         values.put("TrangThai", chuyenDi.getTrangThai() != null ? chuyenDi.getTrangThai() : "SAP_TOI");
         values.put("AnhBia", chuyenDi.getAnhBia());
+        values.put("SoThanhVien", chuyenDi.getSoThanhVien());
 
+        db.beginTransaction();
         try {
-            return db.insert("ChuyenDi", null, values);
+            long id = db.insert("ChuyenDi", null, values);
+            if (id > 0) {
+                if (danhSachIdThanhVien != null && !danhSachIdThanhVien.isEmpty()) {
+                    for (int userId : danhSachIdThanhVien) {
+                        ContentValues tvValues = new ContentValues();
+                        tvValues.put("MaChuyenDi", id);
+                        tvValues.put("MaNguoiDung", userId);
+                        db.insertWithOnConflict("ThanhVienChuyenDi", null, tvValues, SQLiteDatabase.CONFLICT_IGNORE);
+                    }
+                } else {
+                    ContentValues tvValues = new ContentValues();
+                    tvValues.put("MaChuyenDi", id);
+                    tvValues.put("MaNguoiDung", chuyenDi.getMaNguoiDung());
+                    db.insertWithOnConflict("ThanhVienChuyenDi", null, tvValues, SQLiteDatabase.CONFLICT_IGNORE);
+                }
+                db.setTransactionSuccessful();
+            }
+            return id;
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khi thêm chuyến đi", e);
             return -1;
+        } finally {
+            db.endTransaction();
         }
     }
 
-    // lấy danh sách chuyến đi của người dùng kèm dữ liệu thống kê từ View v_TongChiChuyenDi (Read)
+    public long themChuyenDi(ChuyenDi chuyenDi) {
+        return themChuyenDi(chuyenDi, null);
+    }
 
+    // lấy danh sách chuyến đi của người dùng kèm dữ liệu thống kê từ View v_TongChiChuyenDi (Read)
     public List<ChuyenDi> layDanhSachChuyenDi(int maNguoiDung) {
         List<ChuyenDi> list = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // kết hợp bảng ChuyenDi với View v_TongChiChuyenDi
+        // kết hợp bảng ChuyenDi với View v_TongChiChuyenDi (lấy chuyến đi do user tạo hoặc user tham gia)
         String sql = "SELECT c.*, " +
                 "       COALESCE(v.TongChi, 0) AS TongChi, " +
                 "       COALESCE(v.ConLai, c.NganSach) AS ConLai, " +
@@ -55,11 +79,12 @@ public class ChuyenDiDAO {
                 "FROM ChuyenDi c " +
                 "LEFT JOIN v_TongChiChuyenDi v ON c.MaChuyenDi = v.MaChuyenDi " +
                 "WHERE c.MaNguoiDung = ? " +
+                "   OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM ThanhVienChuyenDi WHERE MaNguoiDung = ?) " +
                 "ORDER BY c.NgayDi DESC";
 
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung)});
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), String.valueOf(maNguoiDung)});
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     ChuyenDi cd = parseChuyenDiFromCursor(cursor);
@@ -109,12 +134,13 @@ public class ChuyenDiDAO {
                 "       COALESCE(v.MucCanhBao, 'BINH_THUONG') AS MucCanhBao " +
                 "FROM ChuyenDi c " +
                 "LEFT JOIN v_TongChiChuyenDi v ON c.MaChuyenDi = v.MaChuyenDi " +
-                "WHERE c.MaNguoiDung = ? AND ? BETWEEN c.NgayDi AND c.NgayVe " +
+                "WHERE (c.MaNguoiDung = ? OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM ThanhVienChuyenDi WHERE MaNguoiDung = ?)) " +
+                "  AND ? BETWEEN c.NgayDi AND c.NgayVe " +
                 "ORDER BY c.NgayDi ASC LIMIT 1";
 
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), ngayHomNay});
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), String.valueOf(maNguoiDung), ngayHomNay});
             if (cursor != null && cursor.moveToFirst()) {
                 return parseChuyenDiFromCursor(cursor);
             }
@@ -126,8 +152,8 @@ public class ChuyenDiDAO {
         return null;
     }
 
-    // cập nhật thông tin chuyến đi (Update)
-    public boolean capNhatChuyenDi(ChuyenDi chuyenDi) {
+    // cập nhật thông tin chuyến đi kèm danh sách thành viên tham gia (Update)
+    public boolean capNhatChuyenDi(ChuyenDi chuyenDi, List<Integer> danhSachIdThanhVien) {
         if (chuyenDi == null) return false;
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -138,18 +164,40 @@ public class ChuyenDiDAO {
         values.put("NganSach", chuyenDi.getNganSach());
         values.put("TrangThai", chuyenDi.getTrangThai());
         values.put("AnhBia", chuyenDi.getAnhBia());
+        values.put("SoThanhVien", chuyenDi.getSoThanhVien());
 
+        db.beginTransaction();
         try {
             int rows = db.update("ChuyenDi", values, "MaChuyenDi = ?",
                     new String[]{String.valueOf(chuyenDi.getMaChuyenDi())});
-            return rows > 0;
-        } catch (Exception e) {
-            Log.e(TAG, "Lỗi khi cập nhật chuyến đi (có thể do vi phạm ngày của Trigger)", e);
+            if (rows > 0) {
+                if (danhSachIdThanhVien != null) {
+                    db.delete("ThanhVienChuyenDi", "MaChuyenDi = ?",
+                            new String[]{String.valueOf(chuyenDi.getMaChuyenDi())});
+                    for (int userId : danhSachIdThanhVien) {
+                        ContentValues tvValues = new ContentValues();
+                        tvValues.put("MaChuyenDi", chuyenDi.getMaChuyenDi());
+                        tvValues.put("MaNguoiDung", userId);
+                        db.insertWithOnConflict("ThanhVienChuyenDi", null, tvValues, SQLiteDatabase.CONFLICT_IGNORE);
+                    }
+                }
+                db.setTransactionSuccessful();
+                return true;
+            }
             return false;
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi cập nhật chuyến đi", e);
+            return false;
+        } finally {
+            db.endTransaction();
         }
     }
 
-    // xóa chuyến đi (Delete - tự động CASCADE xóa Lịch Trình, Chi Phí, Ảnh)
+    public boolean capNhatChuyenDi(ChuyenDi chuyenDi) {
+        return capNhatChuyenDi(chuyenDi, null);
+    }
+
+    // xóa chuyến đi (Delete - tự động CASCADE xóa Lịch Trình, Chi Phí, Ảnh, Thành Viên)
     public boolean xoaChuyenDi(int maChuyenDi) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         try {
@@ -160,6 +208,7 @@ public class ChuyenDiDAO {
             return false;
         }
     }
+
     // tìm kiếm chuyến đi theo từ khóa
     public List<ChuyenDi> timKiemChuyenDi(int maNguoiDung, String keyword) {
         List<ChuyenDi> list = new ArrayList<>();
@@ -171,18 +220,40 @@ public class ChuyenDiDAO {
                 "       COALESCE(v.MucCanhBao, 'BINH_THUONG') AS MucCanhBao " +
                 "FROM ChuyenDi c " +
                 "LEFT JOIN v_TongChiChuyenDi v ON c.MaChuyenDi = v.MaChuyenDi " +
-                "WHERE c.MaNguoiDung = ? AND (c.TenChuyenDi LIKE ? OR c.DiemDen LIKE ?) " +
+                "WHERE (c.MaNguoiDung = ? OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM ThanhVienChuyenDi WHERE MaNguoiDung = ?)) " +
+                "  AND (c.TenChuyenDi LIKE ? OR c.DiemDen LIKE ?) " +
                 "ORDER BY c.NgayDi DESC";
 
         String pattern = "%" + keyword.trim() + "%";
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), pattern, pattern});
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), String.valueOf(maNguoiDung), pattern, pattern});
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     list.add(parseChuyenDiFromCursor(cursor));
                 } while (cursor.moveToNext());
             }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return list;
+    }
+
+    // lấy danh sách ID người dùng tham gia chuyến đi
+    public List<Integer> layDanhSachIdThanhVien(int maChuyenDi) {
+        List<Integer> list = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT MaNguoiDung FROM ThanhVienChuyenDi WHERE MaChuyenDi = ?",
+                    new String[]{String.valueOf(maChuyenDi)});
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    list.add(cursor.getInt(0));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi lấy danh sách ID thành viên", e);
         } finally {
             if (cursor != null) cursor.close();
         }
@@ -200,6 +271,11 @@ public class ChuyenDiDAO {
         cd.setNganSach(cursor.getLong(cursor.getColumnIndexOrThrow("NganSach")));
         cd.setTrangThai(cursor.getString(cursor.getColumnIndexOrThrow("TrangThai")));
         cd.setAnhBia(cursor.getString(cursor.getColumnIndexOrThrow("AnhBia")));
+
+        int idxSoTV = cursor.getColumnIndex("SoThanhVien");
+        if (idxSoTV != -1) {
+            cd.setSoThanhVien(cursor.getInt(idxSoTV));
+        }
 
         // Các cột thống kê
         cd.setTongChi(cursor.getLong(cursor.getColumnIndexOrThrow("TongChi")));

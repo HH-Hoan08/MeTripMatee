@@ -28,6 +28,10 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
+import com.example.mytripmatee.database.NguoiDungDAO;
+import com.example.mytripmatee.model.NguoiDung;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -52,6 +56,12 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private QuanLyPhien quanLyPhien;
     private String selectedNgayDi = "2026-11-12";
     private String selectedNgayVe = "2026-11-15";
+    // quản lý thành viên tham gia
+    private MaterialCardView cvMembers;
+    private TextView tvMembersSubtitle;
+    private NguoiDungDAO nguoiDungDAO;
+    private List<NguoiDung> danhSachNguoiDungDb = new ArrayList<>();
+    private List<Integer> danhSachIdThanhVienChon = new ArrayList<>();
 
     private final ActivityResultLauncher<Intent> chonNgayLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -83,6 +93,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         chuyenDiDAO = new ChuyenDiDAO(this);
         quanLyPhien = new QuanLyPhien(this);
+        nguoiDungDAO = new NguoiDungDAO(this);
 
         initViews();
         setupListeners();
@@ -115,6 +126,9 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         tvDurationBadgeTime = findViewById(R.id.tvDurationBadgeTime);
         tvDateRangeTime = findViewById(R.id.tvDateRangeTime);
         tvCountdownTime = findViewById(R.id.tvCountdownTime);
+
+        cvMembers = findViewById(R.id.cvMembers);
+        tvMembersSubtitle = findViewById(R.id.tvMembersSubtitle);
     }
 
     private void setupCreateMode() {
@@ -152,6 +166,11 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (etBudget != null) etBudget.setText("3000000");
 
         updateDateDisplay();
+
+        int currentUserId = (quanLyPhien != null) ? quanLyPhien.getMaNguoiDung() : 1;
+        danhSachIdThanhVienChon.clear();
+        danhSachIdThanhVienChon.add(currentUserId);
+        capNhatHienThiThanhVien();
     }
 
     private void setupEditMode(int id) {
@@ -159,6 +178,13 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         currentTrip = chuyenDiDAO.layChuyenDiTheoId(id);
         if (currentTrip == null) {
             Toast.makeText(this, "Không tìm thấy chuyến đi!", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        int currentUserId = (quanLyPhien != null) ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentTrip.getMaNguoiDung() != currentUserId) {
+            Toast.makeText(this, "Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa hoặc xóa chuyến đi này!", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -193,6 +219,19 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (etDestination != null) etDestination.setText(currentTrip.getDiemDen());
         if (etBudget != null) etBudget.setText(String.valueOf(currentTrip.getNganSach()));
         updateDateDisplay();
+
+        currentUserId = (currentTrip != null) ? currentTrip.getMaNguoiDung() : 1;
+        List<Integer> listThanhVien = chuyenDiDAO.layDanhSachIdThanhVien(id);
+        danhSachIdThanhVienChon.clear();
+        if (listThanhVien != null && !listThanhVien.isEmpty()) {
+            danhSachIdThanhVienChon.addAll(listThanhVien);
+        } else {
+            danhSachIdThanhVienChon.add(currentUserId);
+        }
+        if (!danhSachIdThanhVienChon.contains(currentUserId)) {
+            danhSachIdThanhVienChon.add(currentUserId);
+        }
+        capNhatHienThiThanhVien();
     }
 
     private void updateDateDisplay() {
@@ -259,6 +298,12 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             btnTabEdit.setOnClickListener(v -> {
                 if (isCreateMode) {
                     if (tripId > 0) {
+                        ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(tripId);
+                        int currentUserId = (quanLyPhien != null) ? quanLyPhien.getMaNguoiDung() : 1;
+                        if (cd != null && cd.getMaNguoiDung() != currentUserId) {
+                            Toast.makeText(this, "Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                         setupEditMode(tripId);
                     } else {
                         Toast.makeText(this, "Chưa có thông tin chuyến đi để chỉnh sửa", Toast.LENGTH_SHORT).show();
@@ -282,6 +327,10 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 intent.putExtra("ngayVe", selectedNgayVe);
                 chonNgayLauncher.launch(intent);
             });
+        }
+
+        if (cvMembers != null) {
+            cvMembers.setOnClickListener(v -> hienThiDialogChonThanhVien());
         }
     }
 
@@ -309,9 +358,14 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
         if (currentUserId <= 0) currentUserId = 1;
 
+        if (!danhSachIdThanhVienChon.contains(currentUserId)) {
+            danhSachIdThanhVienChon.add(currentUserId);
+        }
+
         if (isCreateMode) {
             ChuyenDi newTrip = new ChuyenDi(currentUserId, tripName, destination, selectedNgayDi, selectedNgayVe, budget);
-            long id = chuyenDiDAO.themChuyenDi(newTrip);
+            newTrip.setSoThanhVien(danhSachIdThanhVienChon.size());
+            long id = chuyenDiDAO.themChuyenDi(newTrip, danhSachIdThanhVienChon);
             if (id > 0) {
                 Toast.makeText(this, "Tạo chuyến đi thành công", Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
@@ -326,8 +380,9 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 currentTrip.setNganSach(budget);
                 currentTrip.setNgayDi(selectedNgayDi);
                 currentTrip.setNgayVe(selectedNgayVe);
+                currentTrip.setSoThanhVien(danhSachIdThanhVienChon.size());
 
-                boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip);
+                boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip, danhSachIdThanhVienChon);
                 if (success) {
                     Toast.makeText(this, "Cập nhật chuyến đi thành công", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
@@ -357,5 +412,74 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    // hiển thị Dialog Multi-Choice danh sách thành viên từ Database
+    private void hienThiDialogChonThanhVien() {
+        danhSachNguoiDungDb = nguoiDungDAO.layTatCaNguoiDung();
+        if (danhSachNguoiDungDb.isEmpty()) {
+            Toast.makeText(this, "Chưa có danh sách người dùng trong hệ thống", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int size = danhSachNguoiDungDb.size();
+        String[] tenHienThi = new String[size];
+        boolean[] daChon = new boolean[size];
+
+        for (int i = 0; i < size; i++) {
+            NguoiDung nd = danhSachNguoiDungDb.get(i);
+            String hoTen = (nd.getHoTen() != null && !nd.getHoTen().isEmpty()) ? nd.getHoTen() : nd.getTenDangNhap();
+            tenHienThi[i] = hoTen + " (@" + nd.getTenDangNhap() + ")";
+            daChon[i] = danhSachIdThanhVienChon.contains(nd.getMaNguoiDung());
+        }
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Chọn thành viên tham gia")
+                .setMultiChoiceItems(tenHienThi, daChon, (dialog, which, isChecked) -> {
+                    int idNguoiDung = danhSachNguoiDungDb.get(which).getMaNguoiDung();
+                    if (isChecked) {
+                        if (!danhSachIdThanhVienChon.contains(idNguoiDung)) {
+                            danhSachIdThanhVienChon.add(idNguoiDung);
+                        }
+                    } else {
+                        danhSachIdThanhVienChon.remove(Integer.valueOf(idNguoiDung));
+                    }
+                })
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    capNhatHienThiThanhVien();
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    // cập nhật chữ hiển thị trên thẻ thành viên
+    private void capNhatHienThiThanhVien() {
+        if (tvMembersSubtitle == null) return;
+
+        if (danhSachIdThanhVienChon.isEmpty()) {
+            tvMembersSubtitle.setText("Chưa chọn thành viên nào");
+            return;
+        }
+
+        if (danhSachNguoiDungDb.isEmpty() && nguoiDungDAO != null) {
+            danhSachNguoiDungDb = nguoiDungDAO.layTatCaNguoiDung();
+        }
+
+        List<String> tenCacThanhVien = new ArrayList<>();
+        for (NguoiDung nd : danhSachNguoiDungDb) {
+            if (danhSachIdThanhVienChon.contains(nd.getMaNguoiDung())) {
+                String ten = (nd.getHoTen() != null && !nd.getHoTen().isEmpty()) ? nd.getHoTen() : nd.getTenDangNhap();
+                tenCacThanhVien.add(ten);
+            }
+        }
+
+        int soLuong = danhSachIdThanhVienChon.size();
+        if (soLuong == 1) {
+            String ten = !tenCacThanhVien.isEmpty() ? tenCacThanhVien.get(0) : "Bạn";
+            tvMembersSubtitle.setText("Chuyến đi cá nhân (1 thành viên: " + ten + ")");
+        } else {
+            String danhSachTen = android.text.TextUtils.join(", ", tenCacThanhVien);
+            tvMembersSubtitle.setText(soLuong + " thành viên: " + danhSachTen);
+        }
     }
 }
