@@ -133,7 +133,7 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
                 case 0:
                     return LichTrinhFragment.newInstance(maChuyenDi);
                 case 1:
-                    return new ChiPhiChuyenDiFragment();
+                    return ChiPhiChuyenDiFragment.newInstance(maChuyenDi);
                 case 2:
                     return new ThongKeChuyenDiFragment();
                 case 3:
