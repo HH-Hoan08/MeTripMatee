@@ -144,15 +144,39 @@ public class ChuyenDi {
         this.soThanhVien = Math.max(1, soThanhVien);
     }
 
+    public String getTrangThaiThucTe() {
+        if (ngayDi == null || ngayVe == null || ngayDi.isEmpty() || ngayVe.isEmpty()) {
+            return trangThai != null ? trangThai : "SAP_TOI";
+        }
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            java.util.Date today = sdf.parse(sdf.format(new java.util.Date()));
+            java.util.Date dStart = sdf.parse(ngayDi);
+            java.util.Date dEnd = sdf.parse(ngayVe);
+
+            if (today != null && dStart != null && dEnd != null) {
+                if (today.after(dEnd)) {
+                    return "DA_XONG";
+                } else if (!today.before(dStart) && !today.after(dEnd)) {
+                    return "DANG_DI";
+                } else {
+                    return "SAP_TOI";
+                }
+            }
+        } catch (Exception ignored) {}
+        return trangThai != null ? trangThai : "SAP_TOI";
+    }
+
     // chuyển đổi đối tượng ChuyenDi sang TripItem để hiển thị trên RecyclerView
     public ItemChuyenDi toTripItem() {
+        String realStatus = getTrangThaiThucTe();
         String statusLabel;
         ItemChuyenDi.LoaiTrangThai statusType;
 
-        if ("DANG_DI".equalsIgnoreCase(trangThai)) {
+        if ("DANG_DI".equalsIgnoreCase(realStatus)) {
             statusLabel = "Đang diễn ra";
             statusType = ItemChuyenDi.LoaiTrangThai.SAP_TOI;
-        } else if ("DA_XONG".equalsIgnoreCase(trangThai)) {
+        } else if ("DA_XONG".equalsIgnoreCase(realStatus)) {
             statusLabel = "Đã hoàn thành";
             statusType = ItemChuyenDi.LoaiTrangThai.DA_HOAN_THANH;
         } else {

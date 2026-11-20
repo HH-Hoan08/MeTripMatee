@@ -247,7 +247,7 @@ public class KhamPhaFragment extends Fragment {
             if (!matchesKeyword) continue;
 
             boolean matchesStatus = true;
-            String status = cd.getTrangThai() != null ? cd.getTrangThai() : "SAP_TOI";
+            String status = cd.getTrangThaiThucTe();
 
             if ("UPCOMING".equals(currentFilter)) {
                 matchesStatus = "SAP_TOI".equalsIgnoreCase(status) || "DANG_DI".equalsIgnoreCase(status);
