@@ -195,6 +195,18 @@ public class LichTrinhFragment extends Fragment {
                         .setPositiveButton("Xóa", (dialog, which) -> {
                             boolean success = lichTrinhDAO.xoaHoatDong(item.getMaHoatDong());
                             if (success) {
+                                com.example.mytripmatee.dao.ChiPhiDAO chiPhiDAO = new com.example.mytripmatee.dao.ChiPhiDAO(requireContext());
+                                List<com.example.mytripmatee.model.ChiPhi> listCp = chiPhiDAO.layDanhSachChiPhiTheoChuyenDi(item.getMaChuyenDi());
+                                if (listCp != null) {
+                                    for (com.example.mytripmatee.model.ChiPhi cp : listCp) {
+                                        if (item.getNgayHoatDong() != null && item.getNgayHoatDong().equals(cp.getNgayChi()) &&
+                                                cp.getGhiChu() != null &&
+                                                (cp.getGhiChu().equalsIgnoreCase(item.getTieuDe()) || cp.getGhiChu().contains(item.getTieuDe()))) {
+                                            chiPhiDAO.xoaChiPhi(cp.getMaChiPhi());
+                                            break;
+                                        }
+                                    }
+                                }
                                 Toast.makeText(requireContext(), "Đã xóa hoạt động ✓", Toast.LENGTH_SHORT).show();
                                 loadDayData(selectedDay);
                             } else {

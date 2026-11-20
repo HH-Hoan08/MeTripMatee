@@ -18,14 +18,17 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.dao.LichTrinhDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.databinding.ActivitySuaLichTrinhBinding;
+import com.example.mytripmatee.model.ChiPhi;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.LichTrinh;
 import com.example.mytripmatee.util.TienIchNgay;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 public class SuaLichTrinhActivity extends AppCompatActivity {
@@ -37,7 +40,9 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
     private ActivitySuaLichTrinhBinding binding;
     private LichTrinhDAO lichTrinhDAO;
     private ChuyenDiDAO chuyenDiDAO;
+    private ChiPhiDAO chiPhiDAO;
     private LichTrinh existingItem;
+    private ChiPhi existingChiPhi;
 
     private int maChuyenDi = 1;
     private int maHoatDong = -1;
@@ -57,6 +62,7 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
 
         lichTrinhDAO = new LichTrinhDAO(this);
         chuyenDiDAO = new ChuyenDiDAO(this);
+        chiPhiDAO = new ChiPhiDAO(this);
 
         if (getIntent() != null) {
             maChuyenDi = getIntent().getIntExtra("maChuyenDi", 1);
@@ -141,6 +147,21 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         } else {
             selectCategoryType(binding.chipTypeMove, "DI CHUYỂN");
         }
+
+        List<ChiPhi> listCp = chiPhiDAO.layDanhSachChiPhiTheoChuyenDi(existingItem.getMaChuyenDi());
+        if (listCp != null) {
+            for (ChiPhi cp : listCp) {
+                if (existingItem.getNgayHoatDong() != null && existingItem.getNgayHoatDong().equals(cp.getNgayChi()) &&
+                        cp.getGhiChu() != null &&
+                        (cp.getGhiChu().equalsIgnoreCase(existingItem.getTieuDe()) || cp.getGhiChu().contains(existingItem.getTieuDe()))) {
+                    existingChiPhi = cp;
+                    break;
+                }
+            }
+        }
+        if (existingChiPhi != null && existingChiPhi.getSoTien() > 0) {
+            binding.etCost.setText(String.valueOf(existingChiPhi.getSoTien()));
+        }
     }
 
     private void setupListeners() {
@@ -172,6 +193,9 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     boolean success = lichTrinhDAO.xoaHoatDong(maHoatDong);
                     if (success) {
+                        if (existingChiPhi != null) {
+                            chiPhiDAO.xoaChiPhi(existingChiPhi.getMaChiPhi());
+                        }
                         Toast.makeText(this, "Đã xóa hoạt động ✓", Toast.LENGTH_SHORT).show();
                         setResult(RESULT_OK);
                         finish();
@@ -256,49 +280,73 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         String mapUrl = binding.etMapUrl.getText() != null ? binding.etMapUrl.getText().toString().trim() : "";
         String notes = binding.etNotes.getText() != null ? binding.etNotes.getText().toString().trim() : "";
 
+        String costStr = binding.etCost.getText() != null ? binding.etCost.getText().toString().trim() : "";
+        long costAmount = 0;
+        if (!costStr.isEmpty()) {
+            try {
+                costAmount = Long.parseLong(costStr.replaceAll("[^0-9]", ""));
+            } catch (NumberFormatException ignored) {}
+        }
+
         if (!mapUrl.isEmpty() && !mapUrl.startsWith("http://") && !mapUrl.startsWith("https://") && !mapUrl.contains("maps")) {
             Toast.makeText(this, "Cảnh báo: Link Google Maps chưa đúng định dạng URL", Toast.LENGTH_SHORT).show();
         }
 
         LichTrinh.LoaiHoatDong loai;
+        int maDanhMuc;
         switch (selectedType) {
             case "ĂN UỐNG":
                 loai = LichTrinh.LoaiHoatDong.AN_UONG;
+                maDanhMuc = 1;
                 break;
             case "LƯU TRÚ":
                 loai = LichTrinh.LoaiHoatDong.LUU_TRU;
+                maDanhMuc = 3;
                 break;
             case "CẢNH ĐẸP":
                 loai = LichTrinh.LoaiHoatDong.THAM_QUAN;
+                maDanhMuc = 4;
                 break;
             case "DI CHUYỂN":
             default:
                 loai = LichTrinh.LoaiHoatDong.DI_CHUYEN;
+                maDanhMuc = 2;
                 break;
         }
 
         boolean daDi = (existingItem != null) ? existingItem.isDaDi() : false;
         LichTrinh item = new LichTrinh(maChuyenDi, selectedDateDb, selectedStartTime, title, location, mapUrl, loai, notes, daDi);
 
+        boolean isSuccess;
         if (maHoatDong > 0) {
             item.setMaHoatDong(maHoatDong);
-            boolean success = lichTrinhDAO.capNhatHoatDong(item);
-            if (success) {
-                Toast.makeText(this, "Cập nhật hoạt động thành công ✓", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK);
-                finish();
-            } else {
-                Toast.makeText(this, "Lỗi khi cập nhật (kiểm tra lại ngày nằm trong chuyến đi)", Toast.LENGTH_LONG).show();
-            }
+            isSuccess = lichTrinhDAO.capNhatHoatDong(item);
         } else {
             long newId = lichTrinhDAO.themHoatDong(item);
-            if (newId > 0) {
-                Toast.makeText(this, "Thêm hoạt động vào lịch trình thành công ✓", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK);
-                finish();
-            } else {
-                Toast.makeText(this, "Lỗi khi thêm hoạt động (ngày phải nằm trong ngày đi - ngày về của chuyến đi)", Toast.LENGTH_LONG).show();
+            isSuccess = (newId > 0);
+        }
+
+        if (isSuccess) {
+            if (costAmount > 0) {
+                if (existingChiPhi != null) {
+                    existingChiPhi.setMaDanhMuc(maDanhMuc);
+                    existingChiPhi.setSoTien(costAmount);
+                    existingChiPhi.setNgayChi(selectedDateDb);
+                    existingChiPhi.setGhiChu(title);
+                    chiPhiDAO.capNhatChiPhi(existingChiPhi);
+                } else {
+                    ChiPhi newCp = new ChiPhi(maChuyenDi, maDanhMuc, costAmount, selectedDateDb, title);
+                    chiPhiDAO.themChiPhi(newCp);
+                }
+            } else if (existingChiPhi != null) {
+                chiPhiDAO.xoaChiPhi(existingChiPhi.getMaChiPhi());
             }
+
+            Toast.makeText(this, (maHoatDong > 0 ? "Cập nhật" : "Thêm") + " hoạt động vào lịch trình thành công ✓", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Lỗi khi lưu (ngày phải nằm trong khoảng ngày đi - ngày về của chuyến đi)", Toast.LENGTH_LONG).show();
         }
     }
 }

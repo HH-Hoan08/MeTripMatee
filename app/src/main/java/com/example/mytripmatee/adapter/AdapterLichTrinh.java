@@ -113,14 +113,18 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
 
             if (item.isCoBanDo()) {
                 binding.btnOpenMaps.setVisibility(View.VISIBLE);
-                binding.tvSubInfo.setVisibility(View.GONE);
                 binding.btnOpenMaps.setOnClickListener(v -> {
                     if (listener != null) listener.onMoBanDo(item);
                 });
             } else {
                 binding.btnOpenMaps.setVisibility(View.GONE);
+            }
+
+            if (item.getThongTinPhu() != null && !item.getThongTinPhu().trim().isEmpty()) {
                 binding.tvSubInfo.setVisibility(View.VISIBLE);
-                binding.tvSubInfo.setText(item.getThongTinPhu() != null ? item.getThongTinPhu() : "");
+                binding.tvSubInfo.setText(item.getThongTinPhu());
+            } else {
+                binding.tvSubInfo.setVisibility(View.GONE);
             }
 
             updateStrikethroughStyle(binding, item.isDaHoanThanh());
