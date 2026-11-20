@@ -265,6 +265,18 @@ public class LichTrinhFragment extends Fragment {
         List<LichTrinh> allItems = lichTrinhDAO.layDanhSachHoatDongTheoChuyenDi(maChuyenDi);
         ChuyenDi chuyenDi = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
 
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        boolean isLeader = (chuyenDi == null || chuyenDi.getMaNguoiDung() == currentUserId);
+
+        if (binding != null) {
+            if (binding.btnAddActivity != null) {
+                binding.btnAddActivity.setVisibility(isLeader ? View.VISIBLE : View.GONE);
+            }
+            if (binding.fabAddActivity != null) {
+                binding.fabAddActivity.setVisibility(isLeader ? View.VISIBLE : View.GONE);
+            }
+        }
+
         if (chuyenDi != null && chuyenDi.getDiemDen() != null && !chuyenDi.getDiemDen().isEmpty() && binding != null && binding.tvWeatherLocation != null) {
             binding.tvWeatherLocation.setText(chuyenDi.getDiemDen() + " • 19°C Trời se lạnh");
         }

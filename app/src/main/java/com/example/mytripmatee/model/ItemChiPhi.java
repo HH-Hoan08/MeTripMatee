@@ -15,8 +15,9 @@ public class ItemChiPhi {
     private final LoaiDanhMuc loaiDanhMuc;
     private final String nguoiChi;
     private final String tenChuyenDi;
+    private final boolean isCaNhan;
 
-    public ItemChiPhi(String maId, String tieuDe, String tieuDePhu, long soTien, LoaiDanhMuc loaiDanhMuc, String nguoiChi, String tenChuyenDi) {
+    public ItemChiPhi(String maId, String tieuDe, String tieuDePhu, long soTien, LoaiDanhMuc loaiDanhMuc, String nguoiChi, String tenChuyenDi, boolean isCaNhan) {
         this.maId = maId;
         this.tieuDe = tieuDe;
         this.tieuDePhu = tieuDePhu;
@@ -24,6 +25,11 @@ public class ItemChiPhi {
         this.loaiDanhMuc = loaiDanhMuc;
         this.nguoiChi = nguoiChi;
         this.tenChuyenDi = tenChuyenDi;
+        this.isCaNhan = isCaNhan;
+    }
+
+    public ItemChiPhi(String maId, String tieuDe, String tieuDePhu, long soTien, LoaiDanhMuc loaiDanhMuc, String nguoiChi, String tenChuyenDi) {
+        this(maId, tieuDe, tieuDePhu, soTien, loaiDanhMuc, nguoiChi, tenChuyenDi, false);
     }
 
     public String getMaId() { return maId; }
@@ -33,6 +39,7 @@ public class ItemChiPhi {
     public LoaiDanhMuc getLoaiDanhMuc() { return loaiDanhMuc; }
     public String getNguoiChi() { return nguoiChi; }
     public String getTenChuyenDi() { return tenChuyenDi; }
+    public boolean isCaNhan() { return isCaNhan; }
 
     public String getSoTienDinhDang() {
         return String.format(java.util.Locale.getDefault(), "%,d đ", soTien).replace(',', '.');

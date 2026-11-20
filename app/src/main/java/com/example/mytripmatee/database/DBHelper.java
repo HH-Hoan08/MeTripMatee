@@ -8,7 +8,7 @@ import android.util.Log;
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     public static final String DATABASE_NAME = "mytripmatee.db";
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 6;
 
     // sử dụng Singleton đảm bảo toàn ứng dụng chỉ dùng một thể hiện duy nhất của DBHelper
     private static DBHelper instance;
@@ -201,10 +201,12 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE ChiPhi (" +
                 "    MaChiPhi    INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "    MaChuyenDi  INTEGER NOT NULL," +
+                "    MaNguoiDung INTEGER NOT NULL DEFAULT 1," +
                 "    MaDanhMuc   INTEGER NOT NULL," +
                 "    SoTien      INTEGER NOT NULL," +
                 "    NgayChi     TEXT    NOT NULL," +
                 "    GhiChu      TEXT," +
+                "    LaCaNhan    INTEGER NOT NULL DEFAULT 0," +
                 "    CONSTRAINT fk_ChiPhi_ChuyenDi FOREIGN KEY (MaChuyenDi)" +
                 "        REFERENCES ChuyenDi (MaChuyenDi) ON DELETE CASCADE ON UPDATE CASCADE," +
                 "    CONSTRAINT fk_ChiPhi_DanhMuc FOREIGN KEY (MaDanhMuc)" +

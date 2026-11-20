@@ -37,10 +37,12 @@ public class ChiPhiDAO {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("MaChuyenDi", chiPhi.getMaChuyenDi());
+        values.put("MaNguoiDung", chiPhi.getMaNguoiDung() > 0 ? chiPhi.getMaNguoiDung() : 1);
         values.put("MaDanhMuc", chiPhi.getMaDanhMuc());
         values.put("SoTien", chiPhi.getSoTien());
         values.put("NgayChi", chiPhi.getNgayChi());
         values.put("GhiChu", chiPhi.getGhiChu());
+        values.put("LaCaNhan", chiPhi.getLaCaNhan());
 
         try {
             return db.insert("ChiPhi", null, values);
@@ -59,10 +61,12 @@ public class ChiPhiDAO {
 
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
+        values.put("MaNguoiDung", chiPhi.getMaNguoiDung() > 0 ? chiPhi.getMaNguoiDung() : 1);
         values.put("MaDanhMuc", chiPhi.getMaDanhMuc());
         values.put("SoTien", chiPhi.getSoTien());
         values.put("NgayChi", chiPhi.getNgayChi());
         values.put("GhiChu", chiPhi.getGhiChu());
+        values.put("LaCaNhan", chiPhi.getLaCaNhan());
 
         try {
             int rows = db.update("ChiPhi", values, "MaChiPhi = ?",
@@ -87,14 +91,59 @@ public class ChiPhiDAO {
         }
     }
 
-    // 4. Lấy danh sách chi phí theo Chuyến đi (Liên kết thật danh mục)
-    public List<ChiPhi> layDanhSachChiPhiTheoChuyenDi(int maChuyenDi) {
+    // 4. Lấy danh sách chi phí theo Chuyến đi & Người dùng
+    // (Chi phí cá nhân chỉ hiện với đúng người tạo, chi phí nhóm hiện cho tất cả)
+    public List<ChiPhi> layDanhSachChiPhiTheoChuyenDi(int maChuyenDi, int maNguoiDung) {
         List<ChiPhi> list = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT p.*, d.TenDanhMuc, d.MauSac " +
                 "FROM ChiPhi p " +
                 "JOIN DanhMuc d ON p.MaDanhMuc = d.MaDanhMuc " +
                 "WHERE p.MaChuyenDi = ? " +
+                "  AND (p.LaCaNhan = 0 OR p.MaNguoiDung = ?) " +
+                "ORDER BY p.NgayChi DESC, p.MaChiPhi DESC";
+
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maChuyenDi), String.valueOf(maNguoiDung)});
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    ChiPhi item = new ChiPhi();
+                    item.setMaChiPhi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChiPhi")));
+                    item.setMaChuyenDi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChuyenDi")));
+                    try {
+                        item.setMaNguoiDung(cursor.getInt(cursor.getColumnIndexOrThrow("MaNguoiDung")));
+                    } catch (Exception ignored) {}
+                    item.setMaDanhMuc(cursor.getInt(cursor.getColumnIndexOrThrow("MaDanhMuc")));
+                    item.setSoTien(cursor.getLong(cursor.getColumnIndexOrThrow("SoTien")));
+                    item.setNgayChi(cursor.getString(cursor.getColumnIndexOrThrow("NgayChi")));
+                    item.setGhiChu(cursor.getString(cursor.getColumnIndexOrThrow("GhiChu")));
+                    try {
+                        item.setLaCaNhan(cursor.getInt(cursor.getColumnIndexOrThrow("LaCaNhan")));
+                    } catch (Exception ignored) {}
+                    item.setTenDanhMuc(cursor.getString(cursor.getColumnIndexOrThrow("TenDanhMuc")));
+                    item.setMauSac(cursor.getString(cursor.getColumnIndexOrThrow("MauSac")));
+                    list.add(item);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return list;
+    }
+
+    public List<ChiPhi> layDanhSachChiPhiTheoChuyenDi(int maChuyenDi) {
+        return layDanhSachChiPhiTheoChuyenDi(maChuyenDi, 1);
+    }
+
+    // 4b. Lấy danh sách chi phí NHÓM / LỊCH TRÌNH (LaCaNhan = 0) của một chuyến đi
+    public List<ChiPhi> layDanhSachChiPhiNhomTheoChuyenDi(int maChuyenDi) {
+        List<ChiPhi> list = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT p.*, d.TenDanhMuc, d.MauSac " +
+                "FROM ChiPhi p " +
+                "JOIN DanhMuc d ON p.MaDanhMuc = d.MaDanhMuc " +
+                "WHERE p.MaChuyenDi = ? AND p.LaCaNhan = 0 " +
                 "ORDER BY p.NgayChi DESC, p.MaChiPhi DESC";
 
         Cursor cursor = null;
@@ -105,10 +154,14 @@ public class ChiPhiDAO {
                     ChiPhi item = new ChiPhi();
                     item.setMaChiPhi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChiPhi")));
                     item.setMaChuyenDi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChuyenDi")));
+                    try {
+                        item.setMaNguoiDung(cursor.getInt(cursor.getColumnIndexOrThrow("MaNguoiDung")));
+                    } catch (Exception ignored) {}
                     item.setMaDanhMuc(cursor.getInt(cursor.getColumnIndexOrThrow("MaDanhMuc")));
                     item.setSoTien(cursor.getLong(cursor.getColumnIndexOrThrow("SoTien")));
                     item.setNgayChi(cursor.getString(cursor.getColumnIndexOrThrow("NgayChi")));
                     item.setGhiChu(cursor.getString(cursor.getColumnIndexOrThrow("GhiChu")));
+                    item.setLaCaNhan(0);
                     item.setTenDanhMuc(cursor.getString(cursor.getColumnIndexOrThrow("TenDanhMuc")));
                     item.setMauSac(cursor.getString(cursor.getColumnIndexOrThrow("MauSac")));
                     list.add(item);

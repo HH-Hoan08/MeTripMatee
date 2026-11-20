@@ -344,9 +344,10 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
                     existingChiPhi.setSoTien(costAmount);
                     existingChiPhi.setNgayChi(selectedDateDb);
                     existingChiPhi.setGhiChu(title);
+                    existingChiPhi.setLaCaNhan(0);
                     chiPhiDAO.capNhatChiPhi(existingChiPhi);
                 } else {
-                    ChiPhi newCp = new ChiPhi(maChuyenDi, maDanhMuc, costAmount, selectedDateDb, title);
+                    ChiPhi newCp = new ChiPhi(maChuyenDi, maDanhMuc, costAmount, selectedDateDb, title, 0);
                     chiPhiDAO.themChiPhi(newCp);
                 }
             } else if (existingChiPhi != null) {

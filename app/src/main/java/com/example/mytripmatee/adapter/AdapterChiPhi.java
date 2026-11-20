@@ -1,6 +1,11 @@
 package com.example.mytripmatee.adapter;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -70,7 +75,20 @@ public class AdapterChiPhi extends RecyclerView.Adapter<AdapterChiPhi.ViewHolder
 
         public void bind(ItemChiPhi item, SuKienChonChiPhiListener listener) {
             binding.tvTitle.setText(item.getTieuDe());
-            binding.tvSubtitle.setText(item.getTieuDePhu());
+
+            String subText = item.getTieuDePhu() != null ? item.getTieuDePhu() : "";
+            if (subText.contains("TÔI")) {
+                SpannableString spannable = new SpannableString(subText);
+                int startIndex = subText.indexOf("TÔI");
+                int endIndex = startIndex + "TÔI".length();
+                int tealColor = Color.parseColor("#0D9488");
+                spannable.setSpan(new ForegroundColorSpan(tealColor), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spannable.setSpan(new StyleSpan(Typeface.BOLD), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                binding.tvSubtitle.setText(spannable);
+            } else {
+                binding.tvSubtitle.setText(subText);
+            }
+
             binding.tvAmount.setText(item.getSoTienDinhDang());
 
             switch (item.getLoaiDanhMuc()) {
