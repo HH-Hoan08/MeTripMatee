@@ -1,5 +1,6 @@
 package com.example.mytripmatee.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -7,9 +8,12 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -176,39 +180,122 @@ public class KhamPhaFragment extends Fragment {
 
     private void setupSearchAndFilters() {
         if (binding.etSearch != null) {
+            binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    hideKeyboard();
+                    return true;
+                }
+                return false;
+            });
             binding.etSearch.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    filterTrips(s.toString().trim());
+                    String query = s.toString().trim();
+                    if (binding.btnClearSearch != null) {
+                        binding.btnClearSearch.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+                    }
+                    filterTrips(query);
                 }
                 @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        if (binding.btnClearSearch != null) {
+            binding.btnClearSearch.setOnClickListener(v -> {
+                if (binding.etSearch != null) {
+                    binding.etSearch.setText("");
+                }
+                hideKeyboard();
+            });
+        }
+
+        if (binding.btnTune != null) {
+            binding.btnTune.setOnClickListener(v -> {
+                switch (currentFilter) {
+                    case "ALL":
+                        currentFilter = "UPCOMING";
+                        break;
+                    case "UPCOMING":
+                        currentFilter = "ONGOING";
+                        break;
+                    case "ONGOING":
+                    case "DRAFT":
+                        currentFilter = "DONE";
+                        break;
+                    case "DONE":
+                    default:
+                        currentFilter = "ALL";
+                        break;
+                }
+                updateTabUI();
+                filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
             });
         }
 
         if (binding.tabAll != null) {
             binding.tabAll.setOnClickListener(v -> {
                 currentFilter = "ALL";
+                updateTabUI();
                 filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
             });
         }
         if (binding.tabUpcoming != null) {
             binding.tabUpcoming.setOnClickListener(v -> {
                 currentFilter = "UPCOMING";
+                updateTabUI();
                 filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
             });
         }
         if (binding.tabDraft != null) {
             binding.tabDraft.setOnClickListener(v -> {
-                currentFilter = "DRAFT";
+                currentFilter = "ONGOING";
+                updateTabUI();
                 filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
             });
         }
         if (binding.tabDone != null) {
             binding.tabDone.setOnClickListener(v -> {
                 currentFilter = "DONE";
+                updateTabUI();
                 filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
             });
+        }
+    }
+
+    private void updateTabUI() {
+        if (binding == null || getContext() == null) return;
+
+        int activeBg = R.drawable.bg_pill_teal;
+        int activeTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
+        int inactiveBg = R.drawable.bg_pill_white;
+        int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+
+        if (binding.tabAll != null) {
+            binding.tabAll.setBackgroundResource("ALL".equals(currentFilter) ? activeBg : inactiveBg);
+            binding.tabAll.setTextColor("ALL".equals(currentFilter) ? activeTextColor : inactiveTextColor);
+        }
+        if (binding.tabUpcoming != null) {
+            binding.tabUpcoming.setBackgroundResource("UPCOMING".equals(currentFilter) ? activeBg : inactiveBg);
+            binding.tabUpcoming.setTextColor("UPCOMING".equals(currentFilter) ? activeTextColor : inactiveTextColor);
+        }
+        if (binding.tabDraft != null) {
+            boolean isOngoing = "ONGOING".equals(currentFilter) || "DRAFT".equals(currentFilter);
+            binding.tabDraft.setBackgroundResource(isOngoing ? activeBg : inactiveBg);
+            binding.tabDraft.setTextColor(isOngoing ? activeTextColor : inactiveTextColor);
+        }
+        if (binding.tabDone != null) {
+            binding.tabDone.setBackgroundResource("DONE".equals(currentFilter) ? activeBg : inactiveBg);
+            binding.tabDone.setTextColor("DONE".equals(currentFilter) ? activeTextColor : inactiveTextColor);
+        }
+    }
+
+    private void hideKeyboard() {
+        if (getActivity() != null && getActivity().getCurrentFocus() != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+            }
         }
     }
 
@@ -236,29 +323,56 @@ public class KhamPhaFragment extends Fragment {
     }
 
     private void filterTrips(String keyword) {
+        int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (userId <= 0) userId = 1;
+
+        List<ChuyenDi> searchResult;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            searchResult = chuyenDiDAO.timKiemChuyenDi(userId, keyword.trim());
+        } else {
+            searchResult = fullChuyenDiList;
+        }
+
         List<ItemChuyenDi> filteredItems = new ArrayList<>();
-        String lowerKeyword = keyword.toLowerCase();
-
-        for (ChuyenDi cd : fullChuyenDiList) {
-            boolean matchesKeyword = lowerKeyword.isEmpty() ||
-                    (cd.getTenChuyenDi() != null && cd.getTenChuyenDi().toLowerCase().contains(lowerKeyword)) ||
-                    (cd.getDiemDen() != null && cd.getDiemDen().toLowerCase().contains(lowerKeyword));
-
-            if (!matchesKeyword) continue;
-
+        for (ChuyenDi cd : searchResult) {
             boolean matchesStatus = true;
             String status = cd.getTrangThaiThucTe();
 
             if ("UPCOMING".equals(currentFilter)) {
-                matchesStatus = "SAP_TOI".equalsIgnoreCase(status) || "DANG_DI".equalsIgnoreCase(status);
-            } else if ("DRAFT".equals(currentFilter)) {
-                matchesStatus = "BAN_NHAP".equalsIgnoreCase(status);
+                matchesStatus = "SAP_TOI".equalsIgnoreCase(status);
+            } else if ("ONGOING".equals(currentFilter) || "DRAFT".equals(currentFilter)) {
+                matchesStatus = "DANG_DI".equalsIgnoreCase(status);
             } else if ("DONE".equals(currentFilter)) {
                 matchesStatus = "DA_XONG".equalsIgnoreCase(status);
             }
 
             if (matchesStatus) {
                 filteredItems.add(cd.toTripItem());
+            }
+        }
+
+        if (binding != null) {
+            // Ẩn/hiện thẻ nổi bật tùy theo đang tìm kiếm hay không
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                binding.cardFeatured.setVisibility(View.GONE);
+            } else {
+                binding.cardFeatured.setVisibility(fullChuyenDiList.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+
+            // Nếu danh sách tìm kiếm rỗng -> hiển thị tvEmptySearch
+            if (binding.tvEmptySearch != null) {
+                if (filteredItems.isEmpty()) {
+                    binding.tvEmptySearch.setVisibility(View.VISIBLE);
+                    if (keyword != null && !keyword.trim().isEmpty()) {
+                        binding.tvEmptySearch.setText("Không tìm thấy chuyến đi nào phù hợp với \"" + keyword + "\"");
+                    } else {
+                        binding.tvEmptySearch.setText("Không có chuyến đi nào trong danh mục này");
+                    }
+                    binding.rvTrips.setVisibility(View.GONE);
+                } else {
+                    binding.tvEmptySearch.setVisibility(View.GONE);
+                    binding.rvTrips.setVisibility(View.VISIBLE);
+                }
             }
         }
 

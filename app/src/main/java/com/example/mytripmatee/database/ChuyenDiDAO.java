@@ -209,9 +209,13 @@ public class ChuyenDiDAO {
         }
     }
 
-    // tìm kiếm chuyến đi theo từ khóa
+    // tìm kiếm chuyến đi theo từ khóa (tìm tên chuyến đi, địa điểm, lịch trình, ghi chú...)
     public List<ChuyenDi> timKiemChuyenDi(int maNguoiDung, String keyword) {
         List<ChuyenDi> list = new ArrayList<>();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return layDanhSachChuyenDi(maNguoiDung);
+        }
+
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT c.*, " +
                 "       COALESCE(v.TongChi, 0) AS TongChi, " +
@@ -221,18 +225,26 @@ public class ChuyenDiDAO {
                 "FROM ChuyenDi c " +
                 "LEFT JOIN v_TongChiChuyenDi v ON c.MaChuyenDi = v.MaChuyenDi " +
                 "WHERE (c.MaNguoiDung = ? OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM ThanhVienChuyenDi WHERE MaNguoiDung = ?)) " +
-                "  AND (c.TenChuyenDi LIKE ? OR c.DiemDen LIKE ?) " +
+                "  AND (c.TenChuyenDi LIKE ? OR c.DiemDen LIKE ? " +
+                "       OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM LichTrinh WHERE TieuDe LIKE ? OR DiaDiem LIKE ? OR GhiChu LIKE ?) " +
+                "       OR c.MaChuyenDi IN (SELECT MaChuyenDi FROM ChiPhi WHERE GhiChu LIKE ?)) " +
                 "ORDER BY c.NgayDi DESC";
 
         String pattern = "%" + keyword.trim() + "%";
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung), String.valueOf(maNguoiDung), pattern, pattern});
+            cursor = db.rawQuery(sql, new String[]{
+                    String.valueOf(maNguoiDung),
+                    String.valueOf(maNguoiDung),
+                    pattern, pattern, pattern, pattern, pattern, pattern
+            });
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     list.add(parseChuyenDiFromCursor(cursor));
                 } while (cursor.moveToNext());
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi tìm kiếm chuyến đi", e);
         } finally {
             if (cursor != null) cursor.close();
         }
