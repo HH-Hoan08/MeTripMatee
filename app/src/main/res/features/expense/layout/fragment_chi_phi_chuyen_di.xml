@@ -42,7 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="3.050.000 đ"
+                    android:text="0 đ"
                     android:textColor="#FFFFFF"
                     android:textSize="26sp"
                     android:textStyle="bold" />
@@ -71,7 +71,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="5.000.000 đ"
+                            android:text="0 đ"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -94,7 +94,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="1.950.000 đ"
+                            android:text="0 đ"
                             android:textColor="#5EEAD4"
                             android:textSize="14sp"
                             android:textStyle="bold" />
