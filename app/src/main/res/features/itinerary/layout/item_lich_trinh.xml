@@ -8,22 +8,7 @@
     android:clipToPadding="false"
     android:paddingBottom="12dp">
 
-    <!-- Timeline Line Top -->
-    <View
-        android:id="@+id/timelineLineTop"
-        android:layout_width="2dp"
-        android:layout_height="28dp"
-        android:layout_marginStart="11dp"
-        android:background="#CBD5E1" />
 
-    <!-- Timeline Line Bottom -->
-    <View
-        android:id="@+id/timelineLineBottom"
-        android:layout_width="2dp"
-        android:layout_height="match_parent"
-        android:layout_below="@id/timelineLineTop"
-        android:layout_marginStart="11dp"
-        android:background="#CBD5E1" />
 
     <!-- Node Circle Icon -->
     <FrameLayout

@@ -75,9 +75,6 @@ public class AdapterLichTrinh extends RecyclerView.Adapter<AdapterLichTrinh.View
 
             Context context = binding.getRoot().getContext();
 
-            binding.timelineLineTop.setVisibility(position == 0 ? View.INVISIBLE : View.VISIBLE);
-            binding.timelineLineBottom.setVisibility(position == totalSize - 1 ? View.INVISIBLE : View.VISIBLE);
-
             switch (item.getLoaiHoatDong()) {
                 case AN_UONG:
                     binding.tvBadgeType.setBackgroundResource(R.drawable.bg_badge_amber);
