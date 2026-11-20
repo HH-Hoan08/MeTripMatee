@@ -114,7 +114,8 @@ public class LichTrinh {
     }
 
     public boolean isCoBanDo() {
-        return linkBanDo != null && !linkBanDo.trim().isEmpty();
+        return (linkBanDo != null && !linkBanDo.trim().isEmpty())
+                || (diaDiem != null && !diaDiem.trim().isEmpty());
     }
 
     public String getThongTinPhu() {

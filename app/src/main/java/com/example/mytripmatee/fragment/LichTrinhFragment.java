@@ -183,10 +183,13 @@ public class LichTrinhFragment extends Fragment {
 
             @Override
             public void onMoBanDo(LichTrinh item) {
-                if (item != null && item.getLinkBanDo() != null && !item.getLinkBanDo().isEmpty()) {
-                    Toast.makeText(requireContext(), "Đang mở bản đồ: " + item.getTieuDe(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(requireContext(), "Không có link bản đồ", Toast.LENGTH_SHORT).show();
+                if (item != null) {
+                    com.example.mytripmatee.util.TienIchBanDo.moGoogleMaps(
+                            requireContext(),
+                            item.getLinkBanDo(),
+                            item.getDiaDiem(),
+                            item.getTieuDe()
+                    );
                 }
             }
 
