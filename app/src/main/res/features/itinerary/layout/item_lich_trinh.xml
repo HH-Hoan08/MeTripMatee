@@ -110,27 +110,36 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp">
 
-            <TextView
-                android:id="@+id/tvSubInfo"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:textColor="#64748B"
-                android:textSize="12sp"
-                tools:text="Chi phí: 1.250.000 đ" />
+                android:layout_toStartOf="@id/cbDone"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/btnOpenMaps"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:drawableStart="@drawable/ic_open_in_new"
-                android:drawablePadding="4dp"
-                android:text="Mở Google Maps"
-                android:textColor="#0D9488"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                <TextView
+                    android:id="@+id/tvSubInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#64748B"
+                    android:textSize="12sp"
+                    tools:text="Chi phí: 1.250.000 đ" />
+
+                <TextView
+                    android:id="@+id/btnOpenMaps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:drawableStart="@drawable/ic_open_in_new"
+                    android:drawablePadding="4dp"
+                    android:paddingVertical="2dp"
+                    android:text="Mở Google Maps"
+                    android:textColor="#0D9488"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
 
             <CheckBox
                 android:id="@+id/cbDone"

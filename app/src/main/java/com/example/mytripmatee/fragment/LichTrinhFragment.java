@@ -51,7 +51,7 @@ public class LichTrinhFragment extends Fragment {
     private ChuyenDiDAO chuyenDiDAO;
     private QuanLyPhien quanLyPhien;
     private int maChuyenDi = 1;
-    private int selectedDay = 1;
+    private int selectedDay = 0;
 
     @Nullable
     @Override
@@ -299,7 +299,9 @@ public class LichTrinhFragment extends Fragment {
         }
 
         List<LichTrinh> filteredItems = new ArrayList<>();
-        if (dayNumber <= tripDates.size()) {
+        if (dayNumber == 0) {
+            filteredItems.addAll(allItems);
+        } else if (dayNumber <= tripDates.size()) {
             String targetDate = tripDates.get(dayNumber - 1);
             for (LichTrinh lt : allItems) {
                 if (targetDate.equals(lt.getNgayHoatDong())) {
@@ -315,7 +317,12 @@ public class LichTrinhFragment extends Fragment {
         if (binding != null && binding.tvEmptyState != null) {
             if (filteredItems.isEmpty()) {
                 binding.tvEmptyState.setVisibility(View.VISIBLE);
-                binding.tvEmptyState.setText("Chưa có hoạt động nào cho Ngày " + dayNumber + ".\nBấm '+ Thêm hoạt động' để bổ sung!");
+                String tripTitle = (chuyenDi != null && chuyenDi.getTenChuyenDi() != null) ? chuyenDi.getTenChuyenDi() : "chuyến đi này";
+                if (dayNumber == 0) {
+                    binding.tvEmptyState.setText("Chưa có hoạt động nào cho " + tripTitle + ".\nBấm '+ Thêm hoạt động' để bổ sung!");
+                } else {
+                    binding.tvEmptyState.setText("Chưa có hoạt động nào cho Ngày " + dayNumber + ".\nBấm '+ Thêm hoạt động' để bổ sung!");
+                }
             } else {
                 binding.tvEmptyState.setVisibility(View.GONE);
             }
@@ -374,6 +381,37 @@ public class LichTrinhFragment extends Fragment {
         int pillWidth = (int) (90 * density);
         int pillHeight = (int) (54 * density);
         int pillMarginEnd = (int) (10 * density);
+
+        // 1. Pill "TẤT CẢ" (Day 0)
+        boolean isAllSelected = (currentSelectedDay == 0);
+        LinearLayout pillAll = new LinearLayout(requireContext());
+        LinearLayout.LayoutParams lpAll = new LinearLayout.LayoutParams(pillWidth, pillHeight);
+        lpAll.setMarginEnd(pillMarginEnd);
+        pillAll.setLayoutParams(lpAll);
+        pillAll.setOrientation(LinearLayout.VERTICAL);
+        pillAll.setGravity(Gravity.CENTER);
+        pillAll.setBackgroundResource(isAllSelected ? R.drawable.bg_date_pill_selected : R.drawable.bg_date_pill_unselected);
+
+        TextView tvAllLabel = new TextView(requireContext());
+        tvAllLabel.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        tvAllLabel.setGravity(Gravity.CENTER);
+        tvAllLabel.setText("LỊCH TRÌNH");
+        tvAllLabel.setTextSize(10);
+        tvAllLabel.setTypeface(null, Typeface.BOLD);
+        tvAllLabel.setTextColor(Color.parseColor(isAllSelected ? "#CCFBF1" : "#94A3B8"));
+
+        TextView tvAllVal = new TextView(requireContext());
+        tvAllVal.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        tvAllVal.setGravity(Gravity.CENTER);
+        tvAllVal.setText("Tất cả");
+        tvAllVal.setTextSize(14);
+        tvAllVal.setTypeface(null, Typeface.BOLD);
+        tvAllVal.setTextColor(Color.parseColor(isAllSelected ? "#FFFFFF" : "#1E293B"));
+
+        pillAll.addView(tvAllLabel);
+        pillAll.addView(tvAllVal);
+        pillAll.setOnClickListener(v -> selectDay(0));
+        binding.layoutDayPillsContainer.addView(pillAll);
 
         for (int i = 0; i < dates.size(); i++) {
             final int dayNum = i + 1;
