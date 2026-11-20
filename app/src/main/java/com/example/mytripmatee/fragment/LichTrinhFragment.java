@@ -49,6 +49,7 @@ public class LichTrinhFragment extends Fragment {
     private AdapterLichTrinh adapter;
     private LichTrinhDAO lichTrinhDAO;
     private ChuyenDiDAO chuyenDiDAO;
+    private QuanLyPhien quanLyPhien;
     private int maChuyenDi = 1;
     private int selectedDay = 1;
 
@@ -65,6 +66,7 @@ public class LichTrinhFragment extends Fragment {
 
         lichTrinhDAO = new LichTrinhDAO(requireContext());
         chuyenDiDAO = new ChuyenDiDAO(requireContext());
+        quanLyPhien = new QuanLyPhien(requireContext());
 
         if (getArguments() != null && getArguments().containsKey("maChuyenDi")) {
             maChuyenDi = getArguments().getInt("maChuyenDi", 1);
@@ -80,6 +82,7 @@ public class LichTrinhFragment extends Fragment {
         );
 
         View.OnClickListener openEditListener = v -> {
+            if (!kiemTraQuyenChinhSua()) return;
             Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
             intent.putExtra("maChuyenDi", maChuyenDi);
             startActivity(intent);
@@ -153,11 +156,25 @@ public class LichTrinhFragment extends Fragment {
         return 1;
     }
 
+    private boolean kiemTraQuyenChinhSua() {
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentUserId <= 0) currentUserId = 1;
+        if (maChuyenDi <= 0) return true;
+
+        ChuyenDi currentTrip = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+        if (currentTrip != null && currentTrip.getMaNguoiDung() != currentUserId) {
+            Toast.makeText(requireContext(), "Bạn là thành viên được mời. Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa/thêm/xóa lịch trình!", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
     private void setupRecyclerView() {
         adapter = new AdapterLichTrinh(new AdapterLichTrinh.SuKienChonLichTrinhListener() {
             @Override
             public void onChonMuc(LichTrinh item) {
                 if (item == null) return;
+                if (!kiemTraQuyenChinhSua()) return;
                 Intent intent = SuaLichTrinhActivity.newIntent(requireContext());
                 intent.putExtra("maHoatDong", item.getMaHoatDong());
                 intent.putExtra("maChuyenDi", item.getMaChuyenDi());
@@ -176,6 +193,10 @@ public class LichTrinhFragment extends Fragment {
             @Override
             public void onThayDoiCheck(LichTrinh item, boolean isChecked) {
                 if (item == null) return;
+                if (!kiemTraQuyenChinhSua()) {
+                    loadDayData(selectedDay);
+                    return;
+                }
                 boolean success = lichTrinhDAO.capNhatTrangThaiDaDi(item.getMaHoatDong(), isChecked);
                 if (success) {
                     item.setDaDi(isChecked);
@@ -189,6 +210,7 @@ public class LichTrinhFragment extends Fragment {
             @Override
             public void onXoaMuc(LichTrinh item) {
                 if (item == null) return;
+                if (!kiemTraQuyenChinhSua()) return;
                 new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                         .setTitle("Xóa hoạt động")
                         .setMessage("Bạn có chắc chắn muốn xóa hoạt động '" + item.getTieuDe() + "' khỏi lịch trình?")

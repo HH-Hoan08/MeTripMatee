@@ -106,7 +106,22 @@ public class ChiPhiChuyenDiFragment extends Fragment {
         }
     }
 
+    private boolean kiemTraQuyenChinhSua() {
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentUserId <= 0) currentUserId = 1;
+        ChuyenDi currentTrip = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+
+        if (currentTrip != null && currentTrip.getMaNguoiDung() != currentUserId) {
+            Toast.makeText(requireContext(), "Bạn là thành viên được mời. Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa/thêm/xóa chi phí!", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
     private void hienThiMenuTuyChonChiPhi(ItemChiPhi item) {
+        if (!kiemTraQuyenChinhSua()) {
+            return;
+        }
         String[] options = new String[]{"Chỉnh sửa khoản chi", "Xóa khoản chi"};
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(item.getTieuDe())
@@ -201,7 +216,12 @@ public class ChiPhiChuyenDiFragment extends Fragment {
 
     private void setupAddExpenseButton() {
         if (btnAddExpense != null) {
-            btnAddExpense.setOnClickListener(v -> showAddExpenseDialog());
+            btnAddExpense.setOnClickListener(v -> {
+                if (!kiemTraQuyenChinhSua()) {
+                    return;
+                }
+                showAddExpenseDialog();
+            });
         }
     }
 

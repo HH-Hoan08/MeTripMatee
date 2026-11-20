@@ -69,6 +69,17 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
             maHoatDong = getIntent().getIntExtra("maHoatDong", -1);
         }
 
+        com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
+        int currentUserId = quanLyPhien.getMaNguoiDung();
+        if (currentUserId <= 0) currentUserId = 1;
+
+        ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+        if (cd != null && cd.getMaNguoiDung() != currentUserId) {
+            Toast.makeText(this, "Bạn là thành viên được mời. Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền thêm/chỉnh sửa/xóa lịch trình!", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
