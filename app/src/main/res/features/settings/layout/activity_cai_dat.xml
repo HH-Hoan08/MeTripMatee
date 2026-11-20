@@ -7,11 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".SettingsActivity">
 
+    <!-- Animated Soft Ambient Light Bubble Background -->
+    <com.example.mytripmatee.ui.NenBongBongView
+        android:id="@+id/bubbleBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <LinearLayout
         android:id="@+id/mainSettings"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/bg_main"
+        android:background="@android:color/transparent"
         android:orientation="vertical">
 
         <!-- Top Header Bar -->

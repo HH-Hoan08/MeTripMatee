@@ -2,10 +2,15 @@ package com.example.mytripmatee.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.database.DBHelper;
@@ -26,6 +31,7 @@ public class DangNhapActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
 
         DBHelper.getInstance(this).getWritableDatabase();
 
@@ -38,6 +44,15 @@ public class DangNhapActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_dang_nhap);
+
+        View rootView = findViewById(R.id.rootLogin);
+        if (rootView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
