@@ -3,7 +3,9 @@ package com.example.mytripmatee.fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChiPhi;
 import com.example.mytripmatee.adapter.AdapterChiaTien;
+import com.example.mytripmatee.adapter.AdapterChonChuyenDi;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
@@ -56,6 +59,10 @@ public class ChiPhiFragment extends Fragment {
     private List<ChuyenDi> danhSachChuyenDi = new ArrayList<>();
     private final List<ItemChiPhi> tatCaChiPhi = new ArrayList<>();
     private final List<ItemChiPhi> chiPhiDaLoc = new ArrayList<>();
+
+    private TextView btnFilterTrip;
+    private int selectedTripId = -1;
+    private String selectedTripName = "Tất cả chuyến đi";
 
     private RecyclerView rvExpenses;
     private RecyclerView rvGroupSplit;
@@ -95,6 +102,7 @@ public class ChiPhiFragment extends Fragment {
         rvGroupSplit = view.findViewById(R.id.rvGroupSplit);
         spFilterDate = view.findViewById(R.id.spFilterDate);
         spFilterCategory = view.findViewById(R.id.spFilterCategory);
+        btnFilterTrip = view.findViewById(R.id.btnFilterTrip);
         tvCatMoveAmount = view.findViewById(R.id.tvCatMoveAmount);
         tvCatFoodAmount = view.findViewById(R.id.tvCatFoodAmount);
         tvCatStayAmount = view.findViewById(R.id.tvCatStayAmount);
@@ -109,6 +117,10 @@ public class ChiPhiFragment extends Fragment {
         btnAutoSplit = view.findViewById(R.id.btnAutoSplit);
         tvSplitMemberCount = view.findViewById(R.id.tvSplitMemberCount);
         tvGroupSplitDetail = view.findViewById(R.id.tvGroupSplitDetail);
+
+        if (btnFilterTrip != null) {
+            btnFilterTrip.setOnClickListener(v -> hienThiDialogChonChuyenDi());
+        }
 
         setupRecyclerView();
         loadDataFromDatabase();
@@ -221,6 +233,8 @@ public class ChiPhiFragment extends Fragment {
         }
     }
 
+    private boolean isCategorySpinnerInitialized = false;
+
     private void setupFilters() {
         List<String> tripOptions = new ArrayList<>();
         tripOptions.add("Tất cả chuyến đi");
@@ -234,49 +248,161 @@ public class ChiPhiFragment extends Fragment {
         tripAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
         if (spFilterDate != null) spFilterDate.setAdapter(tripAdapter);
 
-        String[] categoryOptions = new String[]{"Tất cả danh mục", "Di chuyển", "Ăn uống", "Khách sạn", "Khác"};
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categoryOptions);
-        catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
-        if (spFilterCategory != null) spFilterCategory.setAdapter(catAdapter);
+        if (spFilterCategory != null && spFilterCategory.getAdapter() == null) {
+            String[] categoryOptions = new String[]{"Tất cả danh mục", "Di chuyển", "Ăn uống", "Khách sạn", "Khác"};
+            ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categoryOptions);
+            catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
+            spFilterCategory.setAdapter(catAdapter);
 
-        AdapterView.OnItemSelectedListener filterListener = new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyFilters();
-            }
+            spFilterCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (isCategorySpinnerInitialized) {
+                        applyFilters();
+                    } else {
+                        isCategorySpinnerInitialized = true;
+                    }
+                }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        };
-
-        if (spFilterDate != null) spFilterDate.setOnItemSelectedListener(filterListener);
-        if (spFilterCategory != null) spFilterCategory.setOnItemSelectedListener(filterListener);
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
 
         applyFilters();
     }
 
-    private int getTargetTripId() {
-        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
-        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
-            if (tripPos > 0 && tripPos - 1 < danhSachChuyenDi.size()) {
-                return danhSachChuyenDi.get(tripPos - 1).getMaChuyenDi();
-            } else {
-                return danhSachChuyenDi.get(0).getMaChuyenDi();
+    private void hienThiDialogChonChuyenDi() {
+        if (getContext() == null) return;
+
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_trip, null);
+        dialog.setContentView(dialogView);
+
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        EditText etSearch = dialogView.findViewById(R.id.etSearchTrip);
+        ImageView btnClear = dialogView.findViewById(R.id.btnClearSearchTrip);
+        RecyclerView rv = dialogView.findViewById(R.id.rvSelectTrip);
+        TextView tvEmpty = dialogView.findViewById(R.id.tvEmptySearchTrip);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        List<ChuyenDi> currentTripList = new ArrayList<>(danhSachChuyenDi);
+
+        AdapterChonChuyenDi adapter = new AdapterChonChuyenDi((tripId, trip, tripName) -> {
+            selectedTripId = tripId;
+            selectedTripName = tripName != null ? tripName : "Tất cả chuyến đi";
+
+            if (btnFilterTrip != null) {
+                btnFilterTrip.setText(selectedTripName + " ▼");
             }
+
+            applyFilters();
+            Toast.makeText(requireContext(), "Lọc theo: " + selectedTripName, Toast.LENGTH_SHORT).show();
+
+            SharedPreferences sp = requireContext().getSharedPreferences("group_split_pref", Context.MODE_PRIVATE);
+            int targetTripId = getTargetTripId();
+            boolean hasCalculated = sp.getBoolean("has_calculated_split_" + targetTripId, false);
+            if (hasCalculated) {
+                thucHienChiaTienNhom();
+            } else {
+                datTrangThaiBanDauChiaTien();
+            }
+
+            dialog.dismiss();
+        });
+
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rv.setAdapter(adapter);
+            adapter.setDanhSachChuyenDi(currentTripList, selectedTripId);
+        }
+
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s != null ? s.toString().trim().toLowerCase() : "";
+                    if (btnClear != null) btnClear.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+
+                    List<ChuyenDi> filtered = new ArrayList<>();
+                    if (query.isEmpty()) {
+                        filtered.addAll(danhSachChuyenDi);
+                    } else {
+                        for (ChuyenDi cd : danhSachChuyenDi) {
+                            String name = cd.getTenChuyenDi() != null ? cd.getTenChuyenDi().toLowerCase() : "";
+                            String dest = cd.getDiemDen() != null ? cd.getDiemDen().toLowerCase() : "";
+                            if (name.contains(query) || dest.contains(query)) {
+                                filtered.add(cd);
+                            }
+                        }
+                    }
+
+                    adapter.setDanhSachChuyenDi(filtered, selectedTripId);
+
+                    if (filtered.isEmpty() && !query.isEmpty()) {
+                        if (tvEmpty != null) tvEmpty.setVisibility(View.VISIBLE);
+                        if (rv != null) rv.setVisibility(View.GONE);
+                    } else {
+                        if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
+                        if (rv != null) rv.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        if (btnClear != null) {
+            btnClear.setOnClickListener(v -> {
+                if (etSearch != null) etSearch.setText("");
+            });
+        }
+
+        dialog.show();
+    }
+
+    private int getTargetTripId() {
+        if (selectedTripId > 0) {
+            return selectedTripId;
+        }
+        if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            return danhSachChuyenDi.get(0).getMaChuyenDi();
         }
         return 1;
     }
 
     private void applyFilters() {
-        int tripPos = spFilterDate != null ? spFilterDate.getSelectedItemPosition() : 0;
-        String selectedTrip = (spFilterDate != null && spFilterDate.getSelectedItem() != null) ? spFilterDate.getSelectedItem().toString() : "Tất cả chuyến đi";
-        int catPos = spFilterCategory != null ? spFilterCategory.getSelectedItemPosition() : 0;
+        if (selectedTripId > 0 && danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            for (ChuyenDi cd : danhSachChuyenDi) {
+                if (cd.getMaChuyenDi() == selectedTripId) {
+                    selectedTripName = cd.getTenChuyenDi();
+                    break;
+                }
+            }
+        } else if (selectedTripId <= 0) {
+            selectedTripId = -1;
+            selectedTripName = "Tất cả chuyến đi";
+        }
 
-        boolean hasFilter = (tripPos > 0) || (catPos > 0);
+        if (btnFilterTrip != null) {
+            btnFilterTrip.setText(selectedTripName + " ▼");
+        }
+
+        int catPos = spFilterCategory != null ? spFilterCategory.getSelectedItemPosition() : 0;
+        boolean hasFilter = (selectedTripId > 0) || (catPos > 0);
 
         chiPhiDaLoc.clear();
         for (ItemChiPhi item : tatCaChiPhi) {
-            boolean matchTrip = (tripPos == 0) || (item.getTenChuyenDi() != null && item.getTenChuyenDi().contains(selectedTrip)) || selectedTrip.contains(item.getTenChuyenDi());
+            boolean matchTrip = (selectedTripId == -1);
+            if (!matchTrip && item.getTenChuyenDi() != null && selectedTripName != null) {
+                String itemTrip = item.getTenChuyenDi().trim();
+                String filterTrip = selectedTripName.trim();
+                matchTrip = itemTrip.equalsIgnoreCase(filterTrip) || itemTrip.contains(filterTrip) || filterTrip.contains(itemTrip);
+            }
+
             boolean matchCategory = true;
             if (catPos == 1) matchCategory = (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.DI_CHUYEN);
             else if (catPos == 2) matchCategory = (item.getLoaiDanhMuc() == ItemChiPhi.LoaiDanhMuc.AN_UONG);
@@ -291,7 +417,7 @@ public class ChiPhiFragment extends Fragment {
         if (adapterChiPhi != null) {
             adapterChiPhi.setDanhSachChiPhi(chiPhiDaLoc);
         }
-        recalculateTotals(hasFilter, tripPos);
+        recalculateTotals(hasFilter, selectedTripId > 0 ? 1 : 0);
         updateCategoryCards();
     }
 
@@ -330,40 +456,28 @@ public class ChiPhiFragment extends Fragment {
         return amount + " đ";
     }
 
-    private void recalculateTotals(boolean hasFilter, int tripPos) {
+    private void recalculateTotals(boolean hasFilter, int dummy) {
         long budget = 0;
         long totalSpent = 0;
         long groupSpent = 0;
 
-        if (!hasFilter) {
-            if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
-                for (ChuyenDi cd : danhSachChuyenDi) {
-                    budget += cd.getNganSach();
-                }
+        for (ItemChiPhi item : chiPhiDaLoc) {
+            totalSpent += item.getSoTien();
+            if (!item.isCaNhan()) {
+                groupSpent += item.getSoTien();
             }
-            for (ItemChiPhi item : chiPhiDaLoc) {
-                totalSpent += item.getSoTien();
-                if (!item.isCaNhan()) {
-                    groupSpent += item.getSoTien();
-                }
-            }
-        } else {
-            for (ItemChiPhi item : chiPhiDaLoc) {
-                totalSpent += item.getSoTien();
-                if (!item.isCaNhan()) {
-                    groupSpent += item.getSoTien();
-                }
-            }
+        }
 
-            if (tripPos > 0 && danhSachChuyenDi != null && tripPos - 1 < danhSachChuyenDi.size()) {
-                ChuyenDi selectedCd = danhSachChuyenDi.get(tripPos - 1);
-                budget = selectedCd.getNganSach();
-            } else {
-                if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
-                    for (ChuyenDi cd : danhSachChuyenDi) {
-                        budget += cd.getNganSach();
-                    }
+        if (selectedTripId > 0 && danhSachChuyenDi != null) {
+            for (ChuyenDi cd : danhSachChuyenDi) {
+                if (cd.getMaChuyenDi() == selectedTripId) {
+                    budget = cd.getNganSach();
+                    break;
                 }
+            }
+        } else if (danhSachChuyenDi != null && !danhSachChuyenDi.isEmpty()) {
+            for (ChuyenDi cd : danhSachChuyenDi) {
+                budget += cd.getNganSach();
             }
         }
 
