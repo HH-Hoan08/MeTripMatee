@@ -148,25 +148,15 @@ public class ChiPhiFragment extends Fragment {
         }
     }
 
-    private boolean kiemTraQuyenChinhSua() {
-        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
-        int targetTripId = getTargetTripId();
-        ChuyenDi currentTrip = chuyenDiDAO.layChuyenDiTheoId(targetTripId);
 
-        if (currentTrip != null && currentTrip.getMaNguoiDung() != currentUserId) {
-            Toast.makeText(requireContext(), "Bạn là thành viên được mời. Chỉ Trưởng nhóm (người tạo chuyến đi) mới có quyền chỉnh sửa/thêm/xóa chi phí!", Toast.LENGTH_LONG).show();
-            return false;
-        }
-        return true;
-    }
 
     private void hienThiMenuTuyChonChiPhi(ItemChiPhi item) {
         if (item == null) return;
 
+        // Khoản chi chung của nhóm từ lịch trình được khóa cứng, không thể xóa/sửa
         if (!item.isCaNhan()) {
-            if (!kiemTraQuyenChinhSua()) {
-                return;
-            }
+            Toast.makeText(requireContext(), "Khoản chi chung của nhóm từ lịch trình không thể chỉnh sửa hoặc xóa tại đây!", Toast.LENGTH_LONG).show();
+            return;
         }
 
         String[] options = new String[]{"Chỉnh sửa khoản chi", "Xóa khoản chi"};
@@ -212,6 +202,7 @@ public class ChiPhiFragment extends Fragment {
                                 loai,
                                 "Tôi",
                                 cd.getTenChuyenDi(),
+                                cd.getMaChuyenDi(),
                                 cp.isCaNhan()
                         );
                         tatCaChiPhi.add(item);
@@ -758,12 +749,13 @@ public class ChiPhiFragment extends Fragment {
                 }
 
                 int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+                // Tất cả khoản chi thêm từ "Ví chi tiêu" đều là khoản chi cá nhân của chính mình (laCaNhan = 1)
                 ChiPhi chiPhi = new ChiPhi(finalTargetTripId, maDanhMuc, amount, ngayChiDb, title, 1);
                 chiPhi.setMaNguoiDung(currentUserId);
                 long id = chiPhiDAO.themChiPhi(chiPhi);
 
                 if (id > 0) {
-                    Toast.makeText(requireContext(), "Đã thêm khoản chi phí thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Đã thêm khoản chi phí cá nhân!", Toast.LENGTH_SHORT).show();
                 }
 
                 loadDataFromDatabase();
@@ -774,6 +766,13 @@ public class ChiPhiFragment extends Fragment {
     }
 
     private void showEditExpenseDialog(ItemChiPhi item) {
+        if (item == null) return;
+
+        if (!item.isCaNhan()) {
+            Toast.makeText(requireContext(), "Khoản chi chung của nhóm từ lịch trình không thể chỉnh sửa!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_chi_phi, null);
         dialog.setContentView(dialogView);
@@ -855,21 +854,21 @@ public class ChiPhiFragment extends Fragment {
                 SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 String ngayChiDb = sdfYmd.format(new Date());
 
-                int targetTripId = getTargetTripId();
+                int tripId = item.getMaChuyenDi() > 0 ? item.getMaChuyenDi() : getTargetTripId();
                 int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
                 ChiPhi chiPhi = new ChiPhi();
                 chiPhi.setMaChiPhi(maChiPhi);
-                chiPhi.setMaChuyenDi(targetTripId);
+                chiPhi.setMaChuyenDi(tripId);
                 chiPhi.setMaNguoiDung(currentUserId);
                 chiPhi.setMaDanhMuc(maDanhMuc);
                 chiPhi.setSoTien(amount);
                 chiPhi.setNgayChi(ngayChiDb);
                 chiPhi.setGhiChu(title);
-                chiPhi.setLaCaNhan(item.isCaNhan() ? 1 : 0);
+                chiPhi.setLaCaNhan(1); // Sửa chi phí cá nhân của chính mình
 
                 boolean updated = chiPhiDAO.capNhatChiPhi(chiPhi);
                 if (updated) {
-                    Toast.makeText(requireContext(), "Cập nhật chi phí thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Cập nhật chi phí cá nhân thành công!", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(requireContext(), "Không thể cập nhật chi phí", Toast.LENGTH_SHORT).show();
                 }
@@ -883,8 +882,15 @@ public class ChiPhiFragment extends Fragment {
     }
 
     private void xacNhanXoaChiPhi(ItemChiPhi item) {
+        if (item == null) return;
+
+        if (!item.isCaNhan()) {
+            Toast.makeText(requireContext(), "Khoản chi chung của nhóm từ lịch trình không thể xóa!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Xóa khoản chi")
+                .setTitle("Xóa khoản chi cá nhân")
                 .setMessage("Bạn có chắc chắn muốn xóa khoản chi '" + item.getTieuDe() + "' không?")
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     int maChiPhi = 0;
@@ -895,7 +901,7 @@ public class ChiPhiFragment extends Fragment {
                     if (maChiPhi > 0) {
                         boolean deleted = chiPhiDAO.xoaChiPhi(maChiPhi);
                         if (deleted) {
-                            Toast.makeText(requireContext(), "Đã xóa khoản chi!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Đã xóa khoản chi cá nhân!", Toast.LENGTH_SHORT).show();
                             loadDataFromDatabase();
                         } else {
                             Toast.makeText(requireContext(), "Lỗi khi xóa khoản chi", Toast.LENGTH_SHORT).show();
