@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterThuVienAnh;
+import com.example.mytripmatee.dao.AnhDAO;
 import com.example.mytripmatee.databinding.FragmentThuVienAnhBinding;
 import com.example.mytripmatee.model.ItemAnhThuVien;
 
@@ -27,8 +28,18 @@ import java.util.List;
 
 public class ThuVienAnhFragment extends Fragment {
 
+    public static ThuVienAnhFragment newInstance(int maChuyenDi) {
+        ThuVienAnhFragment fragment = new ThuVienAnhFragment();
+        Bundle args = new Bundle();
+        args.putInt("maChuyenDi", maChuyenDi);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     private FragmentThuVienAnhBinding binding;
     private AdapterThuVienAnh adapter;
+    private AnhDAO anhDAO;
+    private int maChuyenDi = 1;
 
     @Nullable
     @Override
@@ -41,11 +52,27 @@ public class ThuVienAnhFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (getArguments() != null && getArguments().containsKey("maChuyenDi")) {
+            maChuyenDi = getArguments().getInt("maChuyenDi", 1);
+        } else if (requireActivity().getIntent() != null) {
+            maChuyenDi = requireActivity().getIntent().getIntExtra("extra_ma_chuyen_di",
+                    requireActivity().getIntent().getIntExtra("maChuyenDi", 1));
+        }
+
+        anhDAO = new AnhDAO(requireContext());
+
         setupRecyclerView();
+        loadPhotosFromDatabase();
 
         binding.fabAddPhoto.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Mở bộ sưu tập để chọn thêm ảnh mới", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Bấm để chọn và thêm hình ảnh mới cho chuyến đi", Toast.LENGTH_SHORT).show()
         );
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadPhotosFromDatabase();
     }
 
     private void setupRecyclerView() {
@@ -53,8 +80,17 @@ public class ThuVienAnhFragment extends Fragment {
 
         binding.rvGallery.setLayoutManager(new GridLayoutManager(requireContext(), 3));
         binding.rvGallery.setAdapter(adapter);
+    }
 
-        adapter.setDanhSachAnh(getSamplePhotos());
+    private void loadPhotosFromDatabase() {
+        if (binding == null) return;
+
+        List<ItemAnhThuVien> listPhotos = anhDAO.layDanhSachAnhTheoChuyenDi(maChuyenDi);
+        if (listPhotos == null) {
+            listPhotos = new ArrayList<>();
+        }
+
+        adapter.setDanhSachAnh(listPhotos);
     }
 
     private void showPhotoEnlargedDialog(ItemAnhThuVien photo) {
@@ -88,20 +124,6 @@ public class ThuVienAnhFragment extends Fragment {
         }
 
         dialog.show();
-    }
-
-    private List<ItemAnhThuVien> getSamplePhotos() {
-        List<ItemAnhThuVien> photos = new ArrayList<>();
-        photos.add(new ItemAnhThuVien("1", "Sương Mù Đà Lạt", "Thung Lũng Mây • 12/11", R.drawable.img_dalat, "Cảnh đẹp"));
-        photos.add(new ItemAnhThuVien("2", "Nắng Biển Phú Quốc", "Bãi Sao • 12/11", R.drawable.img_phuquoc, "Cảnh đẹp"));
-        photos.add(new ItemAnhThuVien("3", "Đèo Mã Pí Lèng", "Hà Giang • 13/11", R.drawable.img_hagiang, "Cảnh đẹp"));
-        photos.add(new ItemAnhThuVien("4", "Bánh căn Nhà Chung", "Quận 3, Đà Lạt • 13/11", R.drawable.img_dalat, "Ăn uống"));
-        photos.add(new ItemAnhThuVien("5", "Hoàng Hôn Trên Đồi", "Đà Lạt • 14/11", R.drawable.img_phuquoc, "Cảnh đẹp"));
-        photos.add(new ItemAnhThuVien("6", "Lẩu gà lá é", "Đường 3/4 • 14/11", R.drawable.img_hagiang, "Ăn uống"));
-        photos.add(new ItemAnhThuVien("7", "View Homestay ban đêm", "Thung Lũng Mây • 14/11", R.drawable.img_dalat, "Lưu trú"));
-        photos.add(new ItemAnhThuVien("8", "Cà phê Túi Mơ To", "Sào Nam • 15/11", R.drawable.img_phuquoc, "Ăn uống"));
-        photos.add(new ItemAnhThuVien("9", "Check-in Quảng trường", "Lâm Viên • 15/11", R.drawable.img_hagiang, "Cảnh đẹp"));
-        return photos;
     }
 
     @Override

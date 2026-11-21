@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -157,13 +158,7 @@ public class KhamPhaFragment extends Fragment {
                     );
                     startActivity(intent);
                 } else {
-                    Intent intent = ChiTietChuyenDiActivity.newIntent(
-                            getContext(),
-                            1,
-                            "Đà Lạt – Sương Mù & Thảnh Thơi",
-                            "12/11 - 15/11/2026 • 3 ngày 2 đêm"
-                    );
-                    startActivity(intent);
+                    Toast.makeText(requireContext(), "Chưa có chuyến đi nào. Hãy bấm '+' để tạo chuyến đi mới!", Toast.LENGTH_SHORT).show();
                 }
             }
         });

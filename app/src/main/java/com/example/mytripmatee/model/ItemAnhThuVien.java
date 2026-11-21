@@ -6,6 +6,7 @@ public class ItemAnhThuVien {
     private final String diaDiem;
     private final int maAnhResId;
     private final String danhMuc;
+    private String duongDanUri;
 
     public ItemAnhThuVien(String maId, String tieuDe, String diaDiem, int maAnhResId, String danhMuc) {
         this.maId = maId;
@@ -33,5 +34,13 @@ public class ItemAnhThuVien {
 
     public String getDanhMuc() {
         return danhMuc;
+    }
+
+    public String getDuongDanUri() {
+        return duongDanUri;
+    }
+
+    public void setDuongDanUri(String duongDanUri) {
+        this.duongDanUri = duongDanUri;
     }
 }
