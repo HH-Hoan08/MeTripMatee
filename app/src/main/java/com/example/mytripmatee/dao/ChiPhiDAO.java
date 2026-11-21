@@ -189,6 +189,22 @@ public class ChiPhiDAO {
         return 0;
     }
 
+    // 5b. Tính tổng chi tiêu NHÓM / LỊCH TRÌNH (LaCaNhan = 0) của một chuyến đi
+    public long tinhTongChiNhomTheoChuyenDi(int maChuyenDi) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT COALESCE(SUM(SoTien), 0) FROM ChiPhi WHERE MaChuyenDi = ? AND LaCaNhan = 0";
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maChuyenDi)});
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getLong(0);
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return 0;
+    }
+
     // ==============================================================
     //  Truy vấn thống kê SQLite (SUM, GROUP BY)
     // ==============================================================

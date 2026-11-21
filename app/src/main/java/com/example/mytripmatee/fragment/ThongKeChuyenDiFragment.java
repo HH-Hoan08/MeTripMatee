@@ -97,17 +97,17 @@ public class ThongKeChuyenDiFragment extends Fragment {
         ChiPhiDAO chiPhiDAO = new ChiPhiDAO(requireContext());
         LichTrinhDAO lichTrinhDAO = new LichTrinhDAO(requireContext());
 
-        // 1. Ngân sách & Tổng chi tiêu
+        // 1. Ngân sách & Tổng chi tiêu nhóm của chuyến đi
         ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
         long budget = cd != null ? cd.getNganSach() : 0;
-        long totalSpent = chiPhiDAO.tinhTongChiTheoChuyenDi(maChuyenDi);
+        long totalSpent = chiPhiDAO.tinhTongChiNhomTheoChuyenDi(maChuyenDi);
 
         int budgetPercent = budget > 0 ? (int) Math.min(100, (totalSpent * 100) / budget) : 0;
         if (tvBudgetPercent != null) tvBudgetPercent.setText(budgetPercent + "%");
         if (tvBudgetDetail != null) tvBudgetDetail.setText(formatShortMoney(totalSpent) + " / " + formatShortMoney(budget));
 
-        // 2. Thống kê đầy đủ 4 danh mục Tỷ trọng chi tiêu (Ăn uống, Di chuyển, Lưu trú, Giải trí/Khác)
-        List<ChiPhi> listCp = chiPhiDAO.layDanhSachChiPhiTheoChuyenDi(maChuyenDi);
+        // 2. Thống kê đầy đủ 4 danh mục Tỷ trọng chi tiêu nhóm (Ăn uống, Di chuyển, Lưu trú, Giải trí/Khác)
+        List<ChiPhi> listCp = chiPhiDAO.layDanhSachChiPhiNhomTheoChuyenDi(maChuyenDi);
         long foodSpent = 0;
         long moveSpent = 0;
         long staySpent = 0;
