@@ -245,6 +245,7 @@
 
                 <!-- Background Image -->
                 <ImageView
+                    android:id="@+id/imgFeaturedBackground"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="Ảnh chuyến đi nổi bật"

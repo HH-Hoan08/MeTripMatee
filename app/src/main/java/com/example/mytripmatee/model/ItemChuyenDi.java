@@ -15,6 +15,7 @@ public class ItemChuyenDi {
     private final String theNgay;
     private final String chiTiet;
     private final int maAnhResId;
+    private String duongDanAnhUri;
 
     public ItemChuyenDi(String maId, String tieuDe, String trangThaiHienThi, LoaiTrangThai loaiTrangThai, String theNgay, String chiTiet, int maAnhResId) {
         this.maId = maId;
@@ -52,5 +53,13 @@ public class ItemChuyenDi {
 
     public int getMaAnhResId() {
         return maAnhResId;
+    }
+
+    public String getDuongDanAnhUri() {
+        return duongDanAnhUri;
+    }
+
+    public void setDuongDanAnhUri(String duongDanAnhUri) {
+        this.duongDanAnhUri = duongDanAnhUri;
     }
 }

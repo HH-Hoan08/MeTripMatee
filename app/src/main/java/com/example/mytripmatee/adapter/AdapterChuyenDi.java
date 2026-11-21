@@ -1,6 +1,7 @@
 package com.example.mytripmatee.adapter;
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
@@ -76,7 +77,13 @@ public class AdapterChuyenDi extends RecyclerView.Adapter<AdapterChuyenDi.ViewHo
 
             Context context = binding.getRoot().getContext();
 
-            if (itemChuyenDi.getMaAnhResId() != 0) {
+            if (itemChuyenDi.getDuongDanAnhUri() != null && !itemChuyenDi.getDuongDanAnhUri().trim().isEmpty()) {
+                try {
+                    binding.imgThumbnail.setImageURI(Uri.parse(itemChuyenDi.getDuongDanAnhUri()));
+                } catch (Exception e) {
+                    binding.imgThumbnail.setImageResource(itemChuyenDi.getMaAnhResId() != 0 ? itemChuyenDi.getMaAnhResId() : R.drawable.img_phuquoc);
+                }
+            } else if (itemChuyenDi.getMaAnhResId() != 0) {
                 binding.imgThumbnail.setImageResource(itemChuyenDi.getMaAnhResId());
             } else {
                 binding.imgThumbnail.setImageResource(R.drawable.img_phuquoc);
@@ -179,7 +186,8 @@ public class AdapterChuyenDi extends RecyclerView.Adapter<AdapterChuyenDi.ViewHo
                     && oldItem.getLoaiTrangThai() == newItem.getLoaiTrangThai()
                     && Objects.equals(oldItem.getTheNgay(), newItem.getTheNgay())
                     && Objects.equals(oldItem.getChiTiet(), newItem.getChiTiet())
-                    && oldItem.getMaAnhResId() == newItem.getMaAnhResId();
+                    && oldItem.getMaAnhResId() == newItem.getMaAnhResId()
+                    && Objects.equals(oldItem.getDuongDanAnhUri(), newItem.getDuongDanAnhUri());
         }
     }
 }

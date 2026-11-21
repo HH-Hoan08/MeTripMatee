@@ -2,6 +2,7 @@ package com.example.mytripmatee.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +24,7 @@ import com.example.mytripmatee.R;
 import com.example.mytripmatee.activity.CaiDatActivity;
 import com.example.mytripmatee.activity.ChiTietChuyenDiActivity;
 import com.example.mytripmatee.adapter.AdapterChuyenDi;
+import com.example.mytripmatee.dao.AnhDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.databinding.FragmentKhamPhaBinding;
@@ -31,7 +34,6 @@ import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 public class KhamPhaFragment extends Fragment {
@@ -39,10 +41,12 @@ public class KhamPhaFragment extends Fragment {
     private FragmentKhamPhaBinding binding;
     private AdapterChuyenDi adapterChuyenDi;
     private ChuyenDiDAO chuyenDiDAO;
+    private NguoiDungDAO nguoiDungDAO;
+    private AnhDAO anhDAO;
     private QuanLyPhien quanLyPhien;
 
     private List<ChuyenDi> fullChuyenDiList = new ArrayList<>();
-    private String currentFilter = "ALL"; // ALL, UPCOMING, DRAFT, DONE
+    private String currentFilter = "ALL";
 
     @Nullable
     @Override
@@ -56,88 +60,61 @@ public class KhamPhaFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         chuyenDiDAO = new ChuyenDiDAO(requireContext());
+        nguoiDungDAO = new NguoiDungDAO(requireContext());
+        anhDAO = new AnhDAO(requireContext());
         quanLyPhien = new QuanLyPhien(requireContext());
 
-        setupUserHeader();
+        setupUserInfo();
         setupRecyclerView();
         setupFeaturedCard();
         setupSettingsButton();
-        setupSearchAndFilters();
+        setupSearchAndFilter();
+        loadTripsFromDatabase();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Tự động làm mới thông tin người dùng và danh sách chuyến đi từ SQLite ngay khi quay lại màn hình chính
-        setupUserHeader();
         loadTripsFromDatabase();
     }
 
-    private void setupUserHeader() {
-        if (binding == null) return;
+    private void setupUserInfo() {
+        int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (userId <= 0) userId = 1;
 
-        // 1. Cập nhật lời chào thời gian thực theo giờ trong ngày (Sáng / Chiều / Tối)
-        Calendar cal = Calendar.getInstance();
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
-        String greeting;
-        if (hour >= 5 && hour < 12) {
-            greeting = "Chào buổi sáng ✨";
-        } else if (hour >= 12 && hour < 18) {
-            greeting = "Chào buổi chiều ☀️";
+        NguoiDung user = nguoiDungDAO.layTheoId(userId);
+        if (user != null) {
+            binding.tvUserName.setText(user.getHoTen());
         } else {
-            greeting = "Chào buổi tối 🌙";
-        }
-        if (binding.tvGreeting != null) {
-            binding.tvGreeting.setText(greeting);
+            binding.tvUserName.setText("Khách");
         }
 
-        // 2. Lấy Họ Tên / Tên Đăng Nhập của tài khoản đang đăng nhập
-        String displayName = null;
-        if (quanLyPhien != null) {
-            displayName = quanLyPhien.getHoTen();
-            if (displayName == null || displayName.trim().isEmpty()) {
-                displayName = quanLyPhien.getTenDangNhap();
-            }
-        }
-
-        if ((displayName == null || displayName.trim().isEmpty()) && getContext() != null) {
-            int userId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
-            if (userId > 0) {
-                NguoiDungDAO nguoiDungDAO = new NguoiDungDAO(requireContext());
-                NguoiDung user = nguoiDungDAO.layTheoId(userId);
-                if (user != null) {
-                    if (user.getHoTen() != null && !user.getHoTen().trim().isEmpty()) {
-                        displayName = user.getHoTen().trim();
-                    } else if (user.getTenDangNhap() != null && !user.getTenDangNhap().trim().isEmpty()) {
-                        displayName = user.getTenDangNhap().trim();
-                    }
-                }
-            }
-        }
-
-        if (displayName == null || displayName.trim().isEmpty()) {
-            displayName = "Người dùng MeTripMatee";
-        }
-
-        if (binding.tvUserName != null) {
-            binding.tvUserName.setText(displayName);
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        int hour = calendar.get(java.util.Calendar.HOUR_OF_DAY);
+        if (hour >= 5 && hour < 11) {
+            binding.tvGreeting.setText("Chào buổi sáng ✨");
+        } else if (hour >= 11 && hour < 14) {
+            binding.tvGreeting.setText("Chào buổi trưa ☀️");
+        } else if (hour >= 14 && hour < 18) {
+            binding.tvGreeting.setText("Chào buổi chiều 🌤️");
+        } else {
+            binding.tvGreeting.setText("Chào buổi tối 🌙");
         }
     }
 
     private void setupRecyclerView() {
-        adapterChuyenDi = new AdapterChuyenDi(itemChuyenDi -> {
-            if (getContext() != null) {
-                int tripId = 1;
+        adapterChuyenDi = new AdapterChuyenDi(item -> {
+            if (getContext() != null && item != null && item.getMaId() != null) {
                 try {
-                    tripId = Integer.parseInt(itemChuyenDi.getMaId());
-                } catch (Exception ignored) {}
-                Intent intent = ChiTietChuyenDiActivity.newIntent(
-                        getContext(),
-                        tripId,
-                        itemChuyenDi.getTieuDe(),
-                        itemChuyenDi.getTheNgay() != null ? itemChuyenDi.getTheNgay() : "Chi tiết chuyến đi"
-                );
-                startActivity(intent);
+                    int tripId = Integer.parseInt(item.getMaId());
+                    Intent intent = ChiTietChuyenDiActivity.newIntent(
+                            getContext(),
+                            tripId,
+                            item.getTieuDe(),
+                            item.getTheNgay()
+                    );
+                    startActivity(intent);
+                } catch (NumberFormatException ignored) {}
             }
         });
 
@@ -173,7 +150,7 @@ public class KhamPhaFragment extends Fragment {
         });
     }
 
-    private void setupSearchAndFilters() {
+    private void setupSearchAndFilter() {
         if (binding.etSearch != null) {
             binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -182,6 +159,7 @@ public class KhamPhaFragment extends Fragment {
                 }
                 return false;
             });
+
             binding.etSearch.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -259,11 +237,11 @@ public class KhamPhaFragment extends Fragment {
     }
 
     private void updateTabUI() {
-        if (binding == null || getContext() == null) return;
+        if (binding == null) return;
 
         int activeBg = R.drawable.bg_pill_teal;
-        int activeTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
         int inactiveBg = R.drawable.bg_pill_white;
+        int activeTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
         int inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.text_secondary);
 
         if (binding.tabAll != null) {
@@ -312,9 +290,33 @@ public class KhamPhaFragment extends Fragment {
                         " • " + (featured.getNgayDi() != null ? featured.getNgayDi() : "");
                 binding.tvFeaturedSub.setText(sub);
             }
+
+            // Lấy ngẫu nhiên (random) ảnh thuộc tag "Cảnh đẹp" trong thư viện ảnh của chuyến đi nổi bật
+            ImageView imgFeaturedBg = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
+            String randomCanhDepUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(featured.getMaChuyenDi());
+
+            if (imgFeaturedBg != null) {
+                if (randomCanhDepUri != null && !randomCanhDepUri.trim().isEmpty()) {
+                    try {
+                        imgFeaturedBg.setImageURI(Uri.parse(randomCanhDepUri));
+                    } catch (Exception e) {
+                        imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+                    }
+                } else {
+                    imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+                }
+            }
         } else {
             binding.cardFeatured.setVisibility(View.GONE);
         }
+    }
+
+    private int layAnhResTheoDiemDen(String destination) {
+        if (destination == null) return R.drawable.img_dalat;
+        String d = destination.toLowerCase();
+        if (d.contains("phú quốc")) return R.drawable.img_phuquoc;
+        if (d.contains("hà giang")) return R.drawable.img_hagiang;
+        return R.drawable.img_dalat;
     }
 
     private void filterTrips(String keyword) {
@@ -342,7 +344,12 @@ public class KhamPhaFragment extends Fragment {
             }
 
             if (matchesStatus) {
-                filteredItems.add(cd.toTripItem());
+                ItemChuyenDi item = cd.toTripItem();
+                String randomCanhDepUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(cd.getMaChuyenDi());
+                if (randomCanhDepUri != null && !randomCanhDepUri.trim().isEmpty()) {
+                    item.setDuongDanAnhUri(randomCanhDepUri);
+                }
+                filteredItems.add(item);
             }
         }
 

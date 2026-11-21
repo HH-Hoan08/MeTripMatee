@@ -32,15 +32,25 @@ public class AnhDAO {
                 String duongDan = cursor.getString(cursor.getColumnIndexOrThrow("DuongDanAnh"));
                 String chuThich = cursor.getString(cursor.getColumnIndexOrThrow("ChuThich"));
 
-                String title = chuThich != null && !chuThich.trim().isEmpty() ? chuThich : "Hình ảnh chuyến đi";
-                String sub = "Thư viện ảnh";
+                String category = "Cảnh đẹp";
+                String title = "Hình ảnh chuyến đi";
+
+                if (chuThich != null && !chuThich.trim().isEmpty()) {
+                    if (chuThich.contains("|")) {
+                        String[] parts = chuThich.split("\\|", 2);
+                        category = parts[0].trim();
+                        title = parts[1].trim();
+                    } else {
+                        title = chuThich.trim();
+                    }
+                }
 
                 ItemAnhThuVien item = new ItemAnhThuVien(
                         String.valueOf(maAnh),
                         title,
-                        sub,
+                        category,
                         0,
-                        "Kỷ niệm"
+                        category
                 );
                 item.setDuongDanUri(duongDan);
                 list.add(item);
@@ -51,12 +61,41 @@ public class AnhDAO {
         return list;
     }
 
-    public long themAnh(int maChuyenDi, String duongDanAnh, String chuThich) {
+    public String layAnhCanhDepRandomTheoChuyenDi(int maChuyenDi) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT DuongDanAnh, ChuThich FROM Anh WHERE MaChuyenDi = ? ORDER BY RANDOM()";
+        Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(maChuyenDi)});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String duongDan = cursor.getString(cursor.getColumnIndexOrThrow("DuongDanAnh"));
+                String chuThich = cursor.getString(cursor.getColumnIndexOrThrow("ChuThich"));
+
+                String category = "Cảnh đẹp";
+                if (chuThich != null && chuThich.contains("|")) {
+                    category = chuThich.split("\\|", 2)[0].trim();
+                }
+
+                if ("Cảnh đẹp".equalsIgnoreCase(category)) {
+                    cursor.close();
+                    return duongDan;
+                }
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        return null;
+    }
+
+    public long themAnh(int maChuyenDi, String duongDanAnh, String chuThich, String danhMuc) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("MaChuyenDi", maChuyenDi);
         values.put("DuongDanAnh", duongDanAnh);
-        values.put("ChuThich", chuThich);
+
+        String cat = (danhMuc != null && !danhMuc.trim().isEmpty()) ? danhMuc.trim() : "Cảnh đẹp";
+        String note = (chuThich != null && !chuThich.trim().isEmpty()) ? chuThich.trim() : "Kỷ niệm chuyến đi";
+
+        values.put("ChuThich", cat + "|" + note);
         return db.insert("Anh", null, values);
     }
 

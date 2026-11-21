@@ -26,12 +26,13 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
+                    android:id="@+id/tvGalleryTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:letterSpacing="0.03"
-                    android:text="BỘ SƯU TẬP ẢNH (9)"
+                    android:text="BỘ SƯU TẬP ẢNH (0)"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />

@@ -1,5 +1,6 @@
 package com.example.mytripmatee.adapter;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -17,6 +18,7 @@ public class AdapterThuVienAnh extends RecyclerView.Adapter<AdapterThuVienAnh.Vi
 
     public interface SuKienChonAnhListener {
         void onChonAnh(ItemAnhThuVien photo);
+        void onXoaAnh(ItemAnhThuVien photo);
     }
 
     private final List<ItemAnhThuVien> danhSachAnh = new ArrayList<>();
@@ -66,13 +68,31 @@ public class AdapterThuVienAnh extends RecyclerView.Adapter<AdapterThuVienAnh.Vi
         public void bind(ItemAnhThuVien photo, SuKienChonAnhListener listener) {
             if (photo == null) return;
 
-            binding.imgPhoto.setImageResource(photo.getMaAnhResId() != 0 ? photo.getMaAnhResId() : R.drawable.img_dalat);
-            binding.tvPhotoTitle.setText(photo.getTieuDe() != null ? photo.getTieuDe() : "");
+            if (photo.getDuongDanUri() != null && !photo.getDuongDanUri().trim().isEmpty()) {
+                try {
+                    binding.imgPhoto.setImageURI(Uri.parse(photo.getDuongDanUri()));
+                } catch (Exception e) {
+                    binding.imgPhoto.setImageResource(R.drawable.img_dalat);
+                }
+            } else if (photo.getMaAnhResId() != 0) {
+                binding.imgPhoto.setImageResource(photo.getMaAnhResId());
+            } else {
+                binding.imgPhoto.setImageResource(R.drawable.img_dalat);
+            }
+
+            binding.tvPhotoTitle.setText(photo.getTieuDe() != null ? photo.getTieuDe() : "Kỷ niệm");
 
             binding.getRoot().setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onChonAnh(photo);
                 }
+            });
+
+            binding.getRoot().setOnLongClickListener(v -> {
+                if (listener != null) {
+                    listener.onXoaAnh(photo);
+                }
+                return true;
             });
         }
     }
