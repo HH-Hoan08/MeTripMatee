@@ -258,42 +258,6 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/bg_featured_overlay" />
 
-                <!-- Top Badges -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_pill_teal"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="4dp"
-                        android:text="NỔI BẬT"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="1dp"
-                        android:layout_weight="1" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_pill_white"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:text="SẮP TỚI"
-                        android:textColor="@color/teal_primary"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
                 <!-- Bottom Content -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -306,19 +270,21 @@
                         android:id="@+id/tvFeaturedTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Đà Lạt – Sương Mù &amp; Thảnh Thơi"
+                        android:ellipsize="end"
+                        android:maxLines="2"
                         android:textColor="#FFFFFF"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="Album: Hà Giang – Chinh Phục Mã Pí Lèng" />
 
                     <TextView
                         android:id="@+id/tvFeaturedSub"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="12/11 - 15/11/2026 • 3 ngày 2 đêm"
                         android:textColor="#E2E8F0"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        tools:text="Đồng Văn, Hà Giang • Chạm để xem bộ sưu tập ảnh ›" />
                 </LinearLayout>
             </RelativeLayout>
         </com.google.android.material.card.MaterialCardView>

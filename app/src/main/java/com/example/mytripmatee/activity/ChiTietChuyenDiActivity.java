@@ -29,17 +29,23 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
     public static final String EXTRA_MA_CHUYEN_DI = "extra_ma_chuyen_di";
     public static final String EXTRA_TRIP_TITLE = "extra_trip_title";
     public static final String EXTRA_TRIP_DATE = "extra_trip_date";
+    public static final String EXTRA_INITIAL_TAB = "extra_initial_tab";
 
-    public static Intent newIntent(Context context, int maChuyenDi, String title, String dateTag) {
+    public static Intent newIntent(Context context, int maChuyenDi, String title, String dateTag, int initialTab) {
         Intent intent = new Intent(context, ChiTietChuyenDiActivity.class);
         intent.putExtra(EXTRA_MA_CHUYEN_DI, maChuyenDi);
         intent.putExtra(EXTRA_TRIP_TITLE, title);
         intent.putExtra(EXTRA_TRIP_DATE, dateTag);
+        intent.putExtra(EXTRA_INITIAL_TAB, initialTab);
         return intent;
     }
 
+    public static Intent newIntent(Context context, int maChuyenDi, String title, String dateTag) {
+        return newIntent(context, maChuyenDi, title, dateTag, 0);
+    }
+
     public static Intent newIntent(Context context, String title, String dateTag) {
-        return newIntent(context, 1, title, dateTag);
+        return newIntent(context, 1, title, dateTag, 0);
     }
 
     private ActivityChiTietChuyenDiBinding binding;
@@ -65,6 +71,13 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
 
         setupHeader();
         setupViewPagerAndTabs();
+
+        if (getIntent() != null && getIntent().hasExtra(EXTRA_INITIAL_TAB)) {
+            int initialTab = getIntent().getIntExtra(EXTRA_INITIAL_TAB, 0);
+            if (initialTab >= 0 && initialTab < 4) {
+                binding.viewPager.setCurrentItem(initialTab, false);
+            }
+        }
     }
 
     private void setupHeader() {
@@ -143,10 +156,10 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
                 case 1:
                     return ChiPhiChuyenDiFragment.newInstance(maChuyenDi);
                 case 2:
-                    return new ThongKeChuyenDiFragment();
+                    return ThongKeChuyenDiFragment.newInstance(maChuyenDi);
                 case 3:
                 default:
-                    return new ThuVienAnhFragment();
+                    return ThuVienAnhFragment.newInstance(maChuyenDi);
             }
         }
 
@@ -156,8 +169,6 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         }
     }
 
-    // thêm hàm onResume để khi sửa tên chuyến đi hoặc xóa chuyến đi bên SuaChuyenDiActivity,
-    // màn hình ChiTietChuyenDiActivity tự động cập nhật hoặc tự đóng lại
     @Override
     protected void onResume() {
         super.onResume();
@@ -168,17 +179,15 @@ public class ChiTietChuyenDiActivity extends AppCompatActivity {
         ChuyenDiDAO dao = new com.example.mytripmatee.database.ChuyenDiDAO(this);
         ChuyenDi cd = dao.layChuyenDiTheoId(maChuyenDi);
 
-        // nếu chuyến đi vừa bị xóa bên SuaChuyenDiActivity, tự đóng màn hình chi tiết luôn
         if (cd == null) {
             finish();
             return;
         }
-        // nếu vừa sửa tên/ngày, cập nhật lại lên Header
+
         binding.tvTripTitle.setText(cd.getTenChuyenDi());
         String sub = (cd.getNgayDi() != null ? cd.getNgayDi() : "") + " – " + (cd.getNgayVe() != null ? cd.getNgayVe() : "");
         binding.tvTripSubtitle.setText(sub);
 
-        // Phân quyền: Chỉ Trưởng nhóm (người tạo chuyến đi) mới thấy nút sửa/xóa
         com.example.mytripmatee.util.QuanLyPhien quanLyPhien = new com.example.mytripmatee.util.QuanLyPhien(this);
         int currentUserId = quanLyPhien.getMaNguoiDung();
         if (cd.getMaNguoiDung() == currentUserId) {

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -35,6 +37,7 @@ import com.example.mytripmatee.util.QuanLyPhien;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class KhamPhaFragment extends Fragment {
 
@@ -46,7 +49,14 @@ public class KhamPhaFragment extends Fragment {
     private QuanLyPhien quanLyPhien;
 
     private List<ChuyenDi> fullChuyenDiList = new ArrayList<>();
+    private ChuyenDi randomFeaturedTrip = null;
     private String currentFilter = "ALL";
+
+    // Quản lý Slideshow đổi 5 ảnh cảnh đẹp tự động sau mỗi 5 giây
+    private final Handler slideshowHandler = new Handler(Looper.getMainLooper());
+    private Runnable slideshowRunnable;
+    private List<String> featuredPhotoUris = new ArrayList<>();
+    private int currentPhotoIndex = 0;
 
     @Nullable
     @Override
@@ -76,6 +86,12 @@ public class KhamPhaFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadTripsFromDatabase();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopFeaturedSlideshow();
     }
 
     private void setupUserInfo() {
@@ -111,7 +127,8 @@ public class KhamPhaFragment extends Fragment {
                             getContext(),
                             tripId,
                             item.getTieuDe(),
-                            item.getTheNgay()
+                            item.getTheNgay(),
+                            0
                     );
                     startActivity(intent);
                 } catch (NumberFormatException ignored) {}
@@ -124,19 +141,20 @@ public class KhamPhaFragment extends Fragment {
 
     private void setupFeaturedCard() {
         binding.cardFeatured.setOnClickListener(v -> {
-            if (getContext() != null) {
-                if (!fullChuyenDiList.isEmpty()) {
-                    ChuyenDi featured = fullChuyenDiList.get(0);
-                    Intent intent = ChiTietChuyenDiActivity.newIntent(
-                            getContext(),
-                            featured.getMaChuyenDi(),
-                            featured.getTenChuyenDi(),
-                            (featured.getNgayDi() != null ? featured.getNgayDi() : "") + " – " + (featured.getNgayVe() != null ? featured.getNgayVe() : "")
-                    );
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(requireContext(), "Chưa có chuyến đi nào. Hãy bấm '+' để tạo chuyến đi mới!", Toast.LENGTH_SHORT).show();
-                }
+            if (getContext() != null && randomFeaturedTrip != null) {
+                String dateTag = (randomFeaturedTrip.getNgayDi() != null ? randomFeaturedTrip.getNgayDi() : "") +
+                        " – " + (randomFeaturedTrip.getNgayVe() != null ? randomFeaturedTrip.getNgayVe() : "");
+                // Bấm vào thẻ nổi bật -> Nhảy trực tiếp vào tab Gallery (Album) của chuyến đi đó (tab 3)
+                Intent intent = ChiTietChuyenDiActivity.newIntent(
+                        getContext(),
+                        randomFeaturedTrip.getMaChuyenDi(),
+                        randomFeaturedTrip.getTenChuyenDi(),
+                        dateTag,
+                        3
+                );
+                startActivity(intent);
+            } else {
+                Toast.makeText(requireContext(), "Chưa có Album chuyến đi nào!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -280,34 +298,98 @@ public class KhamPhaFragment extends Fragment {
 
         filterTrips(binding.etSearch != null ? binding.etSearch.getText().toString().trim() : "");
 
-        // Cập nhật thẻ nổi bật (Featured Card)
-        if (!fullChuyenDiList.isEmpty()) {
-            ChuyenDi featured = fullChuyenDiList.get(0);
+        // Lấy ngẫu nhiên (random) một chuyến đi để hiển thị Album Nổi Bật
+        if (fullChuyenDiList != null && !fullChuyenDiList.isEmpty()) {
+            randomFeaturedTrip = fullChuyenDiList.get(new Random().nextInt(fullChuyenDiList.size()));
+
             binding.cardFeatured.setVisibility(View.VISIBLE);
-            binding.tvFeaturedTitle.setText(featured.getTenChuyenDi());
+            binding.tvFeaturedTitle.setText("Album: " + randomFeaturedTrip.getTenChuyenDi());
             if (binding.tvFeaturedSub != null) {
-                String sub = (featured.getDiemDen() != null ? featured.getDiemDen() : "") +
-                        " • " + (featured.getNgayDi() != null ? featured.getNgayDi() : "");
+                String destStr = (randomFeaturedTrip.getDiemDen() != null && !randomFeaturedTrip.getDiemDen().isEmpty())
+                        ? randomFeaturedTrip.getDiemDen()
+                        : "Kỷ niệm cảnh đẹp";
+                String sub = destStr + " • Chạm để mở album hình ảnh ›";
                 binding.tvFeaturedSub.setText(sub);
             }
 
-            // Lấy ngẫu nhiên (random) ảnh thuộc tag "Cảnh đẹp" trong thư viện ảnh của chuyến đi nổi bật
-            ImageView imgFeaturedBg = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
-            String randomCanhDepUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(featured.getMaChuyenDi());
+            startFeaturedSlideshow(randomFeaturedTrip);
+        } else {
+            randomFeaturedTrip = null;
+            stopFeaturedSlideshow();
+            binding.cardFeatured.setVisibility(View.GONE);
+        }
+    }
 
-            if (imgFeaturedBg != null) {
-                if (randomCanhDepUri != null && !randomCanhDepUri.trim().isEmpty()) {
-                    try {
-                        imgFeaturedBg.setImageURI(Uri.parse(randomCanhDepUri));
-                    } catch (Exception e) {
-                        imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+    private void startFeaturedSlideshow(ChuyenDi featured) {
+        stopFeaturedSlideshow();
+
+        if (binding == null || featured == null) return;
+
+        // Lấy ngẫu nhiên tối đa 5 bức ảnh thuộc tag "Cảnh đẹp" của chuyến đi này
+        featuredPhotoUris = anhDAO.layTopDanhSachAnhCanhDepRandom(featured.getMaChuyenDi(), 5);
+        currentPhotoIndex = 0;
+
+        ImageView imgFeaturedBg = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
+        if (imgFeaturedBg == null) return;
+
+        if (featuredPhotoUris != null && !featuredPhotoUris.isEmpty()) {
+            try {
+                imgFeaturedBg.setAlpha(1.0f);
+                imgFeaturedBg.setImageURI(Uri.parse(featuredPhotoUris.get(0)));
+            } catch (Exception e) {
+                imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+            }
+
+            // Nếu có từ 2 bức ảnh trở lên, thực hiện tự động xoay đổi ảnh sau mỗi 5 giây kèm hiệu ứng chuyển cảnh mượt mà
+            if (featuredPhotoUris.size() > 1) {
+                slideshowRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        if (binding == null || featuredPhotoUris == null || featuredPhotoUris.isEmpty()) return;
+
+                        currentPhotoIndex = (currentPhotoIndex + 1) % featuredPhotoUris.size();
+                        String nextUri = featuredPhotoUris.get(currentPhotoIndex);
+
+                        ImageView img = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
+                        if (img != null) {
+                            changeFeaturedImageWithFade(img, nextUri);
+                        }
+
+                        slideshowHandler.postDelayed(this, 5000);
                     }
-                } else {
-                    imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
-                }
+                };
+                slideshowHandler.postDelayed(slideshowRunnable, 5000);
             }
         } else {
-            binding.cardFeatured.setVisibility(View.GONE);
+            imgFeaturedBg.setAlpha(1.0f);
+            imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+        }
+    }
+
+    private void changeFeaturedImageWithFade(ImageView imageView, String newUri) {
+        if (imageView == null || newUri == null) return;
+
+        imageView.animate()
+                .alpha(0.2f)
+                .setDuration(400)
+                .withEndAction(() -> {
+                    if (binding == null) return;
+                    try {
+                        imageView.setImageURI(Uri.parse(newUri));
+                    } catch (Exception ignored) {}
+
+                    imageView.animate()
+                            .alpha(1.0f)
+                            .setDuration(500)
+                            .start();
+                })
+                .start();
+    }
+
+    private void stopFeaturedSlideshow() {
+        if (slideshowRunnable != null) {
+            slideshowHandler.removeCallbacks(slideshowRunnable);
+            slideshowRunnable = null;
         }
     }
 
@@ -386,6 +468,7 @@ public class KhamPhaFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        stopFeaturedSlideshow();
         binding = null;
     }
 }

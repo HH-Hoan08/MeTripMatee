@@ -86,6 +86,39 @@ public class AnhDAO {
         return null;
     }
 
+    public List<String> layTopDanhSachAnhCanhDepRandom(int maChuyenDi, int limit) {
+        List<String> result = new ArrayList<>();
+        if (maChuyenDi <= 0) return result;
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Lấy ngẫu nhiên các ảnh có tag "Cảnh đẹp" thuộc đúng chuyến đi này
+        String sql = "SELECT DuongDanAnh, ChuThich FROM Anh WHERE MaChuyenDi = ? ORDER BY RANDOM()";
+        Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(maChuyenDi)});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String duongDan = cursor.getString(cursor.getColumnIndexOrThrow("DuongDanAnh"));
+                String chuThich = cursor.getString(cursor.getColumnIndexOrThrow("ChuThich"));
+
+                String category = "Cảnh đẹp";
+                if (chuThich != null && chuThich.contains("|")) {
+                    category = chuThich.split("\\|", 2)[0].trim();
+                }
+
+                if ("Cảnh đẹp".equalsIgnoreCase(category) && !result.contains(duongDan)) {
+                    result.add(duongDan);
+                    if (result.size() >= limit) {
+                        break;
+                    }
+                }
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        return result;
+    }
+
     public long themAnh(int maChuyenDi, String duongDanAnh, String chuThich, String danhMuc) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
