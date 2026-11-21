@@ -20,11 +20,15 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.dao.LichTrinhDAO;
+import com.example.mytripmatee.dao.ThongBaoDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.databinding.ActivitySuaLichTrinhBinding;
 import com.example.mytripmatee.model.ChiPhi;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.LichTrinh;
+import com.example.mytripmatee.model.NguoiDung;
+import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
 
 import java.util.Calendar;
@@ -353,6 +357,27 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
             } else if (existingChiPhi != null) {
                 chiPhiDAO.xoaChiPhi(existingChiPhi.getMaChiPhi());
             }
+
+            // Send notification to trip members
+            try {
+                QuanLyPhien qlp = new QuanLyPhien(this);
+                int curUserId = qlp.getMaNguoiDung();
+                NguoiDungDAO ndDao = new NguoiDungDAO(this);
+                NguoiDung curU = ndDao.layTheoId(curUserId);
+                String senderName = curU != null ? (curU.getHoTen() != null && !curU.getHoTen().isEmpty() ? curU.getHoTen() : curU.getTenDangNhap()) : "Một thành viên";
+
+                ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(maChuyenDi);
+                String tripName = cd != null ? cd.getTenChuyenDi() : "Chuyến đi";
+
+                List<Integer> memberIds = chuyenDiDAO.layDanhSachIdThanhVien(maChuyenDi);
+                if (cd != null && !memberIds.contains(cd.getMaNguoiDung())) {
+                    memberIds.add(cd.getMaNguoiDung());
+                }
+
+                ThongBaoDAO tbDao = new ThongBaoDAO(this);
+                String hanhDong = maHoatDong > 0 ? "cập nhật" : "thêm";
+                tbDao.guiThongBaoCapNhatLichTrinh(curUserId, senderName, memberIds, maChuyenDi, tripName, title, hanhDong);
+            } catch (Exception ignored) {}
 
             Toast.makeText(this, (maHoatDong > 0 ? "Cập nhật" : "Thêm") + " hoạt động vào lịch trình thành công ✓", Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);

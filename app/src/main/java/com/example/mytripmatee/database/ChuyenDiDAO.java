@@ -272,6 +272,47 @@ public class ChuyenDiDAO {
         return list;
     }
 
+    public boolean themThanhVienChuyenDi(int maChuyenDi, int maNguoiDung) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("MaChuyenDi", maChuyenDi);
+        values.put("MaNguoiDung", maNguoiDung);
+        try {
+            long id = db.insertWithOnConflict("ThanhVienChuyenDi", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+            capNhatSoLuongThanhVien(maChuyenDi);
+            return id >= 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi thêm thành viên", e);
+            return false;
+        }
+    }
+
+    public boolean xoaThanhVienChuyenDi(int maChuyenDi, int maNguoiDung) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        try {
+            int rows = db.delete("ThanhVienChuyenDi", "MaChuyenDi = ? AND MaNguoiDung = ?",
+                    new String[]{String.valueOf(maChuyenDi), String.valueOf(maNguoiDung)});
+            capNhatSoLuongThanhVien(maChuyenDi);
+            return rows > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi xóa thành viên", e);
+            return false;
+        }
+    }
+
+    private void capNhatSoLuongThanhVien(int maChuyenDi) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        List<Integer> tvList = layDanhSachIdThanhVien(maChuyenDi);
+        ChuyenDi cd = layChuyenDiTheoId(maChuyenDi);
+        if (cd != null) {
+            int count = tvList != null ? tvList.size() : 1;
+            if (count == 0 && cd.getMaNguoiDung() > 0) count = 1;
+            ContentValues cv = new ContentValues();
+            cv.put("SoThanhVien", count);
+            db.update("ChuyenDi", cv, "MaChuyenDi = ?", new String[]{String.valueOf(maChuyenDi)});
+        }
+    }
+
     private ChuyenDi parseChuyenDiFromCursor(Cursor cursor) {
         ChuyenDi cd = new ChuyenDi();
         cd.setMaChuyenDi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChuyenDi")));

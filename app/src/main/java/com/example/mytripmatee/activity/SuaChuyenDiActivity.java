@@ -20,8 +20,11 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.dao.ThongBaoDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.model.ChuyenDi;
+import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
 import com.google.android.material.button.MaterialButton;
@@ -362,11 +365,22 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             danhSachIdThanhVienChon.add(currentUserId);
         }
 
+        NguoiDungDAO nguoiDungDAO = new NguoiDungDAO(this);
+        NguoiDung curUser = nguoiDungDAO.layTheoId(currentUserId);
+        String senderName = curUser != null ? (curUser.getHoTen() != null && !curUser.getHoTen().isEmpty() ? curUser.getHoTen() : curUser.getTenDangNhap()) : "Bạn";
+        ThongBaoDAO thongBaoDAO = new ThongBaoDAO(this);
+
         if (isCreateMode) {
             ChuyenDi newTrip = new ChuyenDi(currentUserId, tripName, destination, selectedNgayDi, selectedNgayVe, budget);
             newTrip.setSoThanhVien(danhSachIdThanhVienChon.size());
             long id = chuyenDiDAO.themChuyenDi(newTrip, danhSachIdThanhVienChon);
             if (id > 0) {
+                // Send invitations to invited members
+                for (int mId : danhSachIdThanhVienChon) {
+                    if (mId != currentUserId) {
+                        thongBaoDAO.guiLoiMoiThamGia(currentUserId, senderName, mId, (int) id, tripName);
+                    }
+                }
                 Toast.makeText(this, "Tạo chuyến đi thành công", Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
                 finish();
@@ -384,6 +398,14 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
                 boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip, danhSachIdThanhVienChon);
                 if (success) {
+                    // Send invitations to new members and update notifications to existing members
+                    for (int mId : danhSachIdThanhVienChon) {
+                        if (mId != currentUserId) {
+                            thongBaoDAO.guiLoiMoiThamGia(currentUserId, senderName, mId, currentTrip.getMaChuyenDi(), tripName);
+                        }
+                    }
+                    thongBaoDAO.guiThongBaoCapNhatChuyenDi(currentUserId, senderName, danhSachIdThanhVienChon, currentTrip.getMaChuyenDi(), tripName);
+
                     Toast.makeText(this, "Cập nhật chuyến đi thành công", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
                     finish();

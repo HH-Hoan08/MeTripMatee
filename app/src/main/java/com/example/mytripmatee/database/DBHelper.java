@@ -30,6 +30,26 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        try {
+            db.execSQL("CREATE TABLE IF NOT EXISTS ThongBao (" +
+                    "    MaThongBao    INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "    MaNguoiDung   INTEGER NOT NULL," +
+                    "    MaNguoiGui    INTEGER DEFAULT 1," +
+                    "    MaChuyenDi    INTEGER NOT NULL," +
+                    "    TieuDe        TEXT NOT NULL," +
+                    "    NoiDung       TEXT NOT NULL," +
+                    "    LoaiThongBao  TEXT NOT NULL," +
+                    "    TrangThai     INTEGER NOT NULL DEFAULT 0," +
+                    "    NgayTao       TEXT NOT NULL" +
+                    ");");
+        } catch (Exception e) {
+            Log.e(TAG, "Loi tao bang ThongBao trong onOpen", e);
+        }
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(TAG, "Đang khởi tạo cơ sở dữ liệu SQLite");
         db.beginTransaction();
@@ -227,16 +247,29 @@ public class DBHelper extends SQLiteOpenHelper {
                 "    CONSTRAINT ck_Anh_DuongDanAnh CHECK (LENGTH(TRIM(DuongDanAnh)) > 0)," +
                 "    CONSTRAINT ck_Anh_ChuThich CHECK (ChuThich IS NULL OR LENGTH(ChuThich) <= 200)" +
                 ");");
+        // bảng ThongBao
+        db.execSQL("CREATE TABLE IF NOT EXISTS ThongBao (" +
+                "    MaThongBao    INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "    MaNguoiDung   INTEGER NOT NULL," +
+                "    MaNguoiGui    INTEGER DEFAULT 1," +
+                "    MaChuyenDi    INTEGER NOT NULL," +
+                "    TieuDe        TEXT NOT NULL," +
+                "    NoiDung       TEXT NOT NULL," +
+                "    LoaiThongBao  TEXT NOT NULL," +
+                "    TrangThai     INTEGER NOT NULL DEFAULT 0," +
+                "    NgayTao       TEXT NOT NULL" +
+                ");");
     }
     // hàm tạo các chỉ mục
     private void createIndexes(SQLiteDatabase db) {
-        db.execSQL("CREATE INDEX idx_ChuyenDi_NguoiDung ON ChuyenDi (MaNguoiDung, NgayDi);");
-        db.execSQL("CREATE INDEX idx_ChuyenDi_TrangThai ON ChuyenDi (MaNguoiDung, TrangThai);");
-        db.execSQL("CREATE INDEX idx_LichTrinh_ChuyenDi ON LichTrinh (MaChuyenDi, NgayHoatDong, GioBatDau);");
-        db.execSQL("CREATE INDEX idx_ChiPhi_ChuyenDi    ON ChiPhi (MaChuyenDi, NgayChi);");
-        db.execSQL("CREATE INDEX idx_ChiPhi_DanhMuc     ON ChiPhi (MaDanhMuc);");
-        db.execSQL("CREATE INDEX idx_Anh_ChuyenDi       ON Anh (MaChuyenDi);");
-        db.execSQL("CREATE INDEX idx_ThanhVienChuyenDi_NguoiDung ON ThanhVienChuyenDi (MaNguoiDung, MaChuyenDi);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ChuyenDi_NguoiDung ON ChuyenDi (MaNguoiDung, NgayDi);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ChuyenDi_TrangThai ON ChuyenDi (MaNguoiDung, TrangThai);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_LichTrinh_ChuyenDi ON LichTrinh (MaChuyenDi, NgayHoatDong, GioBatDau);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ChiPhi_ChuyenDi    ON ChiPhi (MaChuyenDi, NgayChi);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ChiPhi_DanhMuc     ON ChiPhi (MaDanhMuc);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_Anh_ChuyenDi       ON Anh (MaChuyenDi);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ThanhVienChuyenDi_NguoiDung ON ThanhVienChuyenDi (MaNguoiDung, MaChuyenDi);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ThongBao_NguoiDung ON ThongBao (MaNguoiDung, TrangThai);");
     }
     // hàm tạo trigger
     private void createTriggers(SQLiteDatabase db) {

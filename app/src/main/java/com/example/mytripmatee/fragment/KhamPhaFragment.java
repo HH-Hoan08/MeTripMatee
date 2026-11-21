@@ -1,5 +1,7 @@
 package com.example.mytripmatee.fragment;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,6 +16,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,19 +24,24 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.activity.CaiDatActivity;
 import com.example.mytripmatee.activity.ChiTietChuyenDiActivity;
 import com.example.mytripmatee.adapter.AdapterChuyenDi;
+import com.example.mytripmatee.adapter.AdapterThongBao;
 import com.example.mytripmatee.dao.AnhDAO;
+import com.example.mytripmatee.dao.ThongBaoDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.databinding.FragmentKhamPhaBinding;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.ItemChuyenDi;
 import com.example.mytripmatee.model.NguoiDung;
+import com.example.mytripmatee.model.ThongBao;
 import com.example.mytripmatee.util.QuanLyPhien;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,14 +86,17 @@ public class KhamPhaFragment extends Fragment {
         setupRecyclerView();
         setupFeaturedCard();
         setupSettingsButton();
+        setupNotificationButton();
         setupSearchAndFilter();
         loadTripsFromDatabase();
+        capNhatThongBaoVaChuong();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         loadTripsFromDatabase();
+        capNhatThongBaoVaChuong();
     }
 
     @Override
@@ -166,6 +177,123 @@ public class KhamPhaFragment extends Fragment {
                 startActivity(intent);
             }
         });
+    }
+
+    private ObjectAnimator bellAnimator;
+
+    private void setupNotificationButton() {
+        binding.btnNotification.setOnClickListener(v -> hienThiDialogThongBao());
+    }
+
+    private void capNhatThongBaoVaChuong() {
+        if (getContext() == null || binding == null) return;
+
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentUserId <= 0) currentUserId = 1;
+
+        ThongBaoDAO thongBaoDAO = new ThongBaoDAO(requireContext());
+        int unreadCount = thongBaoDAO.laySoThongBaoChuaDoc(currentUserId);
+
+        if (unreadCount > 0) {
+            binding.vNotificationBadge.setVisibility(View.VISIBLE);
+            batDauLacChuong();
+        } else {
+            binding.vNotificationBadge.setVisibility(View.GONE);
+            tatLacChuong();
+        }
+    }
+
+    private void batDauLacChuong() {
+        if (binding.imgNotificationBell == null) return;
+        if (bellAnimator == null) {
+            bellAnimator = ObjectAnimator.ofFloat(binding.imgNotificationBell, "rotation", 0f, -15f, 15f, -10f, 10f, -5f, 5f, 0f);
+            bellAnimator.setDuration(1200);
+            bellAnimator.setRepeatCount(ValueAnimator.INFINITE);
+            bellAnimator.setRepeatMode(ValueAnimator.RESTART);
+        }
+        if (!bellAnimator.isRunning()) {
+            bellAnimator.start();
+        }
+    }
+
+    private void tatLacChuong() {
+        if (bellAnimator != null && bellAnimator.isRunning()) {
+            bellAnimator.cancel();
+        }
+        if (binding.imgNotificationBell != null) {
+            binding.imgNotificationBell.setRotation(0f);
+        }
+    }
+
+    private void hienThiDialogThongBao() {
+        if (getContext() == null) return;
+
+        int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;
+        if (currentUserId <= 0) currentUserId = 1;
+        final int finalUserId = currentUserId;
+
+        ThongBaoDAO thongBaoDAO = new ThongBaoDAO(requireContext());
+        List<ThongBao> listNotif = thongBaoDAO.layDanhSachThongBaoTheoNguoiDung(finalUserId);
+
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_notifications, null);
+        dialog.setContentView(dialogView);
+
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        RecyclerView rv = dialogView.findViewById(R.id.rvNotifications);
+        TextView tvEmpty = dialogView.findViewById(R.id.tvEmptyNotif);
+
+        if (btnClose != null) btnClose.setOnClickListener(dv -> dialog.dismiss());
+
+        final AdapterThongBao[] adapterHolder = new AdapterThongBao[1];
+        AdapterThongBao adapter = new AdapterThongBao(new AdapterThongBao.OnThongBaoActionListener() {
+            @Override
+            public void onAccept(ThongBao thongBao, int position) {
+                thongBaoDAO.capNhatTrangThaiThongBao(thongBao.getMaThongBao(), 1);
+                chuyenDiDAO.themThanhVienChuyenDi(thongBao.getMaChuyenDi(), finalUserId);
+
+                Toast.makeText(requireContext(), "Đã chấp nhận lời mời tham gia chuyến đi!", Toast.LENGTH_SHORT).show();
+                loadTripsFromDatabase();
+                capNhatThongBaoVaChuong();
+
+                List<ThongBao> updatedList = thongBaoDAO.layDanhSachThongBaoTheoNguoiDung(finalUserId);
+                if (adapterHolder[0] != null) {
+                    adapterHolder[0].setDanhSachThongBao(updatedList);
+                }
+            }
+
+            @Override
+            public void onDecline(ThongBao thongBao, int position) {
+                thongBaoDAO.capNhatTrangThaiThongBao(thongBao.getMaThongBao(), 2);
+                chuyenDiDAO.xoaThanhVienChuyenDi(thongBao.getMaChuyenDi(), finalUserId);
+
+                Toast.makeText(requireContext(), "Đã từ chối lời mời tham gia chuyến đi", Toast.LENGTH_SHORT).show();
+                loadTripsFromDatabase();
+                capNhatThongBaoVaChuong();
+
+                List<ThongBao> updatedList = thongBaoDAO.layDanhSachThongBaoTheoNguoiDung(finalUserId);
+                if (adapterHolder[0] != null) {
+                    adapterHolder[0].setDanhSachThongBao(updatedList);
+                }
+            }
+        });
+        adapterHolder[0] = adapter;
+
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rv.setAdapter(adapter);
+            adapter.setDanhSachThongBao(listNotif);
+        }
+
+        if (listNotif == null || listNotif.isEmpty()) {
+            if (tvEmpty != null) tvEmpty.setVisibility(View.VISIBLE);
+            if (rv != null) rv.setVisibility(View.GONE);
+        } else {
+            if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
+            if (rv != null) rv.setVisibility(View.VISIBLE);
+        }
+
+        dialog.show();
     }
 
     private void setupSearchAndFilter() {
