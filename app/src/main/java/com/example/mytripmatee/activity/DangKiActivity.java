@@ -18,10 +18,13 @@ import com.example.mytripmatee.model.NguoiDung;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import android.widget.ScrollView;
+
 public class DangKiActivity extends AppCompatActivity {
     private TextInputEditText etFullName, etEmail, etPassword;
     private MaterialButton btnRegisterSubmit, btnNavLogin;
     private CheckBox cbTerms;
+    private ScrollView svRegister;
     private NguoiDungDAO nguoiDungDAO;
 
     @Override
@@ -31,11 +34,12 @@ public class DangKiActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_dang_ki);
 
+        svRegister = findViewById(R.id.svRegister);
         View rootView = findViewById(R.id.rootRegister);
         if (rootView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+                v.setPadding(imeInsets.left, imeInsets.top, imeInsets.right, imeInsets.bottom);
                 return insets;
             });
         }
@@ -49,8 +53,27 @@ public class DangKiActivity extends AppCompatActivity {
         btnRegisterSubmit = findViewById(R.id.btnRegisterSubmit);
         btnNavLogin = findViewById(R.id.btnNavLogin);
 
+        setupAutoScrollOnFocus(svRegister, etFullName, etEmail, etPassword);
+
         btnRegisterSubmit.setOnClickListener(v -> handleRegister());
         btnNavLogin.setOnClickListener(v -> finish());
+    }
+
+    private void setupAutoScrollOnFocus(ScrollView scrollView, View... views) {
+        if (scrollView == null) return;
+        for (View v : views) {
+            if (v != null) {
+                v.setOnFocusChangeListener((view, hasFocus) -> {
+                    if (hasFocus) {
+                        scrollView.postDelayed(() -> {
+                            int[] loc = new int[2];
+                            view.getLocationOnScreen(loc);
+                            scrollView.smoothScrollBy(0, loc[1] - 250);
+                        }, 200);
+                    }
+                });
+            }
+        }
     }
 
     private void handleRegister() {

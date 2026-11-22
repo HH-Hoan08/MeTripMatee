@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,6 +79,8 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 }
             });
 
+    private ScrollView svTrip;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,11 +88,12 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_sua_chuyen_di);
 
+        svTrip = findViewById(R.id.rootLayout);
         View rootView = findViewById(R.id.rootLayout);
         if (rootView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+                v.setPadding(imeInsets.left, imeInsets.top, imeInsets.right, imeInsets.bottom);
                 return insets;
             });
         }
@@ -100,6 +104,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
+        setupAutoScrollOnFocus(svTrip, etTripName, etDestination, etBudget);
 
         isCreateMode = getIntent().getBooleanExtra("mode_create", false);
         tripId = getIntent().getIntExtra("trip_id", getIntent().getIntExtra("maChuyenDi", -1));
@@ -108,6 +113,23 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             setupCreateMode();
         } else {
             setupEditMode(tripId);
+        }
+    }
+
+    private void setupAutoScrollOnFocus(android.widget.ScrollView scrollView, View... views) {
+        if (scrollView == null) return;
+        for (View v : views) {
+            if (v != null) {
+                v.setOnFocusChangeListener((view, hasFocus) -> {
+                    if (hasFocus) {
+                        scrollView.postDelayed(() -> {
+                            int[] loc = new int[2];
+                            view.getLocationOnScreen(loc);
+                            scrollView.smoothScrollBy(0, loc[1] - 250);
+                        }, 200);
+                    }
+                });
+            }
         }
     }
 

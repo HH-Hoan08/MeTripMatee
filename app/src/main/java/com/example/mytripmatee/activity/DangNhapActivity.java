@@ -20,10 +20,13 @@ import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import android.widget.ScrollView;
+
 public class DangNhapActivity extends AppCompatActivity {
     private TextInputEditText etEmail, etPassword;
     private MaterialButton btnLogin, btnNavRegister;
     private CheckBox cbRemember;
+    private ScrollView svLogin;
 
     private QuanLyPhien quanLyPhien;
     private NguoiDungDAO nguoiDungDAO;
@@ -45,11 +48,12 @@ public class DangNhapActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_dang_nhap);
 
+        svLogin = findViewById(R.id.svLogin);
         View rootView = findViewById(R.id.rootLogin);
         if (rootView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+                v.setPadding(imeInsets.left, imeInsets.top, imeInsets.right, imeInsets.bottom);
                 return insets;
             });
         }
@@ -59,6 +63,8 @@ public class DangNhapActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         btnNavRegister = findViewById(R.id.btnNavRegister);
         cbRemember = findViewById(R.id.cbRemember);
+
+        setupAutoScrollOnFocus(svLogin, etEmail, etPassword);
 
         if (quanLyPhien.coGhiNhoDangNhap()) {
             etEmail.setText(quanLyPhien.getTenDangNhap());
@@ -72,6 +78,23 @@ public class DangNhapActivity extends AppCompatActivity {
                 Intent intent = new Intent(DangNhapActivity.this, DangKiActivity.class);
                 startActivity(intent);
             });
+        }
+    }
+
+    private void setupAutoScrollOnFocus(ScrollView scrollView, View... views) {
+        if (scrollView == null) return;
+        for (View v : views) {
+            if (v != null) {
+                v.setOnFocusChangeListener((view, hasFocus) -> {
+                    if (hasFocus) {
+                        scrollView.postDelayed(() -> {
+                            int[] loc = new int[2];
+                            view.getLocationOnScreen(loc);
+                            scrollView.smoothScrollBy(0, loc[1] - 250);
+                        }, 200);
+                    }
+                });
+            }
         }
     }
 

@@ -85,18 +85,36 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+            v.setPadding(imeInsets.left, imeInsets.top, imeInsets.right, imeInsets.bottom);
             return insets;
         });
 
         setupListeners();
+        setupAutoScrollOnFocus(binding.svForm, binding.etTitle, binding.etLocation, binding.etCost, binding.etNotes);
 
         if (maHoatDong > 0) {
             loadExistingData();
         } else {
             selectCategoryType(binding.chipTypeMove, "DI CHUYỂN");
             initNewActivityDate();
+        }
+    }
+
+    private void setupAutoScrollOnFocus(androidx.core.widget.NestedScrollView scrollView, View... views) {
+        if (scrollView == null) return;
+        for (View v : views) {
+            if (v != null) {
+                v.setOnFocusChangeListener((view, hasFocus) -> {
+                    if (hasFocus) {
+                        scrollView.postDelayed(() -> {
+                            int[] loc = new int[2];
+                            view.getLocationOnScreen(loc);
+                            scrollView.smoothScrollBy(0, loc[1] - 250);
+                        }, 200);
+                    }
+                });
+            }
         }
     }
 
