@@ -127,15 +127,8 @@ public class LichTrinhFragment extends Fragment {
             maChuyenDi = chuyenDiHomNay.getMaChuyenDi();
             int dayNumber = tinhNgayThuMay(chuyenDiHomNay.getNgayDi(), todayDbStr);
             selectedDay = Math.max(1, dayNumber);
-
-            Toast.makeText(requireContext(),
-                    "Hôm nay (" + todayDisplayStr + ") đang diễn ra: " + chuyenDiHomNay.getTenChuyenDi(),
-                    Toast.LENGTH_SHORT).show();
         } else {
             maChuyenDi = -1; // Không có chuyến đi hôm nay
-            Toast.makeText(requireContext(),
-                    "Hôm nay (" + todayDisplayStr + ") bạn không có chuyến đi nào!",
-                    Toast.LENGTH_LONG).show();
         }
 
         loadDayData(selectedDay);
