@@ -5,8 +5,12 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,16 +23,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.adapter.AdapterChonThanhVien;
 import com.example.mytripmatee.dao.ThongBaoDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
+import com.example.mytripmatee.format.DinhDangTien;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
-import com.example.mytripmatee.format.DinhDangTien;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -469,7 +477,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 .show();
     }
 
-    // hiển thị Dialog Multi-Choice danh sách thành viên từ Database
+    // hiển thị Dialog danh sách thành viên với ô tìm kiếm họ tên / nickname
     private void hienThiDialogChonThanhVien() {
         danhSachNguoiDungDb = nguoiDungDAO.layTatCaNguoiDung();
         if (danhSachNguoiDungDb.isEmpty()) {
@@ -477,34 +485,83 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             return;
         }
 
-        int size = danhSachNguoiDungDb.size();
-        String[] tenHienThi = new String[size];
-        boolean[] daChon = new boolean[size];
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_members, null);
+        dialog.setContentView(dialogView);
 
-        for (int i = 0; i < size; i++) {
-            NguoiDung nd = danhSachNguoiDungDb.get(i);
-            String hoTen = (nd.getHoTen() != null && !nd.getHoTen().isEmpty()) ? nd.getHoTen() : nd.getTenDangNhap();
-            tenHienThi[i] = hoTen + " (@" + nd.getTenDangNhap() + ")";
-            daChon[i] = danhSachIdThanhVienChon.contains(nd.getMaNguoiDung());
+        ImageView btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        EditText etSearch = dialogView.findViewById(R.id.etSearchMember);
+        ImageView btnClear = dialogView.findViewById(R.id.btnClearSearchMember);
+        RecyclerView rv = dialogView.findViewById(R.id.rvSelectMembers);
+        TextView tvEmpty = dialogView.findViewById(R.id.tvEmptySearchMember);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelMember);
+        Button btnConfirm = dialogView.findViewById(R.id.btnConfirmMember);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        List<Integer> tempSelectedIds = new ArrayList<>(danhSachIdThanhVienChon);
+        AdapterChonThanhVien adapter = new AdapterChonThanhVien(tempSelectedIds);
+
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(this));
+            rv.setAdapter(adapter);
+            adapter.setDanhSachNguoiDung(danhSachNguoiDungDb);
         }
 
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Chọn thành viên tham gia")
-                .setMultiChoiceItems(tenHienThi, daChon, (dialog, which, isChecked) -> {
-                    int idNguoiDung = danhSachNguoiDungDb.get(which).getMaNguoiDung();
-                    if (isChecked) {
-                        if (!danhSachIdThanhVienChon.contains(idNguoiDung)) {
-                            danhSachIdThanhVienChon.add(idNguoiDung);
-                        }
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s != null ? s.toString().trim().toLowerCase() : "";
+                    if (btnClear != null) btnClear.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+
+                    List<NguoiDung> filtered = new ArrayList<>();
+                    if (query.isEmpty()) {
+                        filtered.addAll(danhSachNguoiDungDb);
                     } else {
-                        danhSachIdThanhVienChon.remove(Integer.valueOf(idNguoiDung));
+                        for (NguoiDung nd : danhSachNguoiDungDb) {
+                            String fullName = nd.getHoTen() != null ? nd.getHoTen().toLowerCase() : "";
+                            String username = nd.getTenDangNhap() != null ? nd.getTenDangNhap().toLowerCase() : "";
+                            if (fullName.contains(query) || username.contains(query)) {
+                                filtered.add(nd);
+                            }
+                        }
                     }
-                })
-                .setPositiveButton("Xác nhận", (dialog, which) -> {
-                    capNhatHienThiThanhVien();
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+
+                    adapter.setDanhSachNguoiDung(filtered);
+
+                    if (filtered.isEmpty() && !query.isEmpty()) {
+                        if (tvEmpty != null) tvEmpty.setVisibility(View.VISIBLE);
+                        if (rv != null) rv.setVisibility(View.GONE);
+                    } else {
+                        if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
+                        if (rv != null) rv.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        if (btnClear != null) {
+            btnClear.setOnClickListener(v -> {
+                if (etSearch != null) etSearch.setText("");
+            });
+        }
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                danhSachIdThanhVienChon.clear();
+                danhSachIdThanhVienChon.addAll(tempSelectedIds);
+                capNhatHienThiThanhVien();
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
     }
 
     // cập nhật chữ hiển thị trên thẻ thành viên
