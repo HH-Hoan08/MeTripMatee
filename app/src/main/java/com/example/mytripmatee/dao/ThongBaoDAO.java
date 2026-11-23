@@ -24,7 +24,9 @@ public class ThongBaoDAO {
         if (tb == null) return -1;
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        // Avoid inserting duplicate active invitations for the same user and trip
+        String nowTime = (tb.getNgayTao() != null && !tb.getNgayTao().isEmpty()) ? tb.getNgayTao() : layThoiGianHienTai();
+
+        // Avoid inserting duplicate notifications for the same user, trip, and type
         if ("MOI_THAM_GIA".equals(tb.getLoaiThongBao())) {
             Cursor cursor = db.rawQuery(
                     "SELECT MaThongBao FROM ThongBao WHERE MaNguoiDung = ? AND MaChuyenDi = ? AND LoaiThongBao = 'MOI_THAM_GIA' AND TrangThai = 0",
@@ -34,6 +36,16 @@ public class ThongBaoDAO {
                 boolean exists = cursor.moveToFirst();
                 cursor.close();
                 if (exists) return 0; // Already has pending invitation
+            }
+        } else {
+            Cursor cursor = db.rawQuery(
+                    "SELECT MaThongBao FROM ThongBao WHERE MaNguoiDung = ? AND MaChuyenDi = ? AND LoaiThongBao = ? AND NgayTao = ?",
+                    new String[]{String.valueOf(tb.getMaNguoiDung()), String.valueOf(tb.getMaChuyenDi()), tb.getLoaiThongBao(), nowTime}
+            );
+            if (cursor != null) {
+                boolean exists = cursor.moveToFirst();
+                cursor.close();
+                if (exists) return 0; // Duplicate notification within the same minute
             }
         }
 
@@ -45,7 +57,7 @@ public class ThongBaoDAO {
         values.put("NoiDung", tb.getNoiDung());
         values.put("LoaiThongBao", tb.getLoaiThongBao());
         values.put("TrangThai", tb.getTrangThai());
-        values.put("NgayTao", tb.getNgayTao() != null ? tb.getNgayTao() : "");
+        values.put("NgayTao", (tb.getNgayTao() != null && !tb.getNgayTao().isEmpty()) ? tb.getNgayTao() : layThoiGianHienTai());
 
         try {
             return db.insert("ThongBao", null, values);
@@ -64,7 +76,7 @@ public class ThongBaoDAO {
                 "LEFT JOIN NguoiDung u ON t.MaNguoiGui = u.MaNguoiDung " +
                 "LEFT JOIN ChuyenDi c ON t.MaChuyenDi = c.MaChuyenDi " +
                 "WHERE t.MaNguoiDung = ? " +
-                "ORDER BY t.MaThongBao DESC";
+                "ORDER BY t.NgayTao DESC, t.MaThongBao DESC";
 
         Cursor cursor = null;
         try {
@@ -110,6 +122,34 @@ public class ThongBaoDAO {
             if (cursor != null) cursor.close();
         }
         return 0;
+    }
+
+    public int layMaThongBaoMoiNhat(int maNguoiDung) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT MAX(MaThongBao) FROM ThongBao WHERE MaNguoiDung = ?";
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(maNguoiDung)});
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi lấy mã thông báo mới nhất", e);
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return 0;
+    }
+
+    public void danhDauDaDocThongBaoThongTin(int maNguoiDung) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("TrangThai", 3);
+        try {
+            db.update("ThongBao", values, "MaNguoiDung = ? AND LoaiThongBao != 'MOI_THAM_GIA' AND TrangThai = 0", new String[]{String.valueOf(maNguoiDung)});
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi đánh dấu đã đọc thông báo thông tin", e);
+        }
     }
 
     public boolean capNhatTrangThaiThongBao(int maThongBao, int trangThai) {

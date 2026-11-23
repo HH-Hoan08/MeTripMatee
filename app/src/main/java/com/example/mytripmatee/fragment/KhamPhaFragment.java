@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -193,8 +194,14 @@ public class KhamPhaFragment extends Fragment {
 
         ThongBaoDAO thongBaoDAO = new ThongBaoDAO(requireContext());
         int unreadCount = thongBaoDAO.laySoThongBaoChuaDoc(currentUserId);
+        int highestNotifId = thongBaoDAO.layMaThongBaoMoiNhat(currentUserId);
 
-        if (unreadCount > 0) {
+        SharedPreferences sp = requireContext().getSharedPreferences("notif_pref", Context.MODE_PRIVATE);
+        int lastSeenId = sp.getInt("last_seen_notif_id_" + currentUserId, 0);
+
+        boolean hasNewNotif = (highestNotifId > 0 && highestNotifId > lastSeenId) || (unreadCount > 0 && highestNotifId > lastSeenId);
+
+        if (hasNewNotif) {
             binding.vNotificationBadge.setVisibility(View.VISIBLE);
             batDauLacChuong();
         } else {
@@ -233,6 +240,17 @@ public class KhamPhaFragment extends Fragment {
         final int finalUserId = currentUserId;
 
         ThongBaoDAO thongBaoDAO = new ThongBaoDAO(requireContext());
+
+        // Đánh dấu đã xem danh sách thông báo khi người dùng bấm vào xem
+        int highestNotifId = thongBaoDAO.layMaThongBaoMoiNhat(finalUserId);
+        if (highestNotifId > 0) {
+            SharedPreferences sp = requireContext().getSharedPreferences("notif_pref", Context.MODE_PRIVATE);
+            sp.edit().putInt("last_seen_notif_id_" + finalUserId, highestNotifId).apply();
+        }
+        thongBaoDAO.danhDauDaDocThongBaoThongTin(finalUserId);
+
+        capNhatThongBaoVaChuong(); // Dừng lắc chuông & ẩn chấm đỏ ngay khi vào xem
+
         List<ThongBao> listNotif = thongBaoDAO.layDanhSachThongBaoTheoNguoiDung(finalUserId);
 
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());

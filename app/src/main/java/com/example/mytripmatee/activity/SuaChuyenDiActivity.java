@@ -411,6 +411,8 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             }
         } else {
             if (currentTrip != null) {
+                List<Integer> existingMemberIds = chuyenDiDAO.layDanhSachIdThanhVien(currentTrip.getMaChuyenDi());
+
                 currentTrip.setTenChuyenDi(tripName);
                 currentTrip.setDiemDen(destination);
                 currentTrip.setNganSach(budget);
@@ -420,13 +422,20 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
                 boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip, danhSachIdThanhVienChon);
                 if (success) {
-                    // Send invitations to new members and update notifications to existing members
+                    List<Integer> updateNotifMembers = new ArrayList<>();
                     for (int mId : danhSachIdThanhVienChon) {
                         if (mId != currentUserId) {
-                            thongBaoDAO.guiLoiMoiThamGia(currentUserId, senderName, mId, currentTrip.getMaChuyenDi(), tripName);
+                            if (existingMemberIds.contains(mId)) {
+                                updateNotifMembers.add(mId);
+                            } else {
+                                thongBaoDAO.guiLoiMoiThamGia(currentUserId, senderName, mId, currentTrip.getMaChuyenDi(), tripName);
+                            }
                         }
                     }
-                    thongBaoDAO.guiThongBaoCapNhatChuyenDi(currentUserId, senderName, danhSachIdThanhVienChon, currentTrip.getMaChuyenDi(), tripName);
+
+                    if (!updateNotifMembers.isEmpty()) {
+                        thongBaoDAO.guiThongBaoCapNhatChuyenDi(currentUserId, senderName, updateNotifMembers, currentTrip.getMaChuyenDi(), tripName);
+                    }
 
                     Toast.makeText(this, "Cập nhật chuyến đi thành công", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
