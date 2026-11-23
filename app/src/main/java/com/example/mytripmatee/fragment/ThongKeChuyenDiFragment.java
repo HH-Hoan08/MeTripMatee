@@ -18,6 +18,7 @@ import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.model.ChiPhi;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.LichTrinh;
+import com.example.mytripmatee.format.DinhDangTien;
 
 import java.util.List;
 import java.util.Locale;
@@ -167,17 +168,10 @@ public class ThongKeChuyenDiFragment extends Fragment {
     }
 
     private String formatShortMoney(long amount) {
-        if (amount <= 0) return "0đ";
-        if (amount >= 1_000_000) {
-            double m = amount / 1_000_000.0;
-            return String.format(Locale.getDefault(), "%.2fMđ", m).replace(".00", "");
-        } else if (amount >= 1_000) {
-            return (amount / 1000) + "Kđ";
-        }
-        return amount + "đ";
+        return DinhDangTien.dinhDangNgan(amount);
     }
 
     private String formatMoney(long amount) {
-        return String.format(Locale.getDefault(), "%,d đ", amount).replace(',', '.');
+        return DinhDangTien.dinhDangDong(amount);
     }
 }

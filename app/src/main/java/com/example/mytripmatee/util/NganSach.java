@@ -56,6 +56,6 @@ public class NganSach {
     }
 
     private static String formatMoney(long amount) {
-        return String.format(Locale.getDefault(), "%,d đ", amount).replace(',', '.');
+        return com.example.mytripmatee.format.DinhDangTien.dinhDangDong(amount);
     }
 }

@@ -23,6 +23,7 @@ import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChiPhi;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.format.DinhDangTien;
 import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.model.ChiPhi;
 import com.example.mytripmatee.model.ChuyenDi;
@@ -190,6 +191,6 @@ public class ChiPhiChuyenDiFragment extends Fragment {
     }
 
     private String formatMoney(long amount) {
-        return String.format(Locale.getDefault(), "%,d đ", amount).replace(',', '.');
+        return DinhDangTien.dinhDangDong(amount);
     }
 }

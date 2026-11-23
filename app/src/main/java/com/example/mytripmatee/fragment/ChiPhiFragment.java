@@ -32,6 +32,7 @@ import com.example.mytripmatee.adapter.AdapterChonChuyenDi;
 import com.example.mytripmatee.dao.ChiPhiDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
+import com.example.mytripmatee.format.DinhDangTien;
 import com.example.mytripmatee.model.ChiPhi;
 import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.ItemChiPhi;
@@ -433,18 +434,7 @@ public class ChiPhiFragment extends Fragment {
     }
 
     private String formatShortMoney(long amount) {
-        if (amount <= 0) return "0 đ";
-        if (amount >= 1_000_000) {
-            double m = amount / 1_000_000.0;
-            if (m == (long) m) {
-                return String.format(Locale.getDefault(), "%dM", (long) m);
-            } else {
-                return String.format(Locale.getDefault(), "%.2fM", m).replace(".00", "");
-            }
-        } else if (amount >= 1_000) {
-            return (amount / 1000) + "K";
-        }
-        return amount + " đ";
+        return DinhDangTien.dinhDangNgan(amount);
     }
 
     private void recalculateTotals(boolean hasFilter, int dummy) {
@@ -685,6 +675,10 @@ public class ChiPhiFragment extends Fragment {
         EditText edtExpenseTitle = dialogView.findViewById(R.id.edtExpenseTitle);
         EditText edtExpenseAmount = dialogView.findViewById(R.id.edtExpenseAmount);
 
+        if (edtExpenseAmount != null) {
+            DinhDangTien.themDinhDangTuDong(edtExpenseAmount);
+        }
+
         String[] categories = new String[]{"Di chuyển", "Ăn uống", "Khách sạn / Lưu trú", "Giải trí / Khác"};
         ArrayAdapter<String> catAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_spinner_chon, categories);
         catAdapter.setDropDownViewResource(R.layout.item_spinner_danh_sach);
@@ -803,7 +797,12 @@ public class ChiPhiFragment extends Fragment {
             }
             edtExpenseTitle.setText(cleanTitle);
         }
-        if (edtExpenseAmount != null) edtExpenseAmount.setText(String.valueOf(item.getSoTien()));
+        if (edtExpenseAmount != null) {
+            DinhDangTien.themDinhDangTuDong(edtExpenseAmount);
+            if (item.getSoTien() > 0) {
+                edtExpenseAmount.setText(String.valueOf(item.getSoTien()));
+            }
+        }
         if (btnSaveExpense != null) btnSaveExpense.setText("Cập nhật chi phí");
 
         if (btnCloseDialog != null) btnCloseDialog.setOnClickListener(v -> dialog.dismiss());
@@ -926,6 +925,6 @@ public class ChiPhiFragment extends Fragment {
     }
 
     private String formatMoney(long amount) {
-        return String.format(Locale.getDefault(), "%,d đ", amount).replace(',', '.');
+        return DinhDangTien.dinhDangDong(amount);
     }
 }

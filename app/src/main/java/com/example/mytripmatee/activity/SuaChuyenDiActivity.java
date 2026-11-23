@@ -28,6 +28,7 @@ import com.example.mytripmatee.model.ChuyenDi;
 import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
+import com.example.mytripmatee.format.DinhDangTien;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -146,6 +147,10 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         etTripName = findViewById(R.id.etTripName);
         etDestination = findViewById(R.id.etDestination);
         etBudget = findViewById(R.id.etBudget);
+
+        if (etBudget != null) {
+            DinhDangTien.themDinhDangTuDong(etBudget);
+        }
 
         cvTime = findViewById(R.id.cvTime);
         tvDurationBadgeTime = findViewById(R.id.tvDurationBadgeTime);
@@ -370,10 +375,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             return;
         }
 
-        long budget = 0;
-        try {
-            budget = Long.parseLong(budgetStr.replaceAll("[^0-9]", ""));
-        } catch (Exception ignored) {}
+        long budget = DinhDangTien.chuyenChuoiThanhSo(budgetStr);
 
         if (budget <= 0) {
             Toast.makeText(this, "Vui lòng nhập ngân sách hợp lệ (> 0 VNĐ)", Toast.LENGTH_SHORT).show();

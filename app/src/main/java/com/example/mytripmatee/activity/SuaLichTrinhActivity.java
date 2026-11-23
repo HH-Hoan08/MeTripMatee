@@ -30,6 +30,7 @@ import com.example.mytripmatee.model.LichTrinh;
 import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.example.mytripmatee.util.TienIchNgay;
+import com.example.mytripmatee.format.DinhDangTien;
 
 import java.util.Calendar;
 import java.util.List;
@@ -200,6 +201,10 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
 
+        if (binding.etCost != null) {
+            DinhDangTien.themDinhDangTuDong(binding.etCost);
+        }
+
         binding.chipTypeMove.setOnClickListener(v -> selectCategoryType(binding.chipTypeMove, "DI CHUYỂN"));
         binding.chipTypeFood.setOnClickListener(v -> selectCategoryType(binding.chipTypeFood, "ĂN UỐNG"));
         binding.chipTypeStay.setOnClickListener(v -> selectCategoryType(binding.chipTypeStay, "LƯU TRÚ"));
@@ -314,12 +319,7 @@ public class SuaLichTrinhActivity extends AppCompatActivity {
         String notes = binding.etNotes.getText() != null ? binding.etNotes.getText().toString().trim() : "";
 
         String costStr = binding.etCost.getText() != null ? binding.etCost.getText().toString().trim() : "";
-        long costAmount = 0;
-        if (!costStr.isEmpty()) {
-            try {
-                costAmount = Long.parseLong(costStr.replaceAll("[^0-9]", ""));
-            } catch (NumberFormatException ignored) {}
-        }
+        long costAmount = DinhDangTien.chuyenChuoiThanhSo(costStr);
 
         if (!mapUrl.isEmpty() && !mapUrl.startsWith("http://") && !mapUrl.startsWith("https://") && !mapUrl.contains("maps")) {
             Toast.makeText(this, "Cảnh báo: Link Google Maps chưa đúng định dạng URL", Toast.LENGTH_SHORT).show();
