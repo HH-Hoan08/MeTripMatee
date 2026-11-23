@@ -850,8 +850,19 @@ public class ChiPhiFragment extends Fragment {
                     maChiPhi = Integer.parseInt(item.getMaId());
                 } catch (NumberFormatException ignored) {}
 
-                SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                String ngayChiDb = sdfYmd.format(new Date());
+                String ngayChiDb = "";
+                ChiPhi oldChiPhi = chiPhiDAO.layChiPhiTheoId(maChiPhi);
+                if (oldChiPhi != null && oldChiPhi.getNgayChi() != null) {
+                    ngayChiDb = oldChiPhi.getNgayChi();
+                } else {
+                    SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    ngayChiDb = sdfYmd.format(new Date());
+                    int targetTripId = item.getMaChuyenDi() > 0 ? item.getMaChuyenDi() : getTargetTripId();
+                    ChuyenDi cd = chuyenDiDAO.layChuyenDiTheoId(targetTripId);
+                    if (cd != null && cd.getNgayDi() != null && !cd.getNgayDi().isEmpty()) {
+                        ngayChiDb = cd.getNgayDi();
+                    }
+                }
 
                 int tripId = item.getMaChuyenDi() > 0 ? item.getMaChuyenDi() : getTargetTripId();
                 int currentUserId = quanLyPhien != null ? quanLyPhien.getMaNguoiDung() : 1;

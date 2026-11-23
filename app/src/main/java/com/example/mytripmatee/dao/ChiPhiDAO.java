@@ -91,6 +91,34 @@ public class ChiPhiDAO {
         }
     }
 
+    // 3.5. Lấy khoản chi theo ID
+    public ChiPhi layChiPhiTheoId(int maChiPhi) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM ChiPhi WHERE MaChiPhi = ?", new String[]{String.valueOf(maChiPhi)});
+            if (cursor != null && cursor.moveToFirst()) {
+                ChiPhi item = new ChiPhi();
+                item.setMaChiPhi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChiPhi")));
+                item.setMaChuyenDi(cursor.getInt(cursor.getColumnIndexOrThrow("MaChuyenDi")));
+                try {
+                    item.setMaNguoiDung(cursor.getInt(cursor.getColumnIndexOrThrow("MaNguoiDung")));
+                } catch (Exception ignored) {}
+                item.setMaDanhMuc(cursor.getInt(cursor.getColumnIndexOrThrow("MaDanhMuc")));
+                item.setSoTien(cursor.getLong(cursor.getColumnIndexOrThrow("SoTien")));
+                item.setNgayChi(cursor.getString(cursor.getColumnIndexOrThrow("NgayChi")));
+                item.setGhiChu(cursor.getString(cursor.getColumnIndexOrThrow("GhiChu")));
+                item.setLaCaNhan(cursor.getInt(cursor.getColumnIndexOrThrow("LaCaNhan")));
+                return item;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi lấy chi phí theo ID", e);
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
+    }
+
     // 4. Lấy danh sách chi phí theo Chuyến đi & Người dùng
     // (Chi phí cá nhân chỉ hiện với đúng người tạo, chi phí nhóm hiện cho tất cả)
     public List<ChiPhi> layDanhSachChiPhiTheoChuyenDi(int maChuyenDi, int maNguoiDung) {
