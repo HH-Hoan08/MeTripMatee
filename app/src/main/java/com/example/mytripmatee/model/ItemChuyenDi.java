@@ -18,6 +18,10 @@ public class ItemChuyenDi {
     private String duongDanAnhUri;
 
     public ItemChuyenDi(String maId, String tieuDe, String trangThaiHienThi, LoaiTrangThai loaiTrangThai, String theNgay, String chiTiet, int maAnhResId) {
+        this(maId, tieuDe, trangThaiHienThi, loaiTrangThai, theNgay, chiTiet, maAnhResId, null);
+    }
+
+    public ItemChuyenDi(String maId, String tieuDe, String trangThaiHienThi, LoaiTrangThai loaiTrangThai, String theNgay, String chiTiet, int maAnhResId, String duongDanAnhUri) {
         this.maId = maId;
         this.tieuDe = tieuDe;
         this.trangThaiHienThi = trangThaiHienThi;
@@ -25,6 +29,7 @@ public class ItemChuyenDi {
         this.theNgay = theNgay;
         this.chiTiet = chiTiet;
         this.maAnhResId = maAnhResId;
+        this.duongDanAnhUri = duongDanAnhUri;
     }
 
     public String getMaId() {

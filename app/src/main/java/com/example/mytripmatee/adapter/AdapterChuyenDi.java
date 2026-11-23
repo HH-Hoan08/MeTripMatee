@@ -77,17 +77,7 @@ public class AdapterChuyenDi extends RecyclerView.Adapter<AdapterChuyenDi.ViewHo
 
             Context context = binding.getRoot().getContext();
 
-            if (itemChuyenDi.getDuongDanAnhUri() != null && !itemChuyenDi.getDuongDanAnhUri().trim().isEmpty()) {
-                try {
-                    binding.imgThumbnail.setImageURI(Uri.parse(itemChuyenDi.getDuongDanAnhUri()));
-                } catch (Exception e) {
-                    binding.imgThumbnail.setImageResource(itemChuyenDi.getMaAnhResId() != 0 ? itemChuyenDi.getMaAnhResId() : R.drawable.img_phuquoc);
-                }
-            } else if (itemChuyenDi.getMaAnhResId() != 0) {
-                binding.imgThumbnail.setImageResource(itemChuyenDi.getMaAnhResId());
-            } else {
-                binding.imgThumbnail.setImageResource(R.drawable.img_phuquoc);
-            }
+            bindImage(itemChuyenDi, context);
 
             binding.tvTitle.setText(itemChuyenDi.getTieuDe() != null ? itemChuyenDi.getTieuDe() : "");
             binding.tvStatusBadge.setText(itemChuyenDi.getTrangThaiHienThi() != null ? itemChuyenDi.getTrangThaiHienThi() : "");
@@ -145,6 +135,43 @@ public class AdapterChuyenDi extends RecyclerView.Adapter<AdapterChuyenDi.ViewHo
             } else {
                 binding.tvDetails.setText(details);
             }
+        }
+
+        private void bindImage(ItemChuyenDi itemChuyenDi, Context context) {
+            String uriStr = itemChuyenDi.getDuongDanAnhUri();
+            int resId = itemChuyenDi.getMaAnhResId();
+
+            if (uriStr != null && !uriStr.trim().isEmpty()) {
+                try {
+                    binding.imgThumbnail.setImageURI(Uri.parse(uriStr));
+                    resetImageStyleForPhoto();
+                    return;
+                } catch (Exception ignored) {}
+            }
+
+            if (resId != 0 && resId != R.drawable.ic_hotel) {
+                binding.imgThumbnail.setImageResource(resId);
+                resetImageStyleForPhoto();
+            } else {
+                // Hiển thị icon ngôi nhà (ic_hotel) phóng to trên nền trong suốt
+                binding.imgThumbnail.setImageResource(R.drawable.ic_hotel);
+                binding.imgThumbnail.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+                int p = (int) (4 * context.getResources().getDisplayMetrics().density);
+                binding.imgThumbnail.setPadding(p, p, p, p);
+                binding.imgThumbnail.setBackground(null); // Nền trong suốt
+
+                // Mode sáng -> Ngôi nhà màu đen/tối (text_primary = #1E293B)
+                // Mode tối -> Ngôi nhà màu trắng (text_primary = #FFFFFF)
+                int houseColor = ContextCompat.getColor(context, R.color.text_primary);
+                binding.imgThumbnail.setColorFilter(houseColor);
+            }
+        }
+
+        private void resetImageStyleForPhoto() {
+            binding.imgThumbnail.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            binding.imgThumbnail.setPadding(0, 0, 0, 0);
+            binding.imgThumbnail.setBackground(null);
+            binding.imgThumbnail.clearColorFilter();
         }
     }
 

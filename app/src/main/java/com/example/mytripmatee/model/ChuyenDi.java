@@ -190,6 +190,20 @@ public class ChuyenDi {
             details += " • " + soThanhVien + " thành viên";
         }
 
+        int imageRes = R.drawable.ic_hotel;
+        String uriPath = null;
+
+        if (anhBia != null && !anhBia.trim().isEmpty()) {
+            if (anhBia.startsWith("content://") || anhBia.startsWith("file://")) {
+                uriPath = anhBia;
+            } else {
+                String ab = anhBia.toLowerCase();
+                if (ab.contains("hagiang") || ab.contains("ha giang")) imageRes = R.drawable.img_hagiang;
+                else if (ab.contains("phuquoc") || ab.contains("phu quoc")) imageRes = R.drawable.img_phuquoc;
+                else if (ab.contains("dalat") || ab.contains("da lat")) imageRes = R.drawable.img_dalat;
+            }
+        }
+
         return new ItemChuyenDi(
                 String.valueOf(maChuyenDi),
                 tenChuyenDi,
@@ -197,7 +211,8 @@ public class ChuyenDi {
                 statusType,
                 dataRange,
                 details,
-                R.drawable.ic_hotel
+                imageRes,
+                uriPath
         );
     }
 }
