@@ -473,18 +473,20 @@ public class KhamPhaFragment extends Fragment {
 
         // Lấy ngẫu nhiên tối đa 5 bức ảnh thuộc tag "Cảnh đẹp" của chuyến đi này
         featuredPhotoUris = anhDAO.layTopDanhSachAnhCanhDepRandom(featured.getMaChuyenDi(), 5);
+        if (featured.getAnhBia() != null && !featured.getAnhBia().trim().isEmpty()) {
+            String ab = featured.getAnhBia().trim();
+            if (!featuredPhotoUris.contains(ab)) {
+                featuredPhotoUris.add(0, ab);
+            }
+        }
         currentPhotoIndex = 0;
 
         ImageView imgFeaturedBg = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
         if (imgFeaturedBg == null) return;
 
         if (featuredPhotoUris != null && !featuredPhotoUris.isEmpty()) {
-            try {
-                imgFeaturedBg.setAlpha(1.0f);
-                imgFeaturedBg.setImageURI(Uri.parse(featuredPhotoUris.get(0)));
-            } catch (Exception e) {
-                imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
-            }
+            imgFeaturedBg.setAlpha(1.0f);
+            hienThiAnhLenImageView(imgFeaturedBg, featuredPhotoUris.get(0), featured.getDiemDen());
 
             // Nếu có từ 2 bức ảnh trở lên, thực hiện tự động xoay đổi ảnh sau mỗi 5 giây kèm hiệu ứng chuyển cảnh mượt mà
             if (featuredPhotoUris.size() > 1) {
@@ -498,7 +500,7 @@ public class KhamPhaFragment extends Fragment {
 
                         ImageView img = binding.cardFeatured.findViewById(R.id.imgFeaturedBackground);
                         if (img != null) {
-                            changeFeaturedImageWithFade(img, nextUri);
+                            changeFeaturedImageWithFade(img, nextUri, featured.getDiemDen());
                         }
 
                         slideshowHandler.postDelayed(this, 5000);
@@ -508,21 +510,19 @@ public class KhamPhaFragment extends Fragment {
             }
         } else {
             imgFeaturedBg.setAlpha(1.0f);
-            imgFeaturedBg.setImageResource(layAnhResTheoDiemDen(featured.getDiemDen()));
+            hienThiAnhLenImageView(imgFeaturedBg, null, featured.getDiemDen());
         }
     }
 
-    private void changeFeaturedImageWithFade(ImageView imageView, String newUri) {
-        if (imageView == null || newUri == null) return;
+    private void changeFeaturedImageWithFade(ImageView imageView, String newUri, String diemDenFallback) {
+        if (imageView == null) return;
 
         imageView.animate()
                 .alpha(0.2f)
                 .setDuration(400)
                 .withEndAction(() -> {
                     if (binding == null) return;
-                    try {
-                        imageView.setImageURI(Uri.parse(newUri));
-                    } catch (Exception ignored) {}
+                    hienThiAnhLenImageView(imageView, newUri, diemDenFallback);
 
                     imageView.animate()
                             .alpha(1.0f)
@@ -530,6 +530,27 @@ public class KhamPhaFragment extends Fragment {
                             .start();
                 })
                 .start();
+    }
+
+    private void hienThiAnhLenImageView(ImageView imageView, String uriOrName, String diemDenFallback) {
+        if (imageView == null) return;
+        Context context = imageView.getContext();
+        if (context == null) return;
+
+        if (uriOrName != null && !uriOrName.trim().isEmpty()) {
+            String clean = uriOrName.trim();
+            int resId = context.getResources().getIdentifier(clean, "drawable", context.getPackageName());
+            if (resId != 0) {
+                imageView.setImageResource(resId);
+                return;
+            }
+            try {
+                imageView.setImageURI(Uri.parse(clean));
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        imageView.setImageResource(layAnhResTheoDiemDen(diemDenFallback));
     }
 
     private void stopFeaturedSlideshow() {
@@ -542,8 +563,9 @@ public class KhamPhaFragment extends Fragment {
     private int layAnhResTheoDiemDen(String destination) {
         if (destination == null) return R.drawable.img_dalat;
         String d = destination.toLowerCase();
-        if (d.contains("phú quốc")) return R.drawable.img_phuquoc;
-        if (d.contains("hà giang")) return R.drawable.img_hagiang;
+        if (d.contains("phú quốc") || d.contains("phu quoc")) return R.drawable.img_phuquoc;
+        if (d.contains("hà giang") || d.contains("ha giang")) return R.drawable.img_hagiang;
+        if (d.contains("nha trang")) return R.drawable.img_nhatrang;
         return R.drawable.img_dalat;
     }
 
@@ -573,9 +595,11 @@ public class KhamPhaFragment extends Fragment {
 
             if (matchesStatus) {
                 ItemChuyenDi item = cd.toTripItem();
-                String randomCanhDepUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(cd.getMaChuyenDi());
-                if (randomCanhDepUri != null && !randomCanhDepUri.trim().isEmpty()) {
-                    item.setDuongDanAnhUri(randomCanhDepUri);
+                if (item.getDuongDanAnhUri() == null || item.getDuongDanAnhUri().trim().isEmpty()) {
+                    String randomCanhDepUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(cd.getMaChuyenDi());
+                    if (randomCanhDepUri != null && !randomCanhDepUri.trim().isEmpty()) {
+                        item.setDuongDanAnhUri(randomCanhDepUri);
+                    }
                 }
                 filteredItems.add(item);
             }

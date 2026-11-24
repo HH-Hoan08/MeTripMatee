@@ -3,6 +3,7 @@ package com.example.mytripmatee.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.text.Editable;
@@ -11,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
 import com.example.mytripmatee.adapter.AdapterChonThanhVien;
+import com.example.mytripmatee.dao.AnhDAO;
 import com.example.mytripmatee.dao.ThongBaoDAO;
 import com.example.mytripmatee.database.ChuyenDiDAO;
 import com.example.mytripmatee.database.NguoiDungDAO;
@@ -76,6 +79,27 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
     private List<NguoiDung> danhSachNguoiDungDb = new ArrayList<>();
     private List<Integer> danhSachIdThanhVienChon = new ArrayList<>();
 
+    // quản lý ảnh bìa chuyến đi
+    private MaterialCardView cvCoverPhoto;
+    private ImageView ivCoverPhoto;
+    private LinearLayout llEmptyCoverPlaceholder;
+    private TextView btnChangeCover;
+    private String selectedCoverPhotoUri = null;
+    private AnhDAO anhDAO;
+
+    private final ActivityResultLauncher<String> pickCoverLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    try {
+                        getContentResolver().takePersistableUriPermission(
+                                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+                    } catch (Exception ignored) {}
+                    selectedCoverPhotoUri = uri.toString();
+                    hienThiAnhBiaPreview(selectedCoverPhotoUri);
+                }
+            });
+
     private final ActivityResultLauncher<Intent> chonNgayLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -110,6 +134,7 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         chuyenDiDAO = new ChuyenDiDAO(this);
         quanLyPhien = new QuanLyPhien(this);
         nguoiDungDAO = new NguoiDungDAO(this);
+        anhDAO = new AnhDAO(this);
 
         initViews();
         setupListeners();
@@ -167,6 +192,11 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
 
         cvMembers = findViewById(R.id.cvMembers);
         tvMembersSubtitle = findViewById(R.id.tvMembersSubtitle);
+
+        cvCoverPhoto = findViewById(R.id.cvCoverPhoto);
+        ivCoverPhoto = findViewById(R.id.ivCoverPhoto);
+        llEmptyCoverPlaceholder = findViewById(R.id.llEmptyCoverPlaceholder);
+        btnChangeCover = findViewById(R.id.btnChangeCover);
     }
 
     private void setupCreateMode() {
@@ -209,6 +239,9 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         danhSachIdThanhVienChon.clear();
         danhSachIdThanhVienChon.add(currentUserId);
         capNhatHienThiThanhVien();
+
+        selectedCoverPhotoUri = null;
+        hienThiAnhBiaPreview(null);
     }
 
     private void setupEditMode(int id) {
@@ -270,6 +303,12 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             danhSachIdThanhVienChon.add(currentUserId);
         }
         capNhatHienThiThanhVien();
+
+        selectedCoverPhotoUri = currentTrip.getAnhBia();
+        if ((selectedCoverPhotoUri == null || selectedCoverPhotoUri.trim().isEmpty()) && anhDAO != null) {
+            selectedCoverPhotoUri = anhDAO.layAnhCanhDepRandomTheoChuyenDi(id);
+        }
+        hienThiAnhBiaPreview(selectedCoverPhotoUri);
     }
 
     private void updateDateDisplay() {
@@ -367,6 +406,13 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
             });
         }
 
+        if (cvCoverPhoto != null) {
+            cvCoverPhoto.setOnClickListener(v -> pickCoverLauncher.launch("image/*"));
+        }
+        if (btnChangeCover != null) {
+            btnChangeCover.setOnClickListener(v -> pickCoverLauncher.launch("image/*"));
+        }
+
         if (cvMembers != null) {
             cvMembers.setOnClickListener(v -> hienThiDialogChonThanhVien());
         }
@@ -405,8 +451,12 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         if (isCreateMode) {
             ChuyenDi newTrip = new ChuyenDi(currentUserId, tripName, destination, selectedNgayDi, selectedNgayVe, budget);
             newTrip.setSoThanhVien(danhSachIdThanhVienChon.size());
+            newTrip.setAnhBia(selectedCoverPhotoUri);
             long id = chuyenDiDAO.themChuyenDi(newTrip, danhSachIdThanhVienChon);
             if (id > 0) {
+                if (selectedCoverPhotoUri != null && !selectedCoverPhotoUri.trim().isEmpty() && anhDAO != null) {
+                    anhDAO.themAnh((int) id, selectedCoverPhotoUri.trim(), "Ảnh bìa chuyến đi", "Cảnh đẹp");
+                }
                 // Send invitations to invited members
                 for (int mId : danhSachIdThanhVienChon) {
                     if (mId != currentUserId) {
@@ -429,6 +479,11 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
                 currentTrip.setNgayDi(selectedNgayDi);
                 currentTrip.setNgayVe(selectedNgayVe);
                 currentTrip.setSoThanhVien(danhSachIdThanhVienChon.size());
+
+                if (selectedCoverPhotoUri != null && !selectedCoverPhotoUri.trim().isEmpty() && anhDAO != null) {
+                    anhDAO.themAnh(currentTrip.getMaChuyenDi(), selectedCoverPhotoUri.trim(), "Ảnh bìa chuyến đi", "Cảnh đẹp");
+                }
+                currentTrip.setAnhBia(selectedCoverPhotoUri);
 
                 boolean success = chuyenDiDAO.capNhatChuyenDi(currentTrip, danhSachIdThanhVienChon);
                 if (success) {
@@ -592,6 +647,27 @@ public class SuaChuyenDiActivity extends AppCompatActivity {
         } else {
             String danhSachTen = android.text.TextUtils.join(", ", tenCacThanhVien);
             tvMembersSubtitle.setText(soLuong + " thành viên: " + danhSachTen);
+        }
+    }
+
+    private void hienThiAnhBiaPreview(String uriOrName) {
+        if (cvCoverPhoto == null || ivCoverPhoto == null) return;
+        if (uriOrName != null && !uriOrName.trim().isEmpty()) {
+            ivCoverPhoto.setVisibility(View.VISIBLE);
+            if (btnChangeCover != null) btnChangeCover.setVisibility(View.VISIBLE);
+            if (llEmptyCoverPlaceholder != null) llEmptyCoverPlaceholder.setVisibility(View.GONE);
+            int resId = getResources().getIdentifier(uriOrName.trim(), "drawable", getPackageName());
+            if (resId != 0) {
+                ivCoverPhoto.setImageResource(resId);
+            } else {
+                try {
+                    ivCoverPhoto.setImageURI(Uri.parse(uriOrName.trim()));
+                } catch (Exception ignored) {}
+            }
+        } else {
+            ivCoverPhoto.setVisibility(View.GONE);
+            if (btnChangeCover != null) btnChangeCover.setVisibility(View.GONE);
+            if (llEmptyCoverPlaceholder != null) llEmptyCoverPlaceholder.setVisibility(View.VISIBLE);
         }
     }
 }

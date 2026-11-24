@@ -114,6 +114,80 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Thẻ chọn Ảnh bìa chuyến đi -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvCoverPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginTop="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toBottomOf="@id/cvToggleAction">
+
+            <!-- ImageView hiển thị ảnh đã chọn -->
+            <ImageView
+                android:id="@+id/ivCoverPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"/>
+
+            <!-- Nút Thay đổi ảnh (hiện khi đã có ảnh) -->
+            <TextView
+                android:id="@+id/btnChangeCover"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                android:background="@drawable/bg_pill_white"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:text="📷 Đổi ảnh"
+                android:textColor="@color/teal_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone"/>
+
+            <!-- Khung Placeholder khi chưa có ảnh -->
+            <LinearLayout
+                android:id="@+id/llEmptyCoverPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_gallery"
+                    app:tint="@color/teal_primary"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Thêm ảnh bìa chuyến đi"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Chạm để chọn ảnh từ thư viện máy"
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Tên chuyến đi -->
         <TextView
             android:id="@+id/tvTripNameLabel"
@@ -122,8 +196,8 @@
             android:text="Tên chuyến đi"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/cvToggleAction"
+            android:layout_marginTop="20dp"
+            app:layout_constraintTop_toBottomOf="@id/cvCoverPhoto"
             app:layout_constraintStart_toStartOf="parent"/>
 
         <com.google.android.material.textfield.TextInputLayout

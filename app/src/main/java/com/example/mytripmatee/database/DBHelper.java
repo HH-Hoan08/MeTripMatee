@@ -8,7 +8,7 @@ import android.util.Log;
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     public static final String DATABASE_NAME = "mytripmatee.db";
-    public static final int DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 7;
 
     // sử dụng Singleton đảm bảo toàn ứng dụng chỉ dùng một thể hiện duy nhất của DBHelper
     private static DBHelper instance;
@@ -414,23 +414,32 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen) VALUES " +
                 "('lan123', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Hoàng Thị Lan');");
         // chuyến đi mẫu Đà Lạt 3 ngày
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Đà Lạt 3 ngày', 'Đà Lạt', '2026-12-01', '2026-12-03', 3000000, 'SAP_TOI');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Đà Lạt 3 ngày', 'Đà Lạt', '2026-12-01', '2026-12-03', 3000000, 'SAP_TOI', 1, 'img_dalat');");
         // 5 chuyến đi mẫu phong phú cho tài khoản demo (MaNguoiDung = 1)
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Phú Quốc – Kỳ Nghỉ Biển Ngọc', 'Phú Quốc, Kiên Giang', '2026-12-10', '2026-12-13', 5000000, 'SAP_TOI');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Phú Quốc – Kỳ Nghỉ Biển Ngọc', 'Phú Quốc, Kiên Giang', '2026-12-10', '2026-12-13', 5000000, 'SAP_TOI', 1, 'img_phuquoc');");
 
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Hà Giang – Chinh Phục Mã Pí Lèng', 'Đồng Văn, Hà Giang', '2026-12-24', '2026-12-28', 4500000, 'SAP_TOI');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Hà Giang – Chinh Phục Mã Pí Lèng', 'Đồng Văn, Hà Giang', '2026-12-24', '2026-12-28', 4500000, 'SAP_TOI', 1, 'img_hagiang');");
 
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Sapa – Săn Mây Đỉnh Fansipan', 'Sapa, Lào Cai', '2026-11-15', '2026-11-18', 4200000, 'DANG_DI');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Sapa – Săn Mây Đỉnh Fansipan', 'Sapa, Lào Cai', '2026-11-15', '2026-11-18', 4200000, 'DANG_DI', 1, 'img_dalat');");
 
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai) " +
-                "VALUES (1, 'Hội An & Đà Nẵng – Phố Cổ Lung Linh', 'Hội An, Quảng Nam', '2026-11-05', '2026-11-08', 3800000, 'DA_XONG');");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Hội An & Đà Nẵng – Phố Cổ Lung Linh', 'Hội An, Quảng Nam', '2026-11-05', '2026-11-08', 3800000, 'DA_XONG', 1, 'img_phuquoc');");
 
-        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien) " +
-                "VALUES (1, 'Nha Trang – Thiên Đường Biển Đảo', 'Nha Trang, Khánh Hòa', '2027-01-05', '2027-01-08', 6000000, 'SAP_TOI', 2);");
+        db.execSQL("INSERT INTO ChuyenDi (MaNguoiDung, TenChuyenDi, DiemDen, NgayDi, NgayVe, NganSach, TrangThai, SoThanhVien, AnhBia) " +
+                "VALUES (1, 'Nha Trang – Thiên Đường Biển Đảo', 'Nha Trang, Khánh Hòa', '2027-01-05', '2027-01-08', 6000000, 'SAP_TOI', 2, 'img_nhatrang');");
+
+        // bảng ảnh mẫu cho các chuyến đi
+        db.execSQL("INSERT INTO Anh (MaChuyenDi, DuongDanAnh, ChuThich) VALUES " +
+                "(1, 'img_dalat',   'Cảnh đẹp|Hồ Xuân Hương Đà Lạt'), " +
+                "(2, 'img_phuquoc', 'Cảnh đẹp|Bãi Sao Phú Quốc'), " +
+                "(3, 'img_hagiang', 'Cảnh đẹp|Đèo Mã Pí Lèng Hà Giang'), " +
+                "(4, 'img_dalat',   'Cảnh đẹp|Đỉnh Fansipan Sapa'), " +
+                "(5, 'img_phuquoc', 'Cảnh đẹp|Phố cổ Hội An'), " +
+                "(6, 'img_nhatrang', 'Cảnh đẹp|Biển Nha Trang trong xanh');");
         // thành viên tham gia các chuyến đi
         db.execSQL("INSERT INTO ThanhVienChuyenDi (MaChuyenDi, MaNguoiDung) VALUES " +
                 "(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (6, 2);");

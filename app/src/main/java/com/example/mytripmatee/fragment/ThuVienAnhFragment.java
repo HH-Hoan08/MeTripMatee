@@ -2,6 +2,7 @@ package com.example.mytripmatee.fragment;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -387,10 +388,17 @@ public class ThuVienAnhFragment extends Fragment {
 
         if (imgEnlarged != null) {
             if (photo.getDuongDanUri() != null && !photo.getDuongDanUri().trim().isEmpty()) {
-                try {
-                    imgEnlarged.setImageURI(Uri.parse(photo.getDuongDanUri()));
-                } catch (Exception e) {
-                    imgEnlarged.setImageResource(photo.getMaAnhResId() != 0 ? photo.getMaAnhResId() : R.drawable.img_dalat);
+                String uriStr = photo.getDuongDanUri().trim();
+                Context context = imgEnlarged.getContext();
+                int resId = (context != null) ? context.getResources().getIdentifier(uriStr, "drawable", context.getPackageName()) : 0;
+                if (resId != 0) {
+                    imgEnlarged.setImageResource(resId);
+                } else {
+                    try {
+                        imgEnlarged.setImageURI(Uri.parse(uriStr));
+                    } catch (Exception e) {
+                        imgEnlarged.setImageResource(photo.getMaAnhResId() != 0 ? photo.getMaAnhResId() : R.drawable.img_dalat);
+                    }
                 }
             } else {
                 imgEnlarged.setImageResource(photo.getMaAnhResId() != 0 ? photo.getMaAnhResId() : R.drawable.img_dalat);

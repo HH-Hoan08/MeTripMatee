@@ -129,7 +129,7 @@ public class AnhDAO {
         String note = (chuThich != null && !chuThich.trim().isEmpty()) ? chuThich.trim() : "Kỷ niệm chuyến đi";
 
         values.put("ChuThich", cat + "|" + note);
-        return db.insert("Anh", null, values);
+        return db.insertWithOnConflict("Anh", null, values, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public boolean xoaAnh(int maAnh) {

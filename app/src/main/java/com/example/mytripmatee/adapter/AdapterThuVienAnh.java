@@ -1,5 +1,6 @@
 package com.example.mytripmatee.adapter;
 
+import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -68,11 +69,18 @@ public class AdapterThuVienAnh extends RecyclerView.Adapter<AdapterThuVienAnh.Vi
         public void bind(ItemAnhThuVien photo, SuKienChonAnhListener listener) {
             if (photo == null) return;
 
+            Context context = binding.getRoot().getContext();
             if (photo.getDuongDanUri() != null && !photo.getDuongDanUri().trim().isEmpty()) {
-                try {
-                    binding.imgPhoto.setImageURI(Uri.parse(photo.getDuongDanUri()));
-                } catch (Exception e) {
-                    binding.imgPhoto.setImageResource(R.drawable.img_dalat);
+                String uriStr = photo.getDuongDanUri().trim();
+                int resId = (context != null) ? context.getResources().getIdentifier(uriStr, "drawable", context.getPackageName()) : 0;
+                if (resId != 0) {
+                    binding.imgPhoto.setImageResource(resId);
+                } else {
+                    try {
+                        binding.imgPhoto.setImageURI(Uri.parse(uriStr));
+                    } catch (Exception e) {
+                        binding.imgPhoto.setImageResource(R.drawable.img_dalat);
+                    }
                 }
             } else if (photo.getMaAnhResId() != 0) {
                 binding.imgPhoto.setImageResource(photo.getMaAnhResId());

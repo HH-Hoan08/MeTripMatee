@@ -143,7 +143,15 @@ public class AdapterChuyenDi extends RecyclerView.Adapter<AdapterChuyenDi.ViewHo
 
             if (uriStr != null && !uriStr.trim().isEmpty()) {
                 try {
-                    binding.imgThumbnail.setImageURI(Uri.parse(uriStr));
+                    // 1. Kiểm tra nếu là tên drawable resource có sẵn trong project (như "img_dalat", "img_phuquoc", "img_hagiang")
+                    int resIdFromName = context.getResources().getIdentifier(uriStr.trim(), "drawable", context.getPackageName());
+                    if (resIdFromName != 0) {
+                        binding.imgThumbnail.setImageResource(resIdFromName);
+                        resetImageStyleForPhoto();
+                        return;
+                    }
+                    // 2. Nếu là content://, file:// hoặc android.resource://
+                    binding.imgThumbnail.setImageURI(Uri.parse(uriStr.trim()));
                     resetImageStyleForPhoto();
                     return;
                 } catch (Exception ignored) {}
