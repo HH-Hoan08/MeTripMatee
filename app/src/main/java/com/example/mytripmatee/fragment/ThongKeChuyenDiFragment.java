@@ -71,8 +71,6 @@ public class ThongKeChuyenDiFragment extends Fragment {
         tvScheduleCount = view.findViewById(R.id.tvScheduleCount);
         tvBudgetPercent = view.findViewById(R.id.tvBudgetPercent);
         tvBudgetDetail = view.findViewById(R.id.tvBudgetDetail);
-        tvTotalDistance = view.findViewById(R.id.tvTotalDistance);
-        tvMainVehicle = view.findViewById(R.id.tvMainVehicle);
         tvStaySpent = view.findViewById(R.id.tvStaySpent);
         pbStaySpent = view.findViewById(R.id.pbStaySpent);
         tvMoveSpent = view.findViewById(R.id.tvMoveSpent);
