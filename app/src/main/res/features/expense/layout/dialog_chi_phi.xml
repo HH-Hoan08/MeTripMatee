@@ -89,8 +89,8 @@
             android:hint="Ví dụ: Ăn tối lẩu gà lá é, Vé tham quan..."
             android:inputType="textCapSentences"
             android:paddingHorizontal="14dp"
-            android:textColor="#1E293B"
-            android:textColorHint="#94A3B8"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
             android:textSize="14sp" />
 
         <!-- 3. Nhập số tiền -->
@@ -112,8 +112,8 @@
             android:hint="0 đ"
             android:inputType="number"
             android:paddingHorizontal="14dp"
-            android:textColor="#0F766E"
-            android:textColorHint="#94A3B8"
+            android:textColor="@color/teal_primary"
+            android:textColorHint="@color/text_muted"
             android:textSize="15sp"
             android:textStyle="bold" />
 
