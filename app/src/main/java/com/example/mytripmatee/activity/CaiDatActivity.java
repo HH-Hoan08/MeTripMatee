@@ -27,13 +27,26 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.mytripmatee.R;
+import com.example.mytripmatee.dao.AnhDAO;
+import com.example.mytripmatee.dao.ChiPhiDAO;
+import com.example.mytripmatee.dao.LichTrinhDAO;
+import com.example.mytripmatee.database.ChuyenDiDAO;
+import com.example.mytripmatee.database.DBHelper;
 import com.example.mytripmatee.databinding.ActivityCaiDatBinding;
+import com.example.mytripmatee.model.ChiPhi;
+import com.example.mytripmatee.model.ChuyenDi;
+import com.example.mytripmatee.model.LichTrinh;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class CaiDatActivity extends AppCompatActivity {
 
@@ -263,11 +276,132 @@ public class CaiDatActivity extends AppCompatActivity {
                 .setTitle("Tạo dữ liệu mẫu")
                 .setMessage("Khởi tạo các chuyến đi thử nghiệm (Đà Lạt, Hà Giang, Phú Quốc) cùng lịch trình chi tiết và danh sách chi tiêu?")
                 .setPositiveButton("Tạo dữ liệu", (dialog, which) -> {
-                    sharedPreferences.edit().putBoolean("has_sample_data", true).apply();
-                    Toast.makeText(CaiDatActivity.this, "Đã khởi tạo thành công dữ liệu mẫu!", Toast.LENGTH_SHORT).show();
+                    int created = taoDuLieuMauChoTaiKhoanHienTai();
+                    if (created > 0) {
+                        sharedPreferences.edit().putBoolean("has_sample_data", true).apply();
+                        Toast.makeText(CaiDatActivity.this, "Đã khởi tạo " + created + " chuyến đi mẫu thành công!", Toast.LENGTH_SHORT).show();
+                    } else if (created == 0) {
+                        Toast.makeText(CaiDatActivity.this, "Dữ liệu mẫu đã có sẵn trong tài khoản của bạn!", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    private int taoDuLieuMauChoTaiKhoanHienTai() {
+        QuanLyPhien phien = new QuanLyPhien(this);
+        int userId = phien.getMaNguoiDung();
+        if (userId <= 0) {
+            Toast.makeText(this, "Vui lòng đăng nhập lại để tạo dữ liệu mẫu!", Toast.LENGTH_SHORT).show();
+            return -1;
+        }
+
+        ChuyenDiDAO chuyenDiDAO = new ChuyenDiDAO(this);
+        LichTrinhDAO lichTrinhDAO = new LichTrinhDAO(this);
+        ChiPhiDAO chiPhiDAO = new ChiPhiDAO(this);
+        AnhDAO anhDAO = new AnhDAO(this);
+
+        Set<String> existingNames = new HashSet<>();
+        List<ChuyenDi> existingTrips = chuyenDiDAO.layDanhSachChuyenDi(userId);
+        if (existingTrips != null) {
+            for (ChuyenDi cd : existingTrips) {
+                if (cd.getTenChuyenDi() != null) {
+                    existingNames.add(cd.getTenChuyenDi().trim());
+                }
+            }
+        }
+
+        int createdCount = 0;
+
+        // 1. Đà Lạt (Sắp tới)
+        String name1 = "Đà Lạt – Sương Mù & Thảnh Thơi";
+        if (!existingNames.contains(name1)) {
+            String d1 = ngayLech(5);
+            String d2 = ngayLech(6);
+            String d3 = ngayLech(7);
+            ChuyenDi cd1 = new ChuyenDi(userId, name1, "Đà Lạt, Lâm Đồng", d1, d3, 3500000);
+            cd1.setTrangThai("SAP_TOI");
+            cd1.setAnhBia("img_dalat");
+            long id1 = chuyenDiDAO.themChuyenDi(cd1);
+            if (id1 > 0) {
+                int ma = (int) id1;
+                anhDAO.themAnh(ma, "img_dalat", "Hồ Xuân Hương Đà Lạt", "Cảnh đẹp");
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d1, "07:30", "Di chuyển lên Đà Lạt", "Bến xe Đà Lạt", null, LichTrinh.LoaiHoatDong.DI_CHUYEN, null, false));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d1, "12:00", "Ăn trưa lẩu gà lá é", "Đà Lạt", null, LichTrinh.LoaiHoatDong.AN_UONG, "Đặt bàn trước", false));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d2, "08:30", "Săn mây Đồi Chè Cầu Đất", "Cầu Đất, Đà Lạt", null, LichTrinh.LoaiHoatDong.THAM_QUAN, null, false));
+                themChiPhiMau(chiPhiDAO, ma, userId, 2, 450000, d1, "Vé xe khứ hồi");
+                themChiPhiMau(chiPhiDAO, ma, userId, 3, 1200000, d1, "Homestay 2 đêm");
+                themChiPhiMau(chiPhiDAO, ma, userId, 1, 320000, d2, "Ăn uống & cà phê");
+                createdCount++;
+            }
+        }
+
+        // 2. Hà Giang (Đang diễn ra)
+        String name2 = "Hà Giang – Chinh Phục Mã Pí Lèng";
+        if (!existingNames.contains(name2)) {
+            String d1 = ngayLech(0);
+            String d2 = ngayLech(1);
+            String d3 = ngayLech(2);
+            String d4 = ngayLech(3);
+            ChuyenDi cd2 = new ChuyenDi(userId, name2, "Đồng Văn, Hà Giang", d1, d4, 4500000);
+            cd2.setTrangThai("DANG_DI");
+            cd2.setAnhBia("img_hagiang");
+            long id2 = chuyenDiDAO.themChuyenDi(cd2);
+            if (id2 > 0) {
+                int ma = (int) id2;
+                anhDAO.themAnh(ma, "img_hagiang", "Đèo Mã Pí Lèng Hà Giang", "Cảnh đẹp");
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d1, "07:00", "Xuất phát đi TP. Hà Giang", "Cột mốc Km0 Hà Giang", null, LichTrinh.LoaiHoatDong.DI_CHUYEN, null, true));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d2, "09:00", "Chinh phục đèo Mã Pí Lèng", "Đèo Mã Pí Lèng, Mèo Vạc", null, LichTrinh.LoaiHoatDong.THAM_QUAN, null, false));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d3, "19:00", "Thưởng thức lẩu gà đen", "Phố cổ Đồng Văn", null, LichTrinh.LoaiHoatDong.AN_UONG, null, false));
+                themChiPhiMau(chiPhiDAO, ma, userId, 2, 600000, d1, "Thuê xe máy & xăng xe");
+                themChiPhiMau(chiPhiDAO, ma, userId, 3, 950000, d1, "Nhà nghỉ phố cổ Đồng Văn");
+                themChiPhiMau(chiPhiDAO, ma, userId, 1, 420000, d2, "Ăn uống dọc đường");
+                createdCount++;
+            }
+        }
+
+        // 3. Phú Quốc (Đã hoàn thành)
+        String name3 = "Phú Quốc – Kỳ Nghỉ Biển Ngọc";
+        if (!existingNames.contains(name3)) {
+            String d1 = ngayLech(-10);
+            String d2 = ngayLech(-9);
+            String d3 = ngayLech(-8);
+            String d4 = ngayLech(-7);
+            ChuyenDi cd3 = new ChuyenDi(userId, name3, "Phú Quốc, Kiên Giang", d1, d4, 5000000);
+            cd3.setTrangThai("DA_XONG");
+            cd3.setAnhBia("img_phuquoc");
+            long id3 = chuyenDiDAO.themChuyenDi(cd3);
+            if (id3 > 0) {
+                int ma = (int) id3;
+                anhDAO.themAnh(ma, "img_phuquoc", "Bãi Sao Phú Quốc", "Cảnh đẹp");
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d1, "09:00", "Nhận phòng resort ven biển", "Dương Đông, Phú Quốc", null, LichTrinh.LoaiHoatDong.LUU_TRU, null, true));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d2, "10:00", "Lặn ngắm san hô Bãi Sao", "Bãi Sao, Phú Quốc", null, LichTrinh.LoaiHoatDong.THAM_QUAN, null, true));
+                lichTrinhDAO.themHoatDong(new LichTrinh(ma, d3, "17:30", "Ngắm hoàng hôn Sunset Sanato", "Bãi Trường, Phú Quốc", null, LichTrinh.LoaiHoatDong.THAM_QUAN, null, true));
+                themChiPhiMau(chiPhiDAO, ma, userId, 2, 1650000, d1, "Vé máy bay khứ hồi");
+                themChiPhiMau(chiPhiDAO, ma, userId, 3, 1800000, d1, "Phòng resort 3 đêm");
+                themChiPhiMau(chiPhiDAO, ma, userId, 4, 550000, d2, "Tour cano 4 đảo");
+                createdCount++;
+            }
+        }
+
+        return createdCount;
+    }
+
+    private void themChiPhiMau(ChiPhiDAO dao, int maChuyenDi, int userId, int maDanhMuc, long soTien, String ngayChi, String ghiChu) {
+        ChiPhi cp = new ChiPhi(maChuyenDi, maDanhMuc, soTien, ngayChi, ghiChu);
+        cp.setMaNguoiDung(userId);
+        dao.themChiPhi(cp);
+    }
+
+    private String ngayLech(int offsetDays) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, offsetDays);
+        return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.getTime());
+    }
+
+    private File getLocalBackupFile() {
+        File dir = new File(getFilesDir(), "backups");
+        return new File(dir, DBHelper.DATABASE_NAME);
     }
 
     private void setupLocalBackupAndRestore() {
@@ -284,7 +418,8 @@ public class CaiDatActivity extends AppCompatActivity {
 
     private void updateBackupTimeText() {
         String lastBackup = sharedPreferences.getString(KEY_LAST_BACKUP, null);
-        if (lastBackup != null && !lastBackup.isEmpty()) {
+        File backupFile = getLocalBackupFile();
+        if (lastBackup != null && !lastBackup.isEmpty() && backupFile.exists() && backupFile.length() > 0) {
             binding.tvLastBackupTime.setText("Lần cuối: " + lastBackup);
         } else {
             binding.tvLastBackupTime.setText("Lần cuối: Chưa sao lưu");
@@ -296,21 +431,27 @@ public class CaiDatActivity extends AppCompatActivity {
                 .setTitle("Sao lưu dữ liệu Local")
                 .setMessage("Tạo bản sao lưu toàn bộ thông tin chuyến đi, lịch trình và nhật ký chi tiêu vào bộ nhớ local thiết bị?")
                 .setPositiveButton("Sao lưu ngay", (dialog, which) -> {
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault());
-                    String currentTime = sdf.format(new Date());
+                    File backupFile = getLocalBackupFile();
+                    if (DBHelper.backupDatabase(this, backupFile)) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault());
+                        String currentTime = sdf.format(new Date());
 
-                    sharedPreferences.edit().putString(KEY_LAST_BACKUP, currentTime).apply();
-                    updateBackupTimeText();
+                        sharedPreferences.edit().putString(KEY_LAST_BACKUP, currentTime).apply();
+                        updateBackupTimeText();
 
-                    Toast.makeText(CaiDatActivity.this, "Sao lưu dữ liệu local thành công!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CaiDatActivity.this, "Sao lưu dữ liệu local thành công!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(CaiDatActivity.this, "Sao lưu dữ liệu thất bại!", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
     }
 
     private void showRestoreDialog() {
+        File backupFile = getLocalBackupFile();
         String lastBackup = sharedPreferences.getString(KEY_LAST_BACKUP, null);
-        if (lastBackup == null) {
+        if (!backupFile.exists() || backupFile.length() == 0) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Phục hồi dữ liệu")
                     .setMessage("Chưa tìm thấy bản sao lưu local nào trên thiết bị. Vui lòng thực hiện sao lưu trước.")
@@ -319,11 +460,16 @@ public class CaiDatActivity extends AppCompatActivity {
             return;
         }
 
+        String timeLabel = (lastBackup != null && !lastBackup.isEmpty()) ? (" ngày " + lastBackup) : "";
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Phục hồi dữ liệu")
-                .setMessage("Bạn có chắc chắn muốn khôi phục dữ liệu từ bản sao lưu ngày " + lastBackup + "?")
+                .setMessage("Bạn có chắc chắn muốn khôi phục dữ liệu từ bản sao lưu" + timeLabel + "? Dữ liệu hiện tại sẽ được thay thế bằng bản sao lưu này.")
                 .setPositiveButton("Phục hồi", (dialog, which) -> {
-                    Toast.makeText(CaiDatActivity.this, "Khôi phục dữ liệu từ bản sao lưu thành công!", Toast.LENGTH_SHORT).show();
+                    if (DBHelper.restoreDatabase(this, backupFile)) {
+                        Toast.makeText(CaiDatActivity.this, "Khôi phục dữ liệu từ bản sao lưu thành công!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(CaiDatActivity.this, "Khôi phục dữ liệu thất bại!", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();

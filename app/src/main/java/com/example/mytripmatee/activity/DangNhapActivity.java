@@ -1,9 +1,15 @@
 package com.example.mytripmatee.activity;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,13 +24,15 @@ import com.example.mytripmatee.database.NguoiDungDAO;
 import com.example.mytripmatee.model.NguoiDung;
 import com.example.mytripmatee.util.QuanLyPhien;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
-import android.widget.ScrollView;
-
 public class DangNhapActivity extends AppCompatActivity {
+    private static final String SUPPORT_EMAIL = "support@mytripmatee.com";
+
     private TextInputEditText etEmail, etPassword;
     private MaterialButton btnLogin, btnNavRegister;
+    private TextView tvForgotPassword;
     private CheckBox cbRemember;
     private ScrollView svLogin;
 
@@ -62,6 +70,7 @@ public class DangNhapActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnNavRegister = findViewById(R.id.btnNavRegister);
+        tvForgotPassword = findViewById(R.id.tvForgotPassword);
         cbRemember = findViewById(R.id.cbRemember);
 
         setupAutoScrollOnFocus(svLogin, etEmail, etPassword);
@@ -73,11 +82,45 @@ public class DangNhapActivity extends AppCompatActivity {
 
         btnLogin.setOnClickListener(v -> handleLogin());
 
+        if (tvForgotPassword != null) {
+            tvForgotPassword.setOnClickListener(v -> openSupportEmail());
+        }
+
         if (btnNavRegister != null) {
             btnNavRegister.setOnClickListener(v -> {
                 Intent intent = new Intent(DangNhapActivity.this, DangKiActivity.class);
                 startActivity(intent);
             });
+        }
+    }
+
+    private void openSupportEmail() {
+        String username = (etEmail != null && etEmail.getText() != null)
+                ? etEmail.getText().toString().trim()
+                : "";
+        String body = username.isEmpty()
+                ? "Xin chào đội ngũ hỗ trợ MyTripMate,\n\nTôi cần hỗ trợ đặt lại mật khẩu cho tài khoản của mình.\nTên đăng nhập: "
+                : "Xin chào đội ngũ hỗ trợ MyTripMate,\n\nTôi cần hỗ trợ đặt lại mật khẩu cho tài khoản: " + username;
+
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:" + SUPPORT_EMAIL));
+        intent.putExtra(Intent.EXTRA_SUBJECT, "[MyTripMate] Hỗ trợ quên mật khẩu");
+        intent.putExtra(Intent.EXTRA_TEXT, body);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Liên hệ hỗ trợ qua Email")
+                    .setMessage("Không tìm thấy ứng dụng Email trên thiết bị.\nVui lòng gửi yêu cầu khôi phục mật khẩu tới:\n\n" + SUPPORT_EMAIL)
+                    .setPositiveButton("Sao chép Email", (dialog, which) -> {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (clipboard != null) {
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Support Email", SUPPORT_EMAIL));
+                            Toast.makeText(this, "Đã sao chép " + SUPPORT_EMAIL, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Đóng", null)
+                    .show();
         }
     }
 

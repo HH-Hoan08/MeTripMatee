@@ -1,9 +1,15 @@
 package com.example.mytripmatee.database;
 
-import android.database.sqlite.SQLiteOpenHelper;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
@@ -457,5 +463,101 @@ public class DBHelper extends SQLiteOpenHelper {
                 "(1, 3, 900000, '2026-12-01', 'Homestay 2 đêm'), " +
                 "(1, 4, 180000, '2026-12-02', 'Vé vào cổng'), " +
                 "(1, 5, 350000, '2026-12-03', 'Đặc sản làm quà');");
+    }
+
+    public static synchronized boolean backupDatabase(Context context, File destFile) {
+        if (context == null || destFile == null) return false;
+        File parent = destFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            return false;
+        }
+
+        DBHelper helper = getInstance(context);
+        try {
+            helper.getWritableDatabase();
+            helper.close();
+
+            File dbFile = context.getDatabasePath(DATABASE_NAME);
+            if (!dbFile.exists()) return false;
+
+            File tempFile = new File(parent, DATABASE_NAME + ".tmp");
+            copyFile(dbFile, tempFile);
+            if (destFile.exists() && !destFile.delete()) {
+                // Continue with overwrite fallback if delete fails
+                copyFile(tempFile, destFile);
+                //noinspection ResultOfMethodCallIgnored
+                tempFile.delete();
+            } else if (!tempFile.renameTo(destFile)) {
+                copyFile(tempFile, destFile);
+                //noinspection ResultOfMethodCallIgnored
+                tempFile.delete();
+            }
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi sao lưu database", e);
+            return false;
+        }
+    }
+
+    public static synchronized boolean restoreDatabase(Context context, File backupFile) {
+        if (context == null || backupFile == null || !backupFile.exists() || backupFile.length() == 0) {
+            return false;
+        }
+
+        // Kiểm tra file backup hợp lệ trước khi đụng vào DB hiện tại
+        try (SQLiteDatabase testDb = SQLiteDatabase.openDatabase(
+                backupFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READONLY);
+             Cursor c = testDb.rawQuery(
+                     "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('ChuyenDi', 'NguoiDung')",
+                     null)) {
+            if (!c.moveToFirst() || c.getInt(0) < 2) {
+                return false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "File sao lưu không hợp lệ", e);
+            return false;
+        }
+
+        DBHelper helper = getInstance(context);
+        try {
+            helper.close();
+
+            File dbFile = context.getDatabasePath(DATABASE_NAME);
+            File dbDir = dbFile.getParentFile();
+            if (dbDir != null && !dbDir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                dbDir.mkdirs();
+            }
+
+            deleteSidecarIfExists(new File(dbFile.getAbsolutePath() + "-wal"));
+            deleteSidecarIfExists(new File(dbFile.getAbsolutePath() + "-shm"));
+            deleteSidecarIfExists(new File(dbFile.getAbsolutePath() + "-journal"));
+
+            copyFile(backupFile, dbFile);
+            helper.getWritableDatabase();
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi phục hồi database", e);
+            return false;
+        }
+    }
+
+    private static void deleteSidecarIfExists(File file) {
+        if (file != null && file.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+        }
+    }
+
+    private static void copyFile(File src, File dst) throws IOException {
+        try (FileInputStream in = new FileInputStream(src);
+             FileOutputStream out = new FileOutputStream(dst, false)) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            out.getFD().sync();
+        }
     }
 }
