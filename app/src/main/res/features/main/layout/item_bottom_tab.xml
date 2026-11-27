@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="false"
+    android:focusable="false"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingTop="4dp">
+
+    <ImageView
+        android:id="@+id/ivTabIcon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/tvTabTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAllCaps="true"
+        android:textColor="@color/text_muted"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <View
+        android:id="@+id/viewTabIndicator"
+        android:layout_width="34dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="3dp"
+        android:background="@drawable/bg_pill_teal"
+        android:visibility="invisible" />
+
+</LinearLayout>

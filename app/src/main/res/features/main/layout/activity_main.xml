@@ -59,16 +59,13 @@
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 app:tabGravity="fill"
-                app:tabIndicatorColor="@color/teal_primary"
-                app:tabIndicatorHeight="3dp"
+                app:tabIndicator="@null"
+                app:tabIndicatorHeight="0dp"
                 app:tabMode="fixed"
                 app:tabMinWidth="0dp"
                 app:tabPaddingStart="2dp"
                 app:tabPaddingEnd="2dp"
-                app:tabRippleColor="@null"
-                app:tabSelectedTextColor="@color/teal_primary"
-                app:tabTextAppearance="@style/CustomTabTextAppearance"
-                app:tabTextColor="@color/text_muted" />
+                app:tabRippleColor="@null" />
 
             <!-- Spacer in middle for Dome Center Button -->
             <View
@@ -84,16 +81,13 @@
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 app:tabGravity="fill"
-                app:tabIndicatorColor="@color/teal_primary"
-                app:tabIndicatorHeight="3dp"
+                app:tabIndicator="@null"
+                app:tabIndicatorHeight="0dp"
                 app:tabMode="fixed"
                 app:tabMinWidth="0dp"
                 app:tabPaddingStart="2dp"
                 app:tabPaddingEnd="2dp"
-                app:tabRippleColor="@null"
-                app:tabSelectedTextColor="@color/teal_primary"
-                app:tabTextAppearance="@style/CustomTabTextAppearance"
-                app:tabTextColor="@color/text_muted" />
+                app:tabRippleColor="@null" />
 
         </LinearLayout>
 

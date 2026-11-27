@@ -2,8 +2,11 @@ package com.example.mytripmatee.activity;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +15,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -30,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private boolean isSyncingTab = false;
+    private final TabLayout.Tab[] allTabs = new TabLayout.Tab[4];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,18 +69,27 @@ public class MainActivity extends AppCompatActivity {
         setupAddTripButton();
     }
 
+    private TabLayout.Tab createTab(TabLayout tabLayout, String title, int iconRes) {
+        View tabView = LayoutInflater.from(this).inflate(R.layout.item_bottom_tab, tabLayout, false);
+        ImageView ivIcon = tabView.findViewById(R.id.ivTabIcon);
+        TextView tvTitle = tabView.findViewById(R.id.tvTabTitle);
+        ivIcon.setImageResource(iconRes);
+        tvTitle.setText(title);
+        return tabLayout.newTab().setCustomView(tabView);
+    }
+
     private void setupViewPagerAndTabs() {
         binding.viewPager.setAdapter(new MainPagerAdapter(this));
 
-        TabLayout.Tab tab0 = binding.tabLayoutLeft.newTab().setText("Khám phá").setIcon(R.drawable.ic_explore);
-        TabLayout.Tab tab1 = binding.tabLayoutLeft.newTab().setText("Lịch trình").setIcon(R.drawable.ic_calendar_month);
-        binding.tabLayoutLeft.addTab(tab0);
-        binding.tabLayoutLeft.addTab(tab1);
+        allTabs[0] = createTab(binding.tabLayoutLeft, "Khám phá", R.drawable.ic_explore);
+        allTabs[1] = createTab(binding.tabLayoutLeft, "Lịch trình", R.drawable.ic_calendar_month);
+        binding.tabLayoutLeft.addTab(allTabs[0], true);
+        binding.tabLayoutLeft.addTab(allTabs[1], false);
 
-        TabLayout.Tab tab2 = binding.tabLayoutRight.newTab().setText("Bản đồ").setIcon(R.drawable.ic_map);
-        TabLayout.Tab tab3 = binding.tabLayoutRight.newTab().setText("Ví chi tiêu").setIcon(R.drawable.ic_wallet);
-        binding.tabLayoutRight.addTab(tab2);
-        binding.tabLayoutRight.addTab(tab3);
+        allTabs[2] = createTab(binding.tabLayoutRight, "Bản đồ", R.drawable.ic_map);
+        allTabs[3] = createTab(binding.tabLayoutRight, "Ví chi tiêu", R.drawable.ic_wallet);
+        binding.tabLayoutRight.addTab(allTabs[2], false);
+        binding.tabLayoutRight.addTab(allTabs[3], false);
 
         binding.tabLayoutLeft.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -132,51 +146,38 @@ public class MainActivity extends AppCompatActivity {
     private void updateTabSelection(int position) {
         int tealColor = ContextCompat.getColor(this, R.color.teal_primary);
         int mutedColor = ContextCompat.getColor(this, R.color.text_muted);
-        int indicatorHeightPx = (int) (3 * getResources().getDisplayMetrics().density);
-
-        ColorStateList activeColorStateList = new ColorStateList(
-                new int[][]{
-                        new int[]{android.R.attr.state_selected},
-                        new int[]{}
-                },
-                new int[]{
-                        tealColor,
-                        mutedColor
-                }
-        );
-        ColorStateList inactiveColorStateList = ColorStateList.valueOf(mutedColor);
 
         if (position < 2) {
-            binding.tabLayoutLeft.setTabTextColors(mutedColor, tealColor);
-            binding.tabLayoutLeft.setTabIconTint(activeColorStateList);
-            binding.tabLayoutLeft.setSelectedTabIndicatorHeight(indicatorHeightPx);
-            binding.tabLayoutLeft.setSelectedTabIndicatorColor(tealColor);
-
             TabLayout.Tab tabLeft = binding.tabLayoutLeft.getTabAt(position);
             if (tabLeft != null && !tabLeft.isSelected()) {
                 tabLeft.select();
             }
-
-            binding.tabLayoutRight.setTabTextColors(mutedColor, mutedColor);
-            binding.tabLayoutRight.setTabIconTint(inactiveColorStateList);
-            binding.tabLayoutRight.setSelectedTabIndicatorHeight(0);
-            binding.tabLayoutRight.setSelectedTabIndicatorColor(Color.TRANSPARENT);
         } else {
-            int rightIndex = position - 2;
-            binding.tabLayoutRight.setTabTextColors(mutedColor, tealColor);
-            binding.tabLayoutRight.setTabIconTint(activeColorStateList);
-            binding.tabLayoutRight.setSelectedTabIndicatorHeight(indicatorHeightPx);
-            binding.tabLayoutRight.setSelectedTabIndicatorColor(tealColor);
-
-            TabLayout.Tab tabRight = binding.tabLayoutRight.getTabAt(rightIndex);
+            TabLayout.Tab tabRight = binding.tabLayoutRight.getTabAt(position - 2);
             if (tabRight != null && !tabRight.isSelected()) {
                 tabRight.select();
             }
+        }
 
-            binding.tabLayoutLeft.setTabTextColors(mutedColor, mutedColor);
-            binding.tabLayoutLeft.setTabIconTint(inactiveColorStateList);
-            binding.tabLayoutLeft.setSelectedTabIndicatorHeight(0);
-            binding.tabLayoutLeft.setSelectedTabIndicatorColor(Color.TRANSPARENT);
+        for (int i = 0; i < allTabs.length; i++) {
+            TabLayout.Tab tab = allTabs[i];
+            if (tab == null || tab.getCustomView() == null) continue;
+            View customView = tab.getCustomView();
+            ImageView ivIcon = customView.findViewById(R.id.ivTabIcon);
+            TextView tvTitle = customView.findViewById(R.id.tvTabTitle);
+            View indicator = customView.findViewById(R.id.viewTabIndicator);
+
+            boolean isSelected = (i == position);
+            int color = isSelected ? tealColor : mutedColor;
+            if (ivIcon != null) {
+                ImageViewCompat.setImageTintList(ivIcon, ColorStateList.valueOf(color));
+            }
+            if (tvTitle != null) {
+                tvTitle.setTextColor(color);
+            }
+            if (indicator != null) {
+                indicator.setVisibility(isSelected ? View.VISIBLE : View.INVISIBLE);
+            }
         }
     }
 
