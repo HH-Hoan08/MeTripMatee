@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mytripmatee.R;
@@ -89,41 +90,49 @@ public class AdapterLich extends RecyclerView.Adapter<AdapterLich.ViewHolderNgay
         ItemNgayLich item = danhSachNgay.get(position);
         holder.tvDayNumber.setText(String.valueOf(item.ngay));
 
-        // 1. Ngày của tháng trước/sau hoặc ngày đã qua trong quá khứ -> Làm mờ xám, không cho bấm
+        int colorNormal = ContextCompat.getColor(holder.itemView.getContext(), R.color.calendar_text_dark);
+        int colorPrimary = ContextCompat.getColor(holder.itemView.getContext(), R.color.calendar_primary);
+
+        // 1. Ngày của tháng trước/sau hoặc ngày đã qua trong quá khứ -> Làm mờ, không cho bấm
         if (!item.laThangHienTai || item.daQua) {
-            holder.tvDayNumber.setTextColor(Color.parseColor("#CCCCCC"));
+            holder.tvDayNumber.setTextColor(colorNormal);
+            holder.tvDayNumber.setAlpha(item.laThangHienTai ? 0.38f : 0.22f);
             holder.tvDayNumber.setTypeface(null, Typeface.NORMAL);
             holder.viewCircleHighlight.setVisibility(View.GONE);
             holder.viewRangeHighlight.setVisibility(View.GONE);
             holder.itemView.setOnClickListener(null);
+            holder.itemView.setClickable(false);
             return;
         }
 
         // 2. Ngày hợp lệ trong hiện tại & tương lai
+        holder.tvDayNumber.setAlpha(1.0f);
         String chuoiNgayHienTai = item.layChuoiNgayChuan();
         boolean laNgayBatDau = ngayBatDauStr != null && chuoiNgayHienTai.equals(ngayBatDauStr);
         boolean laNgayKetThuc = ngayKetThucStr != null && chuoiNgayHienTai.equals(ngayKetThucStr);
-        boolean namTrongKhoang = ngayBatDauStr != null && ngayKetThucStr != null
+        boolean coKhoangNhieuNgay = ngayBatDauStr != null && ngayKetThucStr != null
+                && !ngayBatDauStr.equals(ngayKetThucStr);
+        boolean namTrongKhoang = coKhoangNhieuNgay
                 && chuoiNgayHienTai.compareTo(ngayBatDauStr) > 0
                 && chuoiNgayHienTai.compareTo(ngayKetThucStr) < 0;
 
         if (laNgayBatDau || laNgayKetThuc) {
             // Điểm đầu hoặc điểm cuối: Hình tròn xanh đậm, chữ trắng in đậm
             holder.viewCircleHighlight.setVisibility(View.VISIBLE);
-            holder.viewRangeHighlight.setVisibility(ngayKetThucStr != null ? View.VISIBLE : View.GONE);
+            holder.viewRangeHighlight.setVisibility(coKhoangNhieuNgay ? View.VISIBLE : View.GONE);
             holder.tvDayNumber.setTextColor(Color.WHITE);
             holder.tvDayNumber.setTypeface(null, Typeface.BOLD);
         } else if (namTrongKhoang) {
             // Ngày ở giữa khoảng: Dải màu xanh nhạt, chữ xanh đậm
             holder.viewCircleHighlight.setVisibility(View.GONE);
             holder.viewRangeHighlight.setVisibility(View.VISIBLE);
-            holder.tvDayNumber.setTextColor(Color.parseColor("#00896A"));
+            holder.tvDayNumber.setTextColor(colorPrimary);
             holder.tvDayNumber.setTypeface(null, Typeface.BOLD);
         } else {
             // Ngày bình thường
             holder.viewCircleHighlight.setVisibility(View.GONE);
             holder.viewRangeHighlight.setVisibility(View.GONE);
-            holder.tvDayNumber.setTextColor(Color.parseColor("#1A1A1A"));
+            holder.tvDayNumber.setTextColor(colorNormal);
             holder.tvDayNumber.setTypeface(null, Typeface.NORMAL);
         }
 

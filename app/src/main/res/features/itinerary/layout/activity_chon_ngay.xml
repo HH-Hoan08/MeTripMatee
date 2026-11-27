@@ -99,18 +99,18 @@
                 android:foreground="?attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/card_bg"
                 app:cardCornerRadius="12dp"
-                app:strokeColor="@color/teal_primary"
+                app:strokeColor="@color/border_color"
                 app:strokeWidth="1dp">
 
                 <TextView
+                    android:id="@+id/tvPreset3N2D"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:text="⚡ 3N2Đ (12-15/11)"
-                    android:textColor="@color/teal_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:text="⚡ 3N2Đ"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Preset 2: Cuối tuần -->
@@ -129,11 +129,12 @@
                 app:strokeWidth="1dp">
 
                 <TextView
+                    android:id="@+id/tvPresetWeekend"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:text="🌅 Cuối tuần (20-22/11)"
+                    android:text="🌅 Cuối tuần"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp" />
             </com.google.android.material.card.MaterialCardView>
